@@ -32,7 +32,7 @@ See [`supabase/README.md`](supabase/README.md) for data constraints and RPC deta
 
 ## Vercel
 
-The separate **foosball-score** Vercel project is connected to `josyao1/Foosball_Score`. It uses Vite, `npm run build`, output `dist`, and Node 24. Both Supabase environment variables are configured for production, preview, and development. `vercel.json` makes direct rivalry/game links work. Environment changes require a new deployment.
+Live at [foosball-score.vercel.app](https://foosball-score.vercel.app). The separate **foosball-score** Vercel project is connected to `josyao1/Foosball_Score`. It uses Vite, `npm run build`, output `dist`, and Node 24. Both Supabase environment variables are configured for production, preview, and development. `vercel.json` makes direct rivalry/game links work. Environment changes require a new deployment.
 
 ## Match rules
 
@@ -53,11 +53,11 @@ npm test
 npm run build
 ```
 
-The scoring tests cover own-goal attribution, win-by-two, draws, streaks, blowouts, lost leads, and shot flags. Local persistence tests cover reload, duplicate rivalries, active-game uniqueness, and stale writes. SQL was exercised against local PostgreSQL including permissions and transaction rollback.
+All 46 tests pass. See [`docs/audit.md`](docs/audit.md) for pathway coverage, fixes, and the limits of the code-only phone review. The scoring tests cover own-goal attribution, win-by-two, draws, streaks, blowouts, lost leads, and shot flags. Local persistence tests cover reload, duplicate rivalries, active-game uniqueness, and stale writes. SQL was exercised against local PostgreSQL including permissions and transaction rollback.
 
 ## Design
 
-Use the header to switch between ten designs: Club, Paper, Pitch, Mono, Arcade, Clay, Blueprint, Coral, Stadium, and Forest. `?design=clay` selects a shareable view; the choice also persists in this browser. Each view uses the same games and scoring logic. Home collections, rivalry summaries, goal distributions, scoreboards, and rung controls use different layouts. Clay includes recent games within each rivalry ticket.
+**Clay is the selected permanent design.** The style picker is removed from the shared app. Each rivalry ticket includes recent games. Clicking the card opens rivalry stats; recent-game links open individual games. On narrow screens, cards swipe horizontally with scroll snap, arrows, and a position indicator. Player statistics use Mono's compact tables with Clay's colors and typography. Older design query parameters are removed without changing the current page. The other nine explorations remain in source and `.superdesign/` for reference.
 
 Black and white kit markers match the physical table. Score numbers have no filled tiles. A muted IXL League mark sits in the header. Goal timeline soccer balls distinguish regular, dunk, bank, dunk + bank, and own goals with labels as well as color. The momentum chart shows actual goal difference, named lead directions, and selectable timestamped goals.
 

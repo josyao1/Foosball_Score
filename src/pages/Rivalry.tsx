@@ -5,7 +5,7 @@ import {
   Play,
   Trash2,
 } from "lucide-react";
-import { useDesign } from "../components/DesignSwitcher";
+import { useDesign } from "../components/SiteDesign";
 import { useStore } from "../lib/store";
 import { RivalrySummary } from "../components/RivalrySummary";
 import { ConfirmDialog } from "../components/Dialog";

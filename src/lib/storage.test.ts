@@ -63,5 +63,11 @@ it("rejects duplicate reversed pairings", async () => {
     /already/,
   );
 });
+it('does not confuse different player names containing the pairing delimiter', async () => {
+  const repo = new LocalRepository(memory(), { rivalries: [], games: [] });
+  await repo.createRivalry('A|B', 'C');
+  await repo.createRivalry('A', 'B|C');
+  expect((await repo.load()).rivalries).toHaveLength(2);
+});
 it('deletes one completed game without removing another rivalry',async()=>{const repo=new LocalRepository(memory(),{rivalries:[],games:[]});const a=await repo.createRivalry('A','B'),b=await repo.createRivalry('C','D');const base:Game={id:'one',rivalry_id:a.id,started_at:new Date().toISOString(),ended_at:null,revision:0,goals:[]};const one=await repo.saveGame(base);await repo.saveGame({...base,id:'two',rivalry_id:b.id});await repo.deleteGame(one);expect((await repo.load()).games.map(g=>g.id)).toEqual(['two']);expect((await repo.load()).rivalries).toHaveLength(2)});
 it('rejects rivalry deletion when a game changed since confirmation',async()=>{const repo=new LocalRepository(memory(),{rivalries:[],games:[]});const r=await repo.createRivalry('A','B');await repo.saveGame({id:'g',rivalry_id:r.id,started_at:new Date().toISOString(),ended_at:null,revision:0,goals:[]});await expect(repo.deleteRivalry(r.id,{})).rejects.toThrow(/changed/);await repo.deleteRivalry(r.id,{g:1});expect((await repo.load()).games).toHaveLength(0);expect((await repo.load()).rivalries).toHaveLength(0)});

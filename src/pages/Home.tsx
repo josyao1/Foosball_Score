@@ -14,7 +14,7 @@ import { dateLabel, score, winner } from "../lib/stats";
 import { playerName } from "../lib/types";
 import type { Game, Rivalry } from "../lib/types";
 import { RivalryCollection } from "../components/RivalryCollection";
-import { useDesign } from "../components/DesignSwitcher";
+import { useDesign } from "../components/SiteDesign";
 import { Dialog } from "../components/Dialog";
 export function NewRivalry({ onClose }: { onClose: () => void }) {
   const store = useStore(),
@@ -23,7 +23,7 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
     [b, setB] = useState(""),
     [error, setError] = useState("");
   return (
-    <Dialog title="New rivalry" onClose={onClose}>
+    <Dialog title="New rivalry" onClose={onClose} dismissible={!store.busy}>
       <form
         onSubmit={async (e) => {
           e.preventDefault();
@@ -42,6 +42,7 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
           <label>
             <span className="text-a">Black side</span>
             <input
+              disabled={store.busy}
               autoFocus
               required
               maxLength={40}
@@ -54,6 +55,7 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
           <label>
             <span className="text-b">White side</span>
             <input
+              disabled={store.busy}
               required
               maxLength={40}
               value={b}
@@ -125,10 +127,7 @@ export function Home() {
   const design=useDesign();
   const { rivalries, games } = useStore(),
     [creating, setCreating] = useState(false);
-  const completed = games.filter((g) => g.ended_at),
-    latest = [...games]
-      .sort((a, b) => Date.parse(b.started_at) - Date.parse(a.started_at))
-      .slice(0, 4);
+  const completed = games.filter((g) => g.ended_at);
   return (
     <>
       <div className="home-heading">
@@ -173,7 +172,7 @@ export function Home() {
       </div>
       <section>
         {rivalries.length ? (
-          <RivalryCollection rivalries={rivalries} games={games} layout={design.id==='forest'?'forest':design.homeLayout}/>
+          <RivalryCollection rivalries={rivalries} games={games} layout={design.homeLayout}/>
         ) : (
           <div className="empty-state">
             <Swords size={40} />
@@ -188,30 +187,6 @@ export function Home() {
           </div>
         )}
       </section>
-      {design.id !== "clay" && <div className="home-bottom">
-        <section>
-          <div className="section-heading">
-            <div>
-              <h2>Recent games</h2>
-            </div>
-            <span className="subtle-icon">
-              <Activity size={20} />
-            </span>
-          </div>
-          {latest.length ? (
-            <div className="game-list">
-              {latest.map((g) => {
-                const r = rivalries.find((r) => r.id === g.rivalry_id);
-                return r ? <GameCard key={g.id} game={g} rivalry={r} /> : null;
-              })}
-            </div>
-          ) : (
-            <div className="empty-inline">
-              Your completed games will appear here.
-            </div>
-          )}
-        </section>
-      </div>}
       {creating && <NewRivalry onClose={() => setCreating(false)} />}
     </>
   );

@@ -1,5 +1,6 @@
+import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, Radio } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight, Radio } from "lucide-react";
 import { Avatar } from "./Scoreboard";
 import { rivalryStats, score } from "../lib/stats";
 import { gameDate, gameTime } from "../lib/time";
@@ -147,7 +148,7 @@ function Ticket({ entry }: { entry: Entry }) {
         <div className="rc-ticket-draws"><span>Draws</span><span>{entry.stats.draws}</span></div>
       </div>
       <div className="rc-ticket-stub">
-        <div className="rc-ticket-stub-heading"><Played entry={entry} /><Link className="rc-ticket-stats-link" to={`/rivalry/${entry.rivalry.id}`} aria-label={`View stats for ${entry.rivalry.player_a} vs ${entry.rivalry.player_b}`}>View stats <span aria-hidden="true">→</span></Link></div>
+        <div className="rc-ticket-stub-heading"><Played entry={entry} /><Link className="rc-ticket-stats-link" draggable={false} to={`/rivalry/${entry.rivalry.id}`} aria-label={`View stats for ${entry.rivalry.player_a} vs ${entry.rivalry.player_b}`}>View stats <span aria-hidden="true">→</span></Link></div>
         {entry.recent.length > 0 && <Status entry={entry} />}
         <section className="rc-ticket-recent" aria-label="Recent games">
           <h3>Recent games</h3>
@@ -155,6 +156,94 @@ function Ticket({ entry }: { entry: Entry }) {
         </section>
       </div>
     </article>
+  );
+}
+
+function ticketOffset(list: HTMLUListElement, index: number) {
+  const item = list.children[index];
+  if (!item) return 0;
+  const padding = Number.parseFloat(getComputedStyle(list).scrollPaddingLeft) || 0;
+  const left = item.getBoundingClientRect().left - list.getBoundingClientRect().left + list.scrollLeft - padding;
+  return Math.max(0, Math.min(left, list.scrollWidth - list.clientWidth));
+}
+
+function TicketCollection({ entries }: { entries: Entry[] }) {
+  const listRef = useRef<HTMLUListElement>(null);
+  const listId = useId();
+  const hintId = useId();
+  const [narrow, setNarrow] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const entryIds = entries.map(entry => entry.rivalry.id).join("|");
+  const index = Math.min(current, entries.length - 1);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const sync = () => {
+      const mobile = typeof window.matchMedia === "function"
+        ? window.matchMedia("(max-width: 700px)").matches
+        : window.innerWidth <= 700;
+      setNarrow(mobile);
+      let nearest = 0;
+      let distance = Infinity;
+      if (mobile && list.scrollWidth > list.clientWidth) {
+        for (let i = 0; i < list.children.length; i++) {
+          const delta = Math.abs(ticketOffset(list, i) - list.scrollLeft);
+          if (delta < distance) { nearest = i; distance = delta; }
+        }
+      }
+      setCurrent(nearest);
+    };
+    sync();
+    list.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("resize", sync);
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
+    observer?.observe(list);
+    return () => {
+      list.removeEventListener("scroll", sync);
+      window.removeEventListener("resize", sync);
+      observer?.disconnect();
+    };
+  }, [entryIds]);
+
+  function goTo(target: number) {
+    const list = listRef.current;
+    if (!list) return;
+    const next = Math.max(0, Math.min(target, entries.length - 1));
+    const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    list.scrollTo({ left: ticketOffset(list, next), behavior: reduce ? "auto" : "smooth" });
+  }
+
+  const carousel = narrow && entries.length > 1;
+  return (
+    <div className="rc-ticket-carousel" role="region" aria-label="Rivalry cards" aria-roledescription={carousel ? "carousel" : undefined}>
+      {carousel && <div className="rc-ticket-carousel-controls">
+        <span id={hintId}>Swipe left or right<span className="rc-sr">. Use the arrow keys, Home, or End when the list is focused.</span></span>
+        <div className="rc-ticket-carousel-navigation">
+          <button type="button" aria-label="Previous rivalry" aria-controls={listId} disabled={index === 0} onClick={() => goTo(index - 1)}><ChevronLeft size={18} aria-hidden="true" /></button>
+          <span role="status" aria-live="polite" aria-atomic="true">{index + 1} / {entries.length}<span className="rc-sr"> rivalries</span></span>
+          <button type="button" aria-label="Next rivalry" aria-controls={listId} disabled={index === entries.length - 1} onClick={() => goTo(index + 1)}><ChevronRight size={18} aria-hidden="true" /></button>
+        </div>
+      </div>}
+      <ul
+        id={listId}
+        ref={listRef}
+        className={`rc-collection rc-layout-tickets rc-ticket-carousel-list${entries.length === 1 ? " rc-ticket-single" : ""}`}
+        aria-label="Rivalries"
+        aria-describedby={carousel ? hintId : undefined}
+        tabIndex={carousel ? 0 : undefined}
+        onKeyDown={event => {
+          if (!carousel || event.target !== event.currentTarget) return;
+          const target = event.key === "ArrowLeft" ? index - 1 : event.key === "ArrowRight" ? index + 1 : event.key === "Home" ? 0 : event.key === "End" ? entries.length - 1 : null;
+          if (target === null) return;
+          event.preventDefault();
+          goTo(target);
+        }}
+      >
+        {entries.map((entry, i) => <li key={entry.rivalry.id} aria-label={carousel ? `${i + 1} of ${entries.length}` : undefined}><Ticket entry={entry} /></li>)}
+      </ul>
+
+    </div>
   );
 }
 
@@ -232,6 +321,7 @@ export function RivalryCollection({ rivalries, games, layout }: { rivalries: Riv
     return { rivalry, stats: rivalryStats(rivalryGames), live: Boolean(liveGame), latest, recent: ordered.slice(0, 4) };
   });
   if (!entries.length) return null;
+  if (layout === "tickets") return <TicketCollection entries={entries} />;
   if (layout === "table") return <RivalryTable entries={entries} />;
   const presentation = ["cards", "list", "forest", "pitch", "versus", "tickets", "matrix", "tiles", "broadcast"].includes(layout) ? layout : "cards";
   return (

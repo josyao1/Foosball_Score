@@ -2095,3 +2095,74 @@ input::placeholder {
     font-size: 28px;
   }
 }
+
+/* Intrinsic-size safeguards for names, native selects and dialog copy. */
+.form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.form-grid > label,
+.dialog-head > h2,
+.goal-preview > span,
+.flag-option > span:nth-child(2) {
+  min-width: 0;
+}
+input,
+select {
+  min-width: 0;
+  max-width: 100%;
+}
+dialog {
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+}
+.dialog-head h2 {
+  overflow-wrap: anywhere;
+}
+.goal-preview > span:first-child {
+  flex: 1;
+}
+.goal-preview .time,
+.flag-option .checkbox {
+  flex-shrink: 0;
+}
+.goal-preview .time {
+  white-space: nowrap;
+}
+.dialog-actions .button,
+dialog .button.full {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+.timeline-description > span,
+.back-link,
+.winner-line,
+.winning-notice {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  /* Sixteen-pixel form text prevents iPhone focus zoom. */
+  input,
+  select {
+    font-size: 16px;
+  }
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dialog-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dialog-actions .button,
+  dialog .button.full {
+    min-height: 48px;
+    padding: 12px;
+  }
+  .dialog-head {
+    align-items: flex-start;
+  }
+  .goal-preview {
+    gap: 12px;
+  }
+}

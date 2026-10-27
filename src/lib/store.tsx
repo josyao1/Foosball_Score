@@ -39,7 +39,7 @@ function useDataStore() {
       if (gen === generation.current)
         setError(e instanceof Error ? e.message : "Could not load scores.");
     } finally {
-      setLoading(false);
+      if (gen === generation.current) setLoading(false);
     }
   }, [getRepo]);
   useEffect(() => {

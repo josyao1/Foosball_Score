@@ -33,10 +33,11 @@ export function GoalDialog({
     }));
   }
   return (
-    <Dialog title={editing ? "Edit goal" : "Add goal"} onClose={onClose}>
+    <Dialog title={editing ? "Edit goal" : "Add goal"} onClose={onClose} dismissible={!pending}>
       <form
         onSubmit={async (e) => {
           e.preventDefault();
+          if (pending) return;
           setPending(true);
           try {
             await onSave(draft);
@@ -60,6 +61,7 @@ export function GoalDialog({
             <label>
               Player who hit it
               <select
+                disabled={pending}
                 value={draft.actor_side}
                 onChange={(e) =>
                   setDraft({
@@ -75,6 +77,7 @@ export function GoalDialog({
             <label>
               Rung
               <select
+                disabled={pending}
                 value={draft.rung}
                 onChange={(e) =>
                   setDraft({ ...draft, rung: e.target.value as Goal["rung"] })
@@ -120,6 +123,7 @@ export function GoalDialog({
           ).map(({ flag, label, description, Icon }) => (
             <button
               type="button"
+              disabled={pending}
               key={flag}
               className={`flag-option ${draft.flags.includes(flag) ? "selected" : ""}`}
               aria-pressed={draft.flags.includes(flag)}

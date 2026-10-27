@@ -18,3 +18,6 @@ Global: 44px controls, readable contrast, responsive phone layouts, no sidebar c
 ## Subsequent implementation feedback
 
 All ten designs share black/white table sides. Score digits are unboxed. Layouts vary in actual markup for collections, summaries, distributions, scoreboards, and rung controls. Clay embeds recent games inside each rivalry ticket. The header includes a muted IXL League mark. The momentum chart is compact and names the player above/below its tied baseline. Original generated previews predate this feedback; use the application's header to compare current designs.
+
+## Final selection
+Clay selected by the user. Shared app is fixed to Clay, with Mono player-stat tables and recent games inside each rivalry ticket. Other variants are retained only as design exploration source.

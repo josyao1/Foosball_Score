@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import { ArrowUpRight, RefreshCw, Wifi, AlertCircle } from "lucide-react";
 import { useStore } from "./lib/store";
-import { DesignSwitcher } from "./components/DesignSwitcher";
+import { SiteDesign } from "./components/SiteDesign";
 import { Home } from "./pages/Home";
 import { RivalryPage } from "./pages/Rivalry";
 import { GamePage } from "./pages/Game";
@@ -42,7 +42,7 @@ export function App() {
           </span>
         </div>
       </header>
-      <DesignSwitcher/>
+      <SiteDesign/>
       <main id="main" className="app-main">
         {!store.cloud && (
           <div className="demo-banner">

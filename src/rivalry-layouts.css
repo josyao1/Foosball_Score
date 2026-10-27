@@ -186,3 +186,42 @@
   .rc-broadcast-history .rc-record { align-items: flex-start; }
   .rc-broadcast-history .rc-record-numbers strong { font-size: 20px; }
 }
+
+/* A native stretched link makes the whole receipt clickable without nesting links. */
+.rc-ticket { position: relative; }
+.rc-ticket-stub { position: static; }
+.rc-ticket-stub::before, .rc-ticket-stub::after { display: none; }
+.rc-ticket-stats-link::after { content: ""; position: absolute; inset: 0; z-index: 1; touch-action: pan-x pan-y pinch-zoom; }
+.rc-ticket-game { position: relative; z-index: 2; }
+.rc-ticket:has(.rc-ticket-stats-link:focus-visible) { outline: 2px solid var(--text); outline-offset: 3px; }
+.rc-ticket .rc-ticket-stats-link:focus-visible { outline: none; }
+.rc-ticket:hover .rc-ticket-stats-link { text-decoration: underline; text-underline-offset: 4px; }
+.rc-ticket-carousel { min-width: 0; max-width: 100%; }
+.rc-ticket-carousel-controls { display: none; }
+.rc-ticket-carousel-list:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+@media (max-width: 700px) {
+  .rc-ticket-carousel .rc-ticket-carousel-list {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: calc(100% - 32px);
+    gap: 14px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 4px;
+    padding: 4px 4px 12px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+  .rc-ticket-carousel-list > li { scroll-snap-align: start; min-width: 0; }
+  .rc-ticket-carousel .rc-ticket-single { grid-auto-columns: 100%; }
+  .rc-ticket-carousel-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; color: var(--muted); font-size: 11px; }
+  .rc-ticket-carousel-navigation { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .rc-ticket-carousel-navigation button { display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: transparent; color: var(--text); }
+  .rc-ticket-carousel-navigation button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+  .rc-ticket-carousel-navigation button:disabled { opacity: .35; }
+  .rc-ticket-carousel-navigation [role="status"] { min-width: 37px; text-align: center; color: var(--text); font-variant-numeric: tabular-nums; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rc-ticket-carousel-list { scroll-behavior: auto; }
+}

@@ -23,7 +23,7 @@ import {
 } from "../lib/stats";
 import { playerName } from "../lib/types";
 import type { Game, Goal, Rung, Side } from "../lib/types";
-import { useDesign } from "../components/DesignSwitcher";
+import { useDesign } from "../components/SiteDesign";
 import { RungControls } from "../components/RungControls";
 import { GameScoreboard } from "../components/GameScoreboard";
 import { GoalDialog } from "../components/GoalDialog";

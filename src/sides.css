@@ -156,3 +156,223 @@ html[data-design] :is(.rc-record-numbers > .rc-a, .rc-record-numbers > .rc-b, .r
 @media(max-width:600px) { .ixl-league { margin-left: 0; gap: 4px; } .ixl-league svg { width: 29px; } .ixl-league > span { font-size: 10px; } }
 
 @media(max-width:600px) { .header-inner { gap: 12px; flex-wrap: wrap; height: auto; min-height: 72px; padding-block: 12px; } .header-inner .connection { font-size: 10px; } .header-inner .brand { font-size: 22px; } .header-inner .brand img { width: 25px; height: 25px; } }
+
+/* Clay phone layout: explicit constraints beat the exploration-theme rules.
+   Keep the two live scoring sides paired; let names and secondary actions wrap. */
+@media (max-width: 600px) {
+  html[data-design="clay"] .header-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    height: auto;
+    min-height: 88px;
+    gap: 0 12px;
+    padding: 5px 16px;
+  }
+  html[data-design="clay"] .header-inner .brand {
+    min-width: 0;
+    min-height: 44px;
+    font-size: 22px;
+    gap: 7px;
+  }
+  html[data-design="clay"] .header-inner .brand img {
+    width: 25px;
+    height: 25px;
+  }
+  html[data-design="clay"] .ixl-league {
+    margin: 0;
+    justify-self: end;
+  }
+  html[data-design="clay"] .header-inner > nav,
+  html[data-design="clay"] .header-inner > nav a {
+    min-height: 44px;
+  }
+  html[data-design="clay"] .header-inner .connection {
+    margin-left: 0;
+    justify-self: end;
+  }
+  html[data-design="clay"] .home-heading {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  html[data-design="clay"] .home-heading h1,
+  html[data-design="clay"] .page-heading h1,
+  html[data-design="clay"] .game-heading h1 {
+    font-size: clamp(26px, 7.5vw, 30px);
+    overflow-wrap: anywhere;
+  }
+  html[data-design="clay"] .page-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  html[data-design="clay"] .page-heading > div {
+    min-width: 0;
+  }
+  html[data-design="clay"] .page-heading > .button {
+    align-self: flex-start;
+  }
+  html[data-design="clay"] .back-link {
+    min-height: 44px;
+    max-width: 100%;
+    margin: 0 0 12px;
+    line-height: 1.5;
+  }
+  html[data-design="clay"] .game-heading > div {
+    min-width: 0;
+  }
+  html[data-design="clay"] .status-pill {
+    flex-shrink: 0;
+  }
+  html[data-design="clay"] .game-clock {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  html[data-design="clay"] .clock-rule {
+    white-space: nowrap;
+  }
+  html[data-design="clay"] .rung-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  html[data-design="clay"] .rung-column,
+  html[data-design="clay"] .rung-button {
+    min-width: 0;
+  }
+  html[data-design="clay"] .scoring-actions .button {
+    white-space: normal;
+    min-height: 48px;
+    line-height: 1.35;
+  }
+  html[data-design="clay"] .game-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 18px;
+    gap: 10px 12px;
+    padding: 14px;
+  }
+  html[data-design="clay"] .game-card-date {
+    grid-column: 1 / -1;
+    min-width: 0;
+    max-width: none;
+    flex-direction: row;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 5px 10px;
+  }
+  html[data-design="clay"] .game-card .mini-match {
+    justify-content: space-between;
+    gap: 9px;
+    width: 100%;
+  }
+  html[data-design="clay"] .game-card .mini-name {
+    min-width: 0;
+    max-width: none;
+    flex: 1 1 0;
+    white-space: nowrap;
+  }
+  html[data-design="clay"] .game-card .mini-name:last-child {
+    text-align: right;
+  }
+  html[data-design="clay"] .game-card .mini-match > strong {
+    flex-shrink: 0;
+  }
+  html[data-design="clay"] .game-card > svg {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  html[data-design="clay"] .timeline li {
+    display: grid;
+    grid-template-columns: 34px 22px minmax(0, 1fr) 44px 44px;
+    align-items: start;
+    gap: 8px;
+    padding: 14px 0;
+  }
+  html[data-design="clay"] .timeline time {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+    padding-top: 3px;
+    overflow-wrap: anywhere;
+  }
+  html[data-design="clay"] .timeline-dot {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 6px 0 0;
+  }
+  html[data-design="clay"] .timeline > li > .goal-ball {
+    grid-column: 2;
+    grid-row: 1;
+    width: 22px;
+    height: 22px;
+    margin: 0;
+  }
+  html[data-design="clay"] .timeline-description {
+    grid-column: 3 / -1;
+    grid-row: 1;
+  }
+  html[data-design="clay"] .timeline-score {
+    grid-column: 1 / 4;
+    grid-row: 2;
+    align-self: center;
+  }
+  html[data-design="clay"] .timeline .icon-button {
+    grid-column: 4;
+    grid-row: 2;
+    width: 44px;
+    height: 44px;
+  }
+  html[data-design="clay"] .timeline .icon-button + .icon-button {
+    grid-column: 5;
+  }
+  html[data-design="clay"] .player-breakdown > header {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+  html[data-design="clay"] .player-breakdown > header h3 {
+    min-width: 0;
+    max-width: 100%;
+  }
+  html[data-design="clay"] .breakdown-sections {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  html[data-design="clay"] .breakdown-sections > section {
+    min-width: 0;
+  }
+  html[data-design="clay"] .distribution-table {
+    table-layout: fixed;
+    overflow-wrap: anywhere;
+  }
+  html[data-design="clay"] .rung-stat-legend > span {
+    min-width: 0;
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+  html[data-design="clay"] .rung-stat-legend > span:last-child {
+    text-align: right;
+  }
+  html[data-design="clay"] .momentum-inspector {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    gap: 8px;
+  }
+  html[data-design="clay"] .momentum-inspector > button {
+    width: 44px;
+    height: 44px;
+  }
+  html[data-design="clay"] .momentum-selection-meta {
+    flex-wrap: wrap;
+    gap: 4px 8px;
+  }
+  html[data-design="clay"] .momentum-selection-meta > strong {
+    margin-left: 0;
+  }
+  html[data-design="clay"] .error-banner .button {
+    min-height: 44px;
+  }
+  html[data-design="clay"] .app-footer > span {
+    min-width: 0;
+  }
+}
+@media (max-width: 370px) {
+  html[data-design="clay"] .breakdown-sections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

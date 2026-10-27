@@ -26,7 +26,7 @@
 - [x] Run tests and production build; document Supabase SQL and Vercel setup and limits. Desktop/mobile visual testing remains with the user as requested.
 
 ## Verification notes
-- 27 tests cover scoring, storage, mutations, distributions, Pacific time, design selection, startup, and interactive momentum. Startup reproduced destroy-is-not-a-function from Promise-returning scrollTo, then fixed effect return.
+- 46 tests cover complete app flows, concurrency, pending dialogs, carousel controls, scoring, storage, mutations, distributions, Pacific time, design selection, startup, and interactive momentum. Startup reproduced destroy-is-not-a-function from Promise-returning scrollTo, then fixed effect return.
 - Reviewer findings fixed: captured mutation revisions/undo target, modal stale close event guard, coherent SQL read RPC avoiding 1,000-row limits.
 - User requests no Playwright; user performs localhost/browser QA.
 - User authorized GitHub push, separate Vercel project, and new foos_* schema in BallKnowledge / josyao1 project only.
@@ -37,3 +37,9 @@
 - Compact momentum chart with named directions and selectable goals; soccer-ball goal type icons.
 - Pacific timestamps, per-player rung/type distributions, and confirmed revision-safe deletion.
 - Muted IXL League mark in header.
+
+## Selected design
+User selected Clay for the shared app. The header picker is removed, old design query parameters are normalized away, and the other explorations remain in source for reference.
+
+## Release
+Audited release targets the user-requested `master` branch and the separate `foosball-score` Vercel project.

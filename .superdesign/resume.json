@@ -4,9 +4,11 @@
     "/": {
       "targetKind": "new-ui",
       "projectId": "44eef388-c4e0-486b-b2bc-65013ae4942d",
-      "activeDraftId": "e7253c74-14b2-4257-995d-dd6786b410e2",
+      "activeDraftId": "04c227fd-88cc-46a7-befa-a50b903f489d",
       "designSystemPath": ".superdesign/design-system.md",
-      "contextFiles": [".superdesign/design-system.md"],
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
       "fingerprints": {
         ".superdesign/design-system.md": "06340c2c460bb3bb0cfe48c916050ef29f6c05799d83be1c4ae3b46ebe383a3d"
       },
@@ -15,9 +17,14 @@
           "title": "Table Talk | Rivalry Dashboard",
           "visualDirection": "Navy sports journal with blue and orange player colors",
           "currentVersion": 1
+        },
+        "04c227fd-88cc-46a7-befa-a50b903f489d": {
+          "title": "Clay",
+          "visualDirection": "Selected by user. Warm paper tickets, black/white kits, compact table statistics. Implementation includes subsequent refinements beyond generated draft.",
+          "currentVersion": 1
         }
       },
-      "updatedAt": "2026-10-27T03:40:20.714249+00:00"
+      "updatedAt": "2026-10-27T04:14:12.343964+00:00"
     }
   }
 }

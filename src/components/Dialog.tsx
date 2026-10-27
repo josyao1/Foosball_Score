@@ -4,10 +4,12 @@ import { X } from "lucide-react";
 export function Dialog({
   title,
   onClose,
+  dismissible = true,
   children,
 }: {
   title: string;
   onClose: () => void;
+  dismissible?: boolean;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null),
@@ -21,8 +23,11 @@ export function Dialog({
     <dialog
       ref={ref}
       aria-labelledby={id}
+      onCancel={(e) => {
+        if (!dismissible) e.preventDefault();
+      }}
       onClose={(e) => {
-        if (!e.currentTarget.open) onClose();
+        if (!e.currentTarget.open && dismissible) onClose();
       }}
     >
       <div className="dialog-head">
@@ -30,6 +35,7 @@ export function Dialog({
         <button
           className="icon-button"
           aria-label="Close dialog"
+          disabled={!dismissible}
           onClick={() => ref.current?.close()}
         >
           <X size={20} />
@@ -57,7 +63,7 @@ export function ConfirmDialog({
   const [pending, setPending] = useState(false),
     [error, setError] = useState("");
   return (
-    <Dialog title={title} onClose={onClose}>
+    <Dialog title={title} onClose={onClose} dismissible={!pending}>
       <p className="muted dialog-copy">{description}</p>
       {error && (
         <p role="alert" className="form-error">

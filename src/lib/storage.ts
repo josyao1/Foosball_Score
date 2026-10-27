@@ -9,6 +9,8 @@ export interface Repository {
   deleteRivalry(id:string,expectedGames:Record<string,number>):Promise<void>;
 }
 export const STORAGE_KEY = "table-talk-demo-v1";
+const pairingKey = (a: string, b: string) =>
+  JSON.stringify([a.trim().toLowerCase(), b.trim().toLowerCase()].sort());
 export function validateNames(a: string, b: string) {
   if (!a.trim() || !b.trim() || a.trim().length > 40 || b.trim().length > 40)
     throw new Error("Enter two names, each up to 40 characters.");
@@ -50,16 +52,14 @@ export class LocalRepository implements Repository {
   async load() {
     return this.read();
   }
-  async createRivalry(a: string, b: string) {
+  async createRivalry(a: string, b: string): Promise<Rivalry> {
     validateNames(a, b);
     const d = this.read(),
-      pair = [a.trim().toLowerCase(), b.trim().toLowerCase()].sort().join("|");
+      pair = pairingKey(a, b);
     if (
       d.rivalries.some(
         (r) =>
-          [r.player_a.toLowerCase(), r.player_b.toLowerCase()]
-            .sort()
-            .join("|") === pair,
+          pairingKey(r.player_a, r.player_b) === pair,
       )
     )
       throw new Error("This rivalry already exists.");
