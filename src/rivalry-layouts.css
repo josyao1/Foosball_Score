@@ -79,15 +79,15 @@
 .rc-layout-tickets { gap: 24px; }
 .rc-ticket { border-radius: 0; border-top: 4px solid var(--text); }
 .rc-ticket-main { padding: 20px; }
-.rc-ticket-heading, .rc-ticket-player-line, .rc-ticket-draws { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
+.rc-ticket-heading, .rc-ticket-player-line { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
 .rc-ticket-heading { color: var(--muted); font-size: 11px; padding-bottom: 16px; }
 .rc-ticket-player-line { margin-bottom: 12px; color: var(--text); }
+.rc-ticket-player-line:last-child { margin-bottom: 0; }
 .rc-ticket-player-line strong { display: flex; align-items: baseline; gap: 9px; font-size: 17px; min-width: 0; font-weight: 550; }
 .rc-ticket-player-line b { font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; font-weight: 600; }
 .rc-ticket-kit { display: inline-block; flex-shrink: 0; width: 9px; height: 9px; border: 1px solid #777; border-radius: 50%; }
 .rc-ticket-kit-black { background: #000; }
 .rc-ticket-kit-white { background: #fff; }
-.rc-ticket-draws { padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
 .rc-ticket-stub { position: relative; border-top: 2px dashed var(--line); padding: 15px 20px; display: flex; flex-direction: column; gap: 5px; }
 .rc-ticket-stub::before, .rc-ticket-stub::after { content: ""; position: absolute; top: -7px; width: 12px; height: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 50%; }
 .rc-ticket-stub::before { left: -7px; }

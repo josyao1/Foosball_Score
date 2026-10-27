@@ -145,7 +145,6 @@ function Ticket({ entry }: { entry: Entry }) {
         <div className="rc-ticket-heading"><span>Head to head</span><span>Wins</span></div>
         <div className="rc-ticket-player-line"><strong><i className="rc-ticket-kit rc-ticket-kit-black" role="img" aria-label="Black team" />{entry.rivalry.player_a}</strong><b>{entry.stats.wins.a}</b></div>
         <div className="rc-ticket-player-line"><strong><i className="rc-ticket-kit rc-ticket-kit-white" role="img" aria-label="White team" />{entry.rivalry.player_b}</strong><b>{entry.stats.wins.b}</b></div>
-        <div className="rc-ticket-draws"><span>Draws</span><span>{entry.stats.draws}</span></div>
       </div>
       <div className="rc-ticket-stub">
         <div className="rc-ticket-stub-heading"><Played entry={entry} /><Link className="rc-ticket-stats-link" draggable={false} to={`/rivalry/${entry.rivalry.id}`} aria-label={`View stats for ${entry.rivalry.player_a} vs ${entry.rivalry.player_b}`}>View stats <span aria-hidden="true">→</span></Link></div>
