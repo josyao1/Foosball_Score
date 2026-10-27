@@ -1,0 +1,252 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Talk Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+        :root {
+            --color-navy: #111d24;
+            --color-slate: #20323c;
+            --color-offwhite: #edf2ef;
+            --color-muted: #93a4ac;
+            --color-blue: #83c8f0;
+            --color-orange: #f3b07e;
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background-color: var(--color-navy);
+            color: var(--color-offwhite);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .display-bold {
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .score-font {
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .foos-grid {
+            background-image:
+                linear-gradient(to right, rgba(147, 164, 172, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(147, 164, 172, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .pitch-line {
+            border-color: rgba(147, 164, 172, 0.1);
+        }
+
+        .rivalry-card:hover {
+            border-color: var(--color-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-[#111d24] relative overflow-x-hidden" data-sd-id="1">
+        <!-- Background Linework Decor -->
+        <div class="absolute inset-0 foos-grid pointer-events-none opacity-50" data-sd-id="2"></div>
+        <div class="absolute left-1/2 top-0 -translate-x-1/2 w-px h-full pitch-line border-l pointer-events-none" data-sd-id="3"></div>
+
+        <!-- Header -->
+        <header class="relative z-10 border-b border-[#20323c] bg-[#111d24]" data-sd-id="4">
+            <div class="max-w-[1120px] mx-auto px-4 h-16 flex items-center justify-between" data-sd-id="5">
+                <div class="flex items-center gap-3" data-sd-id="6">
+                    <div class="w-8 h-8 bg-[#f3b07e] rounded-sm flex items-center justify-center" data-sd-id="7">
+                        <iconify-icon icon="lucide:trophy" class="text-[#111d24] text-xl"></iconify-icon>
+                    </div>
+                    <span class="display-bold text-xl tracking-tighter" data-sd-id="8">Table Talk</span>
+                </div>
+
+                <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-[#93a4ac]" data-sd-id="9">
+                    <a href="#" id="nav-rivalries" class="text-[#edf2ef] hover:text-[#83c8f0] transition-colors" data-sd-id="10">Rivalries</a>
+                    <a href="#" id="nav-history" class="hover:text-[#83c8f0] transition-colors" data-sd-id="11">Match History</a>
+                    <a href="#" id="nav-stats" class="hover:text-[#83c8f0] transition-colors" data-sd-id="12">Stats</a>
+                </nav>
+
+                <div class="flex items-center gap-4" data-sd-id="13">
+                    <div class="flex items-center gap-2 px-3 py-1 bg-[#20323c] rounded-full" data-sd-id="14">
+                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse" data-sd-id="15"></div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-[#93a4ac]" data-sd-id="16">Local Demo</span>
+                    </div>
+                    <button class="md:hidden text-[#edf2ef]" data-sd-id="17">
+                        <iconify-icon icon="lucide:menu" class="text-2xl"></iconify-icon>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="relative z-10 max-w-[1120px] mx-auto px-4 py-8 md:py-12" data-sd-id="18">
+
+            <!-- Page Heading -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12" data-sd-id="19">
+                <div data-sd-id="20">
+                    <h1 class="text-4xl md:text-5xl display-bold mb-3" data-sd-id="21">Your rivalries</h1>
+                    <p class="text-[#93a4ac] text-lg max-w-lg" data-sd-id="22">Track scores, streaks, and bragging rights across your favorite foosball matchups.</p>
+                </div>
+                <button id="new-rivalry-btn" class="inline-flex items-center justify-center gap-2 bg-[#edf2ef] text-[#111d24] px-6 py-3 rounded-[10px] font-bold hover:bg-[#83c8f0] transition-colors" data-sd-id="23">
+                    <iconify-icon icon="lucide:plus-circle" class="text-xl"></iconify-icon>
+                    New rivalry
+                </button>
+            </div>
+
+            <!-- Rivalry Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16" data-sd-id="24">
+
+                <!-- Featured Rivalry: Brooks vs Josh -->
+                <a href="#" id="rivalry-brooks-josh" class="rivalry-card block bg-[#20323c] p-8 rounded-[20px] border border-transparent transition-all group" data-sd-id="25">
+                    <div class="flex justify-between items-start mb-10" data-sd-id="26">
+                        <div class="flex flex-col items-center gap-4" data-sd-id="27">
+                            <div class="w-16 h-16 bg-[#83c8f0] rounded-full flex items-center justify-center text-[#111d24] font-black text-2xl" data-sd-id="28">B</div>
+                            <span class="font-bold text-[#83c8f0]" data-sd-id="29">Brooks</span>
+                        </div>
+
+                        <div class="flex flex-col items-center" data-sd-id="30">
+                            <div class="flex items-center gap-4" data-sd-id="31">
+                                <span class="score-font text-5xl md:text-6xl font-bold" data-sd-id="32">4</span>
+                                <span class="text-[#93a4ac] font-bold text-2xl" data-sd-id="33">—</span>
+                                <span class="score-font text-5xl md:text-6xl font-bold text-[#93a4ac]" data-sd-id="34">2</span>
+                            </div>
+                            <span class="text-[10px] uppercase tracking-widest font-black text-[#93a4ac] mt-2" data-sd-id="35">Head to Head</span>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-4" data-sd-id="36">
+                            <div class="w-16 h-16 bg-[#f3b07e] rounded-full flex items-center justify-center text-[#111d24] font-black text-2xl" data-sd-id="37">J</div>
+                            <span class="font-bold text-[#f3b07e]" data-sd-id="38">Josh</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-[#111d24] pt-6 flex flex-wrap gap-y-4 items-center justify-between text-sm" data-sd-id="39">
+                        <div class="flex items-center gap-2" data-sd-id="40">
+                            <span class="bg-[#83c8f0]/10 text-[#83c8f0] px-3 py-1 rounded-full text-xs font-bold" data-sd-id="41">3 WIN STREAK</span>
+                            <span class="text-[#93a4ac]" data-sd-id="42">Brooks dominant</span>
+                        </div>
+                        <div class="flex items-center gap-1 text-[#93a4ac]" data-sd-id="43">
+                            <span class="font-medium" data-sd-id="44">Last match: Yesterday</span>
+                            <iconify-icon icon="lucide:chevron-right" class="group-hover:translate-x-1 transition-transform"></iconify-icon>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Rivalry: Josh vs Alex -->
+                <a href="#" id="rivalry-josh-alex" class="rivalry-card block bg-[#20323c] p-8 rounded-[20px] border border-transparent transition-all group" data-sd-id="45">
+                    <div class="flex justify-between items-start mb-10" data-sd-id="46">
+                        <div class="flex flex-col items-center gap-4" data-sd-id="47">
+                            <div class="w-16 h-16 bg-[#f3b07e] rounded-full flex items-center justify-center text-[#111d24] font-black text-2xl" data-sd-id="48">J</div>
+                            <span class="font-bold text-[#f3b07e]" data-sd-id="49">Josh</span>
+                        </div>
+
+                        <div class="flex flex-col items-center" data-sd-id="50">
+                            <div class="flex items-center gap-4" data-sd-id="51">
+                                <span class="score-font text-5xl md:text-6xl font-bold text-[#93a4ac]" data-sd-id="52">1</span>
+                                <span class="text-[#93a4ac] font-bold text-2xl" data-sd-id="53">—</span>
+                                <span class="score-font text-5xl md:text-6xl font-bold" data-sd-id="54">1</span>
+                            </div>
+                            <span class="text-[10px] uppercase tracking-widest font-black text-[#93a4ac] mt-2" data-sd-id="55">Head to Head</span>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-4" data-sd-id="56">
+                            <div class="w-16 h-16 bg-[#edf2ef] rounded-full flex items-center justify-center text-[#111d24] font-black text-2xl" data-sd-id="57">A</div>
+                            <span class="font-bold text-[#edf2ef]" data-sd-id="58">Alex</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-[#111d24] pt-6 flex flex-wrap gap-y-4 items-center justify-between text-sm" data-sd-id="59">
+                        <div class="flex items-center gap-2" data-sd-id="60">
+                            <span class="bg-[#93a4ac]/10 text-[#93a4ac] px-3 py-1 rounded-full text-xs font-bold uppercase" data-sd-id="61">Even Tie</span>
+                        </div>
+                        <div class="flex items-center gap-1 text-[#93a4ac]" data-sd-id="62">
+                            <span class="font-medium" data-sd-id="63">Last match: 4 days ago</span>
+                            <iconify-icon icon="lucide:chevron-right" class="group-hover:translate-x-1 transition-transform"></iconify-icon>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+
+            <!-- Recent Matches Section -->
+            <section class="max-w-3xl" data-sd-id="64">
+                <div class="flex items-center justify-between mb-6" data-sd-id="65">
+                    <h2 class="text-2xl display-bold" data-sd-id="66">Recent matches</h2>
+                    <a href="#" id="view-all-matches" class="text-sm font-bold text-[#83c8f0] hover:underline underline-offset-4" data-sd-id="67">View all history</a>
+                </div>
+
+                <div class="space-y-3" data-sd-id="68">
+                    <!-- Match Row -->
+                    <div class="bg-[#20323c] h-16 px-6 rounded-[10px] flex items-center justify-between" data-sd-id="69">
+                        <div class="flex items-center gap-4 flex-1" data-sd-id="70">
+                            <span class="font-bold w-20 text-[#83c8f0]" data-sd-id="71">Brooks</span>
+                            <div class="score-font flex items-center gap-2 bg-[#111d24] px-3 py-1 rounded-[6px] text-lg" data-sd-id="72">
+                                <span class="text-[#83c8f0] font-bold" data-sd-id="73">10</span>
+                                <span class="text-[#93a4ac]" data-sd-id="74">:</span>
+                                <span class="text-[#93a4ac]" data-sd-id="75">08</span>
+                            </div>
+                            <span class="font-bold w-20 text-[#f3b07e]" data-sd-id="76">Josh</span>
+                        </div>
+                        <div class="text-right" data-sd-id="77">
+                            <span class="text-[#93a4ac] text-xs uppercase font-black" data-sd-id="78">Yesterday</span>
+                        </div>
+                    </div>
+
+                    <!-- Match Row -->
+                    <div class="bg-[#20323c] h-16 px-6 rounded-[10px] flex items-center justify-between" data-sd-id="79">
+                        <div class="flex items-center gap-4 flex-1" data-sd-id="80">
+                            <span class="font-bold w-20 text-[#83c8f0]" data-sd-id="81">Brooks</span>
+                            <div class="score-font flex items-center gap-2 bg-[#111d24] px-3 py-1 rounded-[6px] text-lg" data-sd-id="82">
+                                <span class="text-[#83c8f0] font-bold" data-sd-id="83">12</span>
+                                <span class="text-[#93a4ac]" data-sd-id="84">:</span>
+                                <span class="text-[#93a4ac]" data-sd-id="85">10</span>
+                            </div>
+                            <span class="font-bold w-20 text-[#f3b07e]" data-sd-id="86">Josh</span>
+                        </div>
+                        <div class="text-right" data-sd-id="87">
+                            <span class="text-[#93a4ac] text-xs uppercase font-black" data-sd-id="88">Yesterday</span>
+                        </div>
+                    </div>
+
+                    <!-- Match Row -->
+                    <div class="bg-[#20323c] h-16 px-6 rounded-[10px] flex items-center justify-between" data-sd-id="89">
+                        <div class="flex items-center gap-4 flex-1" data-sd-id="90">
+                            <span class="font-bold w-20 text-[#f3b07e]" data-sd-id="91">Josh</span>
+                            <div class="score-font flex items-center gap-2 bg-[#111d24] px-3 py-1 rounded-[6px] text-lg" data-sd-id="92">
+                                <span class="text-[#93a4ac]" data-sd-id="93">07</span>
+                                <span class="text-[#93a4ac]" data-sd-id="94">:</span>
+                                <span class="text-[#edf2ef] font-bold" data-sd-id="95">10</span>
+                            </div>
+                            <span class="font-bold w-20 text-[#edf2ef]" data-sd-id="96">Alex</span>
+                        </div>
+                        <div class="text-right" data-sd-id="97">
+                            <span class="text-[#93a4ac] text-xs uppercase font-black" data-sd-id="98">4 Days Ago</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Instructions -->
+            <div class="mt-16 p-8 border border-[#20323c] rounded-[20px] bg-[#111d24]/50" data-sd-id="99">
+                <h3 class="font-bold mb-2" data-sd-id="100">Recording scores</h3>
+                <p class="text-[#93a4ac] text-sm leading-relaxed max-w-2xl" data-sd-id="101">
+                    Table Talk is built for speed. Open a rivalry on your phone to track a live match.
+                    Standard rules: first to 10 wins by two. Record own goals as an opponent point.
+                    No logins required—matches are saved to your local browser storage.
+                </p>
+            </div>
+
+        </main>
+
+        <!-- Mobile FAB for Quick Start (Small screens only) -->
+        <button class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-[#83c8f0] rounded-full shadow-2xl flex items-center justify-center text-[#111d24] z-50" data-sd-id="102">
+            <iconify-icon icon="lucide:plus" class="text-3xl"></iconify-icon>
+        </button>
+
+    </div>
+
+</body></html>

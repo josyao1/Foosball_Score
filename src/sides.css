@@ -1,0 +1,158 @@
+/* Physical table sides are invariant across designs. Import after every theme.
+   Team fill and team text are separate: black kits always carry white text. */
+:root,
+:root[data-design] {
+  --blue: #000000;
+  --orange: #ffffff;
+  --kit-black: #000000;
+  --kit-white: #ffffff;
+  --kit-edge: #767676;
+}
+html[data-design] .side-a {
+  --side: var(--kit-black);
+  --side-ink: var(--kit-white);
+  --side-tint: var(--kit-black);
+}
+html[data-design] .side-b {
+  --side: var(--kit-white);
+  --side-ink: var(--kit-black);
+  --side-tint: var(--kit-white);
+}
+
+/* Names, compact score chips and kit badges carry the actual side colors. */
+html[data-design] :is(.text-a, .text-b) { color: var(--text); background: none; padding: 0; box-shadow: none; }
+html[data-design] .avatar.side-a,
+html[data-design] .avatar.side-b,
+html[data-design] .goal-preview.side-a,
+html[data-design] .goal-preview.side-b {
+  background: var(--side);
+  color: var(--side-ink);
+  border: 1px solid var(--kit-edge);
+}
+html[data-design] .score-player .score-number { color: var(--text); background: none; border: 0; border-radius: 0; padding: 0; }
+html[data-design] .score-player .player-name { color: var(--text); }
+html[data-design] :is(.dot.blue, .dot.orange, .timeline-dot) {
+  box-shadow: 0 0 0 1px var(--kit-edge);
+}
+html[data-design] .table-rod i {
+  background: var(--kit-black);
+  border: 1px solid var(--kit-edge);
+  box-shadow: none;
+}
+html[data-design] :is(.rod-1, .rod-3) i { background: var(--kit-white); }
+
+/* Works for paired, pad, field, table-row and broadcast control markup. */
+html[data-design] .rung-button.side-a,
+html[data-design] .rung-button.side-b {
+  background: var(--side);
+  color: var(--side-ink);
+  border: 1px solid var(--kit-edge);
+  box-shadow: none;
+}
+html[data-design] .rung-button.side-a:hover,
+html[data-design] .rung-button.side-b:hover {
+  background: var(--side);
+  color: var(--side-ink);
+  box-shadow: inset 0 0 0 2px var(--side-ink);
+}
+html[data-design] .rung-button.side-a > b,
+html[data-design] .rung-button.side-b > b {
+  background: transparent;
+  color: inherit;
+}
+html[data-design] .rung-button .rung-illustration i {
+  background: currentColor;
+  border-color: currentColor;
+}
+html[data-design] .broadcast-player .broadcast-player-name {
+  color: var(--side-ink);
+  background: var(--side);
+  border: 1px solid var(--kit-edge);
+  border-radius: 3px;
+  padding: 5px 7px;
+}
+
+/* The ten home layouts use chips, split panels or score boxes. */
+html[data-design] :is(.rc-a, .rc-b) { color: var(--text); }
+html[data-design] :is(.rc-a, .rc-versus-a) { --record-fill: var(--kit-black); --record-ink: var(--kit-white); }
+html[data-design] :is(.rc-b, .rc-versus-b) { --record-fill: var(--kit-white); --record-ink: var(--kit-black); }
+html[data-design] :is(.rc-names > .rc-a, .rc-names > .rc-b, .rc-record-numbers > .rc-a, .rc-record-numbers > .rc-b, .rc-broadcast-result .rc-a, .rc-broadcast-result .rc-b, .rc-matrix-grid dt.rc-a, .rc-matrix-grid dt.rc-b, .rc-matrix-grid dd.rc-a, .rc-matrix-grid dd.rc-b) {
+  background: var(--record-fill);
+  color: var(--record-ink);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--kit-edge);
+  padding: .06em .2em;
+}
+html[data-design] :is(.rc-matrix-grid dt.rc-a, .rc-matrix-grid dt.rc-b, .rc-matrix-grid dd.rc-a, .rc-matrix-grid dd.rc-b) { align-self: flex-start; }
+html[data-design] :is(.rc-versus-a, .rc-versus-b, .rc-ticket-player.rc-a, .rc-ticket-player.rc-b) {
+  background: var(--record-fill);
+  color: var(--record-ink);
+  border-color: var(--kit-edge);
+}
+html[data-design] .rc-versus-half { box-shadow: inset 0 0 0 1px var(--kit-edge); }
+html[data-design] .rc-versus-divider { color: var(--kit-edge); }
+html[data-design] .rc-ticket-player { padding: 7px 9px; border: 1px solid var(--kit-edge); }
+html[data-design] .rc-field-side > strong,
+html[data-design] .rc-field-side .rc-goal-box {
+  background: var(--record-fill);
+  color: var(--record-ink);
+  border-color: var(--kit-edge);
+  box-shadow: 0 0 0 1px var(--kit-edge);
+}
+html[data-design] .rc-field-side > strong { padding: 3px 6px; }
+html[data-design] .rc-live { color: var(--green); }
+
+/* The neutral plotting surface contrasts with both black and white strokes. */
+html[data-design] .momentum-chart {
+  background: #757575;
+  color: #ffffff;
+  border: 1px solid var(--kit-edge);
+  border-radius: 4px;
+}
+html[data-design] .momentum-chart path { stroke-width: 4px; }
+html[data-design] .momentum-chart circle { stroke: #757575; stroke-width: 1px; }
+html[data-design] :is(.win-meter, .rung-bar, .distribution-track) { background: #757575; }
+html[data-design] .win-meter { min-height: 7px; }
+html[data-design] .win-meter > span,
+html[data-design] .rung-bar > i,
+html[data-design] .distribution-track > i {
+  box-shadow: inset 0 0 0 1px var(--kit-edge);
+}
+html[data-design] .player-breakdown.side-a {
+  --segment-1: #000000; --segment-2: #292929; --segment-3: #444444; --segment-4: #595959; --segment-5: #707070;
+}
+html[data-design] .player-breakdown.side-b {
+  --segment-1: #ffffff; --segment-2: #eeeeee; --segment-3: #dddddd; --segment-4: #cccccc; --segment-5: #bbbbbb;
+}
+html[data-design] .player-breakdown > header h3 {
+  color: var(--side-ink);
+  background: var(--side);
+  border: 1px solid var(--kit-edge);
+  border-radius: 3px;
+  padding: 4px 8px;
+}
+html[data-design] .player-breakdown :is(.distribution-row strong, .distribution-table td:first-of-type, .distribution-donut b) { color: var(--text); }
+html[data-design] .player-breakdown .distribution-stack span { color: var(--side-ink); }
+html[data-design] .distribution-stack { border: 1px solid var(--kit-edge); background: #757575; }
+html[data-design] .distribution-donut { box-shadow: 0 0 0 1px var(--kit-edge); }
+html[data-design] .distribution-donut > span { box-shadow: 0 0 0 1px var(--kit-edge); }
+html[data-design] .distribution-legend li > i,
+html[data-design] .tally-dots i.filled { box-shadow: 0 0 0 1px var(--kit-edge); }
+
+/* Team aliases were previously also used for UI accents; keep those readable. */
+html[data-design] :is(.brand-period, .how-to-icon, .stat-card > svg, .winner-line, .rivalry-card-bottom svg) { color: var(--text); }
+html[data-design] :is(.text-button:hover, .stat-card a:hover strong) { color: var(--text); }
+html[data-design] .app-header nav a { border-bottom-color: var(--text); }
+html[data-design] .flag-option.selected { background: var(--panel-light); border-color: var(--text); }
+html[data-design] .flag-option.selected .checkbox { background: var(--kit-black); color: var(--kit-white); border-color: var(--kit-edge); }
+html[data-design] :is(button, a, input, select, .rc-table-wrap):focus-visible { outline-color: var(--text); }
+html[data-design] .rung-button:focus-visible { outline: 3px solid var(--text); outline-offset: 4px; }
+
+/* Scores remain bare; the kit dots identify sides. */
+html[data-design] :is(.rc-record-numbers > .rc-a, .rc-record-numbers > .rc-b, .rc-broadcast-result .rc-a, .rc-broadcast-result .rc-b, .rc-matrix-grid dd.rc-a, .rc-matrix-grid dd.rc-b) { color: var(--text); background: none; box-shadow: none; padding: 0; }
+.ixl-league { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); margin-left: 16px; white-space: nowrap; }
+.ixl-league svg { width: 36px; height: 16px; }
+.ixl-league > span { font-size: 11px; letter-spacing: .04em; }
+@media(max-width:600px) { .ixl-league { margin-left: 0; gap: 4px; } .ixl-league svg { width: 29px; } .ixl-league > span { font-size: 10px; } }
+
+@media(max-width:600px) { .header-inner { gap: 12px; flex-wrap: wrap; height: auto; min-height: 72px; padding-block: 12px; } .header-inner .connection { font-size: 10px; } .header-inner .brand { font-size: 22px; } .header-inner .brand img { width: 25px; height: 25px; } }

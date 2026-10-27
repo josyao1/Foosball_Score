@@ -1,0 +1,382 @@
+/* Every design uses the same match data and controls. Tokens also cover dialogs,
+   reports, and empty/error states so a light design never inherits dark surfaces. */
+:root,
+:root[data-design="club"] {
+  --bg: #14232e; --panel: #1b2d39; --panel-light: #233b49;
+  --text: #f0f5f7; --muted: #a6bac6; --line: #405463;
+  --blue: #89c7eb; --orange: #f1b585; --green: #a3dfb2;
+  --radius: 10px; --control-radius: 7px;
+  --body-font: "DM Sans", Arial, sans-serif;
+  --heading-font: "DM Sans", Arial, sans-serif;
+  --score-font: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --error-bg: #4c292d; --error-text: #ffd0d2; --danger: #a7383f;
+  color-scheme: dark;
+}
+:root[data-design="paper"] {
+  --bg: #ffffff; --panel: #ffffff; --panel-light: #f0f3f5;
+  --text: #24282b; --muted: #5d666c; --line: #ced5da;
+  --blue: #245d86; --orange: #9c3e2e; --green: #286b44;
+  --radius: 0px; --control-radius: 3px;
+  --heading-font: Georgia, "Times New Roman", serif;
+  --score-font: Georgia, "Times New Roman", serif;
+  --error-bg: #fff0ef; --error-text: #9a252b; --danger: #a42d33;
+  color-scheme: light;
+}
+:root[data-design="pitch"] {
+  --bg: #103b2e; --panel: #164b39; --panel-light: #215e48;
+  --text: #f3f9e8; --muted: #c0d4c6; --line: #598471;
+  --blue: #d8f2ee; --orange: #ffd579; --green: #c6f0a3;
+  --radius: 14px; --control-radius: 6px;
+  --heading-font: "Barlow Condensed", "Arial Narrow", sans-serif;
+}
+:root[data-design="mono"] {
+  --bg: #ffffff; --panel: #ffffff; --panel-light: #eeeeee;
+  --text: #121212; --muted: #585858; --line: #949494;
+  --blue: #111111; --orange: #555555; --green: #333333;
+  --radius: 0px; --control-radius: 0px;
+  --body-font: Arial, Helvetica, sans-serif;
+  --heading-font: Arial, Helvetica, sans-serif;
+  --score-font: Arial, Helvetica, sans-serif;
+  --error-bg: #f9e9e9; --error-text: #8f2020; --danger: #9e2424;
+  color-scheme: light;
+}
+:root[data-design="arcade"] {
+  --bg: #191429; --panel: #251e3c; --panel-light: #352b52;
+  --text: #f5efff; --muted: #bbb0d3; --line: #65527f;
+  --blue: #7ce5ed; --orange: #eab1ff; --green: #c7e996;
+  --radius: 4px; --control-radius: 2px;
+  --heading-font: "Courier New", monospace;
+  --score-font: "Courier New", monospace;
+}
+:root[data-design="clay"] {
+  --bg: #f5e9d6; --panel: #fff7e9; --panel-light: #ebdbc1;
+  --text: #573a2b; --muted: #735949; --line: #c4ac90;
+  --blue: #32635b; --orange: #a64227; --green: #496a35;
+  --radius: 22px; --control-radius: 12px;
+  --heading-font: Georgia, "Times New Roman", serif;
+  --score-font: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --error-bg: #fbe5da; --error-text: #8e2920; --danger: #a23829;
+  color-scheme: light;
+}
+:root[data-design="blueprint"] {
+  --bg: #123c68; --panel: #174875; --panel-light: #205585;
+  --text: #e9f6ff; --muted: #bad6eb; --line: #6591b6;
+  --blue: #b3e6ff; --orange: #fff0b7; --green: #c0efdb;
+  --radius: 0px; --control-radius: 0px;
+  --body-font: "Courier New", monospace;
+  --heading-font: "Courier New", monospace;
+  --score-font: "Courier New", monospace;
+}
+:root[data-design="coral"] {
+  --bg: #fffcf9; --panel: #ffffff; --panel-light: #f4eeea;
+  --text: #332e33; --muted: #70636d; --line: #d9cace;
+  --blue: #006d6a; --orange: #b73539; --green: #337044;
+  --radius: 26px; --control-radius: 999px;
+  --heading-font: "DM Sans", Arial, sans-serif;
+  --score-font: "DM Sans", Arial, sans-serif;
+  --error-bg: #ffeded; --error-text: #992329; --danger: #b73539;
+  color-scheme: light;
+}
+:root[data-design="stadium"] {
+  --bg: #101a2a; --panel: #19263b; --panel-light: #243650;
+  --text: #f0f3f8; --muted: #aab9cf; --line: #455b78;
+  --blue: #bdd4ff; --orange: #ff8a8a; --green: #9bd5ad;
+  --radius: 3px; --control-radius: 3px;
+  --heading-font: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --score-font: "Barlow Condensed", "Arial Narrow", sans-serif;
+}
+:root[data-design="forest"] {
+  --bg: #f5f7f1; --panel: #ffffff; --panel-light: #e6ede1;
+  --text: #23392e; --muted: #5b6d60; --line: #bdccbd;
+  --blue: #245b46; --orange: #8b5627; --green: #346636;
+  --radius: 6px; --control-radius: 5px;
+  --heading-font: "DM Sans", Arial, sans-serif;
+  --score-font: "DM Sans", Arial, sans-serif;
+  --error-bg: #faeeea; --error-text: #902d22; --danger: #a13229;
+  color-scheme: light;
+}
+html[data-design] { background: var(--bg); color: var(--text); font-family: var(--body-font); }
+html[data-design] body { background: var(--bg); }
+html[data-design] :is(h1, h2, h3) { font-family: var(--heading-font); }
+html[data-design] .side-a { --side: var(--blue); --side-tint: color-mix(in srgb, var(--blue) 12%, var(--panel)); }
+html[data-design] .side-b { --side: var(--orange); --side-tint: color-mix(in srgb, var(--orange) 12%, var(--panel)); }
+html[data-design] :is(.rivalry-card, .rivalry-card.featured, .game-list, .how-to, .h2h-panel, .live-score-panel, .panel, .stat-card, dialog) {
+  background: var(--panel); border-color: var(--line); border-radius: var(--radius);
+}
+html[data-design] :is(.demo-banner, .goal-tags > span, .segmented, .flag-option, input, select) {
+  background: var(--panel-light); color: var(--text); border-color: var(--line);
+}
+html[data-design] :is(.demo-badge, .how-to > div span, .checkbox, .clock-rule, .timeline li, .tiny-table, .tiny-table:after) { border-color: var(--line); }
+html[data-design] :is(.muted-heading, .eyebrow, .overview-strip svg, .strip-note, .versus, .rivalry-card-top svg, .game-card > svg, .score-divider, .how-to > div span) { color: var(--muted); }
+html[data-design] :is(.demo-badge, .rivalry-card-bottom > span:first-child, .app-footer) { color: var(--text); }
+html[data-design] :is(.new-rivalry-card, .empty-state) { border-color: var(--line); border-radius: var(--radius); }
+html[data-design] .rivalry-card:hover { border-color: var(--blue); }
+html[data-design] .rung-bar { background: var(--panel-light); }
+html[data-design] :is(.button, .rung-button, input, select, .segmented, .flag-option) { border-radius: var(--control-radius); }
+html[data-design] .button.primary:hover { background: color-mix(in srgb, var(--text) 85%, var(--bg)); }
+html[data-design] .button.danger { background: var(--danger); color: #ffffff; }
+html[data-design] :is(.error-banner, .form-error) { background: var(--error-bg); color: var(--error-text); border-color: var(--error-text); }
+html[data-design] input::placeholder { color: var(--muted); }
+html[data-design] .flag-option.selected { background: color-mix(in srgb, var(--blue) 13%, var(--panel)); border-color: var(--blue); }
+html[data-design] .status-pill.live { border-color: var(--green); }
+html[data-design] :is(.score-number, .h2h-numbers > strong, .mini-match > strong) { font-family: var(--score-font); }
+html[data-design] .table-outline { background: var(--panel); border-color: var(--line); box-shadow: 0 0 0 8px var(--bg), 0 0 0 9px var(--line); }
+html[data-design] :is(.table-circle, .table-center) { border-color: var(--line); }
+html[data-design] .table-rod { background: var(--muted); }
+html[data-design] .header-inner { height: 64px; }
+html[data-design] .page-intro { padding: 30px 0; }
+html[data-design] h1 { font-size: clamp(30px, 4vw, 43px); }
+html[data-design] .overview-strip { margin-bottom: 26px; padding: 15px 0; }
+html[data-design] .back-link { margin-bottom: 20px; }
+html[data-design] .live-score-panel { padding: 20px 28px; }
+html[data-design] .live-score-panel .scoreboard { padding: 18px 0; }
+html[data-design] .live-score-panel .score-number { font-size: 92px; }
+html[data-design] .rung-button { min-height: 52px; padding: 10px 14px; }
+html[data-design] :is(.text-button, .segmented button) { min-height: 44px; }
+html[data-design] :is(.icon-button, .timeline .icon-button) { min-width: 44px; min-height: 44px; }
+html[data-design] .section-heading .button { min-height: 44px; }
+
+/* A compact, persistent chooser; no wrapping into ten rows on a phone. */
+.design-bar { border-bottom: 1px solid var(--line); background: var(--bg); }
+.design-bar-inner { max-width: 1176px; margin: auto; padding: 7px 28px; display: flex; align-items: center; gap: 16px; min-width: 0; }
+.design-label { flex: 0 0 auto; color: var(--muted); font-size: 11px; font-weight: 600; }
+.design-options { display: flex; gap: 5px; overflow-x: auto; padding: 4px; min-width: 0; scrollbar-width: thin; scrollbar-color: var(--line) transparent; overscroll-behavior-x: contain; }
+.design-options .design-option { flex: 0 0 auto; min-height: 44px; height: auto; border: 1px solid transparent; border-radius: 5px; padding: 7px 9px; gap: 6px; font-size: 11px; color: var(--muted); }
+.design-options .design-option:hover { background: var(--panel-light); color: var(--text); }
+.design-options .design-option.selected { color: var(--text); background: var(--panel-light); border-color: var(--text); }
+.design-options .design-option:focus-visible { outline-offset: 0; }
+.design-number { font-size: 9px; font-variant-numeric: tabular-nums; opacity: .8; }
+.design-swatches { display: inline-flex; margin-left: 2px; }
+.design-swatches i { display: block; width: 7px; height: 12px; border: 1px solid #8885; }
+.design-swatches i:first-child { border-radius: 2px 0 0 2px; }
+.design-swatches i:last-child { border-radius: 0 2px 2px 0; }
+
+/* 01 Club: the compact club scorecard, with a crisp score rail. */
+html[data-design="club"] .live-score-panel { border-top: 3px solid var(--blue); }
+html[data-design="club"] .rivalry-card { padding: 18px 20px 0; }
+html[data-design="club"] .rung-column { gap: 7px; }
+
+/* 02 Paper: matches read as a ledger and scores are typeset in serif. */
+html[data-design="paper"] :is(.app-header, .h2h-panel) { border-bottom: 2px solid var(--text); }
+html[data-design="paper"] .rivalry-grid { grid-template-columns: 1fr; gap: 0; border-top: 1px solid var(--text); }
+html[data-design="paper"] .rivalry-card { display: grid; grid-template-columns: 130px 1fr 220px; align-items: center; column-gap: 24px; border: 0; border-bottom: 1px solid var(--line); padding: 16px 0; }
+html[data-design="paper"] .rivalry-card-top { flex-direction: column; align-items: flex-start; gap: 8px; }
+html[data-design="paper"] .rivalry-players { margin: 0; }
+html[data-design="paper"] .rivalry-players .avatar { display: none; }
+html[data-design="paper"] .rivalry-players h3 { margin: 0; }
+html[data-design="paper"] .h2h-numbers { margin: 0; grid-template-columns: 1fr 80px 1fr; }
+html[data-design="paper"] .h2h-numbers > strong { font-size: 42px; font-weight: 400; }
+html[data-design="paper"] .rivalry-card-bottom { grid-column: 2 / -1; border: 0; padding: 10px 0 0; }
+html[data-design="paper"] .new-rivalry-card { min-height: 64px; flex-direction: row; border: 0; border-bottom: 1px solid var(--line); }
+html[data-design="paper"] .add-circle { width: 30px; height: 30px; margin: 0; }
+html[data-design="paper"] .stat-card { border-width: 0 0 1px; padding-left: 0; }
+html[data-design="paper"] .live-score-panel { max-width: 900px; border-width: 2px 0 1px; border-top-color: var(--text); }
+html[data-design="paper"] .score-number { font-weight: 400; }
+html[data-design="paper"] .rung-button { background: var(--panel); border-width: 0 0 1px; border-color: var(--side); }
+html[data-design="paper"] .rung-button:hover { background: var(--side-tint); }
+
+/* 03 Pitch: the field boundary, centre line and rod-shaped controls. */
+html[data-design="pitch"] h1 { font-size: clamp(36px, 5vw, 54px); letter-spacing: -.5px; }
+html[data-design="pitch"] :is(.h2h-panel, .live-score-panel) { border: 2px solid var(--line); background-image: linear-gradient(90deg, transparent calc(50% - .5px), #c4e8d326 50%, transparent calc(50% + .5px)); }
+html[data-design="pitch"] .scoreboard { background: radial-gradient(circle at center, transparent 43px, #c4e8d330 44px, #c4e8d330 45px, transparent 46px); }
+html[data-design="pitch"] .score-player { gap: 6px; }
+html[data-design="pitch"] .rung-button { border-left: 5px solid var(--side); background: var(--bg); }
+html[data-design="pitch"] .rung-illustration { width: 72px; }
+html[data-design="pitch"] .rivalry-card { border-bottom: 4px solid var(--line); }
+html[data-design="pitch"] .stat-card { flex-direction: row; flex-wrap: wrap; gap: 10px; }
+html[data-design="pitch"] .stat-card > :is(strong, a) { width: 100%; }
+
+/* 04 Mono: a continuous utility grid, with black rails and square counters. */
+html[data-design="mono"] :is(h1, h2, h3) { font-weight: 750; letter-spacing: -1px; }
+html[data-design="mono"] .rivalry-grid { gap: 0; }
+html[data-design="mono"] .rivalry-card { border: 1px solid var(--text); }
+html[data-design="mono"] .stat-grid { gap: 0; }
+html[data-design="mono"] .stat-card { border-color: var(--text); }
+html[data-design="mono"] .avatar { border-radius: 0; background: var(--side); color: #ffffff; }
+html[data-design="mono"] .score-number { font-weight: 800; letter-spacing: -6px; }
+html[data-design="mono"] .rung-column { gap: 0; }
+html[data-design="mono"] .rung-button { background: var(--panel); border: 1px solid var(--side); border-bottom-width: 2px; min-height: 58px; }
+html[data-design="mono"] .rung-button:hover { background: var(--side); color: #ffffff; }
+html[data-design="mono"] .rung-button > b { font-weight: 700; }
+html[data-design="mono"] .live-score-panel { border: 2px solid var(--text); }
+html[data-design="mono"] .overview-strip { border-color: var(--text); }
+
+/* 05 Arcade: a restrained cabinet bezel and digital score tiles. */
+html[data-design="arcade"] :is(.h2h-panel, .live-score-panel) { box-shadow: inset 0 0 0 4px var(--bg); border: 2px solid var(--line); }
+html[data-design="arcade"] .score-number { padding: 6px 16px; background: var(--bg); border: 1px solid var(--side); letter-spacing: -5px; font-size: 86px; }
+html[data-design="arcade"] .rung-button { box-shadow: 0 3px 0 color-mix(in srgb, var(--side) 45%, var(--bg)); background: var(--bg); }
+html[data-design="arcade"] .rung-button:active { box-shadow: none; transform: translateY(3px); }
+html[data-design="arcade"] .rung-column { gap: 12px; }
+html[data-design="arcade"] .avatar { border-radius: 2px; }
+html[data-design="arcade"] .rivalry-card { border-top: 3px solid var(--blue); }
+html[data-design="arcade"] .stat-card strong { font-family: var(--score-font); }
+
+/* 06 Clay: a café table with inset score plaques and softer controls. */
+html[data-design="clay"] .app-main { max-width: 1090px; }
+html[data-design="clay"] .rivalry-card { border-width: 0; box-shadow: 0 3px 0 var(--line); padding: 24px 26px 0; }
+html[data-design="clay"] .score-number { background: var(--panel-light); border-radius: 14px; min-width: 104px; padding: 4px 16px; }
+html[data-design="clay"] .live-score-panel { border-width: 5px; border-color: var(--line); }
+html[data-design="clay"] .rung-button { border: 0; border-bottom: 3px solid color-mix(in srgb, var(--side) 30%, var(--panel)); }
+html[data-design="clay"] .stat-card { border: 0; }
+html[data-design="clay"] .game-card { padding-top: 22px; padding-bottom: 22px; }
+html[data-design="clay"] .avatar { border: 0; }
+
+/* 07 Blueprint: technical table drawings and square ruled instruments. */
+html[data-design="blueprint"] body { background-image: linear-gradient(#9bc7e70a 1px, transparent 1px), linear-gradient(90deg, #9bc7e70a 1px, transparent 1px); background-size: 24px 24px; }
+html[data-design="blueprint"] :is(.rivalry-card, .h2h-panel, .live-score-panel, .stat-card) { background: var(--bg); }
+html[data-design="blueprint"] .score-player { border: 1px solid var(--line); padding: 14px 8px; }
+html[data-design="blueprint"] .score-number { font-weight: 400; letter-spacing: -5px; }
+html[data-design="blueprint"] .avatar { border-radius: 0; background: none; }
+html[data-design="blueprint"] .score-divider { align-self: center; padding: 0; }
+html[data-design="blueprint"] .rung-button { background: none; border-color: var(--line); border-style: dashed; }
+html[data-design="blueprint"] .rung-illustration i { background: var(--bg); border: 1px solid currentColor; border-radius: 0; }
+html[data-design="blueprint"] .stat-card > svg { margin-bottom: 0; }
+html[data-design="blueprint"] .table-art { transform: none; }
+html[data-design="blueprint"] .table-outline { border-radius: 0; }
+
+/* 08 Coral: oval score lozenges and spacious, easy-to-tap capsules. */
+html[data-design="coral"] .rivalry-card { border: 0; background: var(--panel-light); }
+html[data-design="coral"] .rivalry-card.featured { background: color-mix(in srgb, var(--blue) 6%, var(--panel)); }
+html[data-design="coral"] .stat-card { border: 0; background: var(--panel-light); border-radius: 16px; }
+html[data-design="coral"] .score-number { border-radius: 60px; padding: 10px 24px; background: var(--side-tint); letter-spacing: -4px; font-weight: 700; }
+html[data-design="coral"] .live-score-panel .score-number { font-size: 78px; }
+html[data-design="coral"] .score-player { gap: 12px; }
+html[data-design="coral"] .rung-button { min-height: 58px; border: 0; padding-left: 22px; padding-right: 22px; }
+html[data-design="coral"] .rung-controls { gap: 16px; }
+html[data-design="coral"] .rung-button > b { border-radius: 50%; background: var(--panel); width: 28px; height: 28px; text-align: center; }
+html[data-design="coral"] .live-score-panel { border: 0; }
+html[data-design="coral"] .game-list { border-radius: 18px; }
+
+/* 09 Stadium: names and scores share a horizontal broadcast bar. */
+html[data-design="stadium"] .app-header { border-top: 4px solid #ba343d; }
+html[data-design="stadium"] h1 { letter-spacing: .1px; }
+html[data-design="stadium"] .rivalry-card { border-top: 3px solid #ba343d; }
+html[data-design="stadium"] .live-score-panel { max-width: 980px; padding: 18px 24px; border-top: 4px solid #ba343d; }
+html[data-design="stadium"] .scoreboard { max-width: none; grid-template-columns: 1fr 86px 1fr; }
+html[data-design="stadium"] .score-player { display: grid; grid-template-columns: 1fr auto; gap: 8px 14px; text-align: left; background: var(--bg); border-left: 4px solid var(--side); padding: 12px 18px; }
+html[data-design="stadium"] .score-player .avatar { display: none; }
+html[data-design="stadium"] .score-number { font-size: 76px; }
+html[data-design="stadium"] .live-score-panel .score-number { font-size: 76px; }
+html[data-design="stadium"] .score-divider { align-self: center; padding: 0; }
+html[data-design="stadium"] .player-name { font-family: var(--heading-font); font-size: 26px; }
+html[data-design="stadium"] .rung-column { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+html[data-design="stadium"] .rung-button { min-height: 68px; padding: 10px; gap: 6px; }
+html[data-design="stadium"] .rung-illustration { display: none; }
+html[data-design="stadium"] .stat-grid { gap: 8px; }
+html[data-design="stadium"] .stat-card { padding: 15px; }
+
+/* 10 Forest: flat dividers, quiet open space and uncluttered scoring rows. */
+html[data-design="forest"] .app-main { max-width: 1080px; }
+html[data-design="forest"] .rivalry-grid { gap: 24px; }
+html[data-design="forest"] .rivalry-card { border-width: 0 0 2px; padding: 20px 16px 0; }
+html[data-design="forest"] .stat-grid { gap: 0; background: var(--panel-light); border-radius: 6px; }
+html[data-design="forest"] .stat-card { background: none; border: 0; border-right: 1px solid var(--line); border-radius: 0; }
+html[data-design="forest"] .stat-card:last-child { border-right: 0; }
+html[data-design="forest"] .score-number { font-weight: 500; letter-spacing: -5px; }
+html[data-design="forest"] .live-score-panel { background: var(--panel); border: 0; padding: 26px 32px; }
+html[data-design="forest"] .rung-button { border: 0; border-left: 3px solid var(--side); background: var(--panel-light); }
+html[data-design="forest"] .rung-column { gap: 6px; }
+html[data-design="forest"] .score-player .avatar { width: 28px; height: 28px; font-size: 13px; }
+html[data-design="forest"] .game-list { border-width: 1px 0; }
+
+/* Keep both teams in view: layout experiments never turn scoring into one column. */
+@media (max-width: 700px) {
+  .design-bar-inner { padding: 4px 12px; gap: 8px; }
+  .design-label { font-size: 10px; }
+  .design-options .design-option { padding: 6px 8px; }
+  html[data-design] .app-main { padding: 16px 16px 36px; }
+  html[data-design] .header-inner { padding: 0 16px; gap: 18px; }
+  html[data-design] .live-score-panel { padding: 16px 12px; }
+  html[data-design] .scoreboard { grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr); }
+  html[data-design] .score-player { min-width: 0; }
+  html[data-design] .live-score-panel .score-number { font-size: 76px; }
+  html[data-design] .rung-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  html[data-design] .rung-button { min-height: 60px; padding: 9px 10px; }
+  html[data-design] .rung-button > span:nth-child(2) { font-size: 12px; padding-right: 18px; }
+  html[data-design] .rung-button > b { right: 9px; }
+  html[data-design] .scoring-actions .button { min-height: 46px; padding: 10px 8px; font-size: 11px; }
+  html[data-design] .game-clock { gap: 6px; font-size: 11px; }
+  html[data-design] .clock-rule { padding-left: 8px; margin-left: 2px; font-size: 9px; }
+  html[data-design="paper"] .rivalry-card { grid-template-columns: 1fr 110px; gap: 10px; }
+  html[data-design="paper"] .rivalry-card-top { grid-column: 1 / -1; flex-direction: row; }
+  html[data-design="paper"] .rivalry-players { grid-template-columns: 1fr 20px 1fr; text-align: left; }
+  html[data-design="paper"] .rivalry-players h3 { font-size: 16px; }
+  html[data-design="paper"] .h2h-numbers { grid-template-columns: 1fr 24px 1fr; gap: 4px; }
+  html[data-design="paper"] .h2h-numbers > strong { font-size: 33px; }
+  html[data-design="paper"] .h2h-numbers > span { font-size: 9px; }
+  html[data-design="paper"] .h2h-numbers small { display: none; }
+  html[data-design="paper"] .rivalry-card-bottom { grid-column: 1 / -1; }
+  html[data-design="arcade"] .score-number { padding: 5px 8px; letter-spacing: -5px; }
+  html[data-design="clay"] .score-number { min-width: 80px; padding: 4px 12px; }
+  html[data-design="blueprint"] .score-player { padding: 10px 3px; }
+  html[data-design="blueprint"] .player-name { font-size: 15px; }
+  html[data-design="coral"] .score-number { padding: 10px 18px; }
+  html[data-design="coral"] .live-score-panel .score-number { font-size: 64px; }
+  html[data-design="coral"] .rung-button { padding-left: 15px; }
+  html[data-design="stadium"] .scoreboard { grid-template-columns: minmax(0, 1fr) 52px minmax(0, 1fr); }
+  html[data-design="stadium"] .score-player { grid-template-columns: 1fr; padding: 8px; text-align: center; gap: 2px; }
+  html[data-design="stadium"] .player-name { font-size: 21px; }
+  html[data-design="stadium"] .score-divider span { white-space: normal; }
+  html[data-design="stadium"] .rung-column { grid-template-columns: 1fr; }
+  html[data-design="stadium"] .rung-button { min-height: 48px; align-items: center; }
+  html[data-design="stadium"] .rung-button > span:nth-child(2) { flex-basis: auto; }
+  html[data-design="forest"] .stat-card { border-bottom: 1px solid var(--line); }
+  html[data-design="forest"] .stat-card:nth-child(2n) { border-right: 0; }
+  html[data-design="forest"] .stat-card:nth-last-child(-n + 2) { border-bottom: 0; }
+}
+@media (max-width: 370px) {
+  html[data-design] .header-inner { gap: 12px; }
+  html[data-design] .brand { font-size: 21px; gap: 6px; }
+  html[data-design] .connection { font-size: 9px; }
+  html[data-design] .live-score-panel .score-number { font-size: 64px; }
+  html[data-design] .player-name { font-size: 16px; }
+  html[data-design="coral"] .live-score-panel .score-number { font-size: 56px; }
+  html[data-design="coral"] .score-number { padding: 10px 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-design] *, html[data-design] *::before, html[data-design] *::after { scroll-behavior: auto; transition: none; }
+  html[data-design] .rung-button:active { transform: none; }
+}
+
+/* Distribution families are different ways to read the same player records. */
+html[data-design] .player-breakdown > header h3 { color: var(--side); }
+html[data-design] .danger-actions button:hover { color: var(--error-text); }
+html[data-design] .distribution-layout-table .player-breakdown { border-radius: 0; border-width: 1px 0; }
+html[data-design] .distribution-layout-dots .tally-dots { gap: 5px; }
+html[data-design] .distribution-layout-dots .tally-dots i { width: 7px; height: 7px; }
+html[data-design] .distribution-layout-field .player-breakdown { border: 2px solid var(--line); }
+html[data-design] .distribution-layout-field .field-rows { border-radius: 0; }
+html[data-design] .distribution-layout-stacked .distribution-stack { min-height: 36px; border-radius: 0; }
+html[data-design] .distribution-layout-donut .player-breakdown { border: 0; background: var(--panel-light); }
+html[data-design] .distribution-layout-donut .distribution-donut > span { background: var(--panel-light); }
+html[data-design] .distribution-layout-bars .distribution-row { margin-bottom: 18px; }
+html[data-design] .distribution-layout-bars .distribution-track { height: 6px; }
+@media (min-width: 850px) {
+  html[data-design] .distribution-layout-table .breakdown-grid { grid-template-columns: 1fr; gap: 0; }
+  html[data-design] .distribution-layout-table .player-breakdown { display: grid; grid-template-columns: 170px 1fr; gap: 10px 30px; }
+  html[data-design] .distribution-layout-table .player-breakdown > header { flex-direction: column; align-items: flex-start; justify-content: flex-start; border-bottom: 0; margin: 0; }
+  html[data-design] .distribution-layout-table .breakdown-sections { grid-template-columns: 1fr 1fr; }
+  html[data-design] .distribution-layout-table .breakdown-note { grid-column: 2; }
+}
+
+/* Scoring families retain a left/right player boundary at every width. */
+html[data-design] .scorer-layout-rows .rung-button { flex-wrap: nowrap; min-height: 48px; }
+html[data-design] .scorer-layout-rows .rung-button > span:nth-child(2) { flex-basis: auto; }
+html[data-design] .scorer-layout-rows .rung-illustration { display: none; }
+html[data-design] .scorer-layout-rows .rung-button > b { position: static; margin-left: auto; }
+html[data-design] .scorer-layout-grid .rung-column { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+html[data-design] .scorer-layout-grid .rung-button { min-height: 82px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 9px; position: relative; }
+html[data-design] .scorer-layout-grid .rung-button > b { position: absolute; right: 10px; top: 10px; font-size: 20px; }
+html[data-design] .scorer-layout-grid .rung-button > span:nth-child(2) { flex-basis: auto; }
+html[data-design] .scorer-layout-grid .rung-illustration { width: 45px; }
+html[data-design] .scorer-layout-pitch .rung-controls { padding: 16px; border: 1px solid var(--line); gap: 40px; background: linear-gradient(90deg, transparent calc(50% - .5px), var(--line) 50%, transparent calc(50% + .5px)); }
+html[data-design] .scorer-layout-pitch .rung-button { border-radius: 0; border-width: 0 0 2px; border-bottom-color: var(--side); }
+@media (max-width: 700px) {
+  html[data-design] .scorer-layout-grid .rung-controls { gap: 12px; }
+  html[data-design] .scorer-layout-grid .rung-column { gap: 6px; }
+  html[data-design] .scorer-layout-grid .rung-button { padding: 9px 5px; min-height: 80px; gap: 8px; align-items: center; text-align: center; }
+  html[data-design] .scorer-layout-grid .rung-button > span:nth-child(2) { font-size: 10px; padding: 0; }
+  html[data-design] .scorer-layout-grid .rung-button > b { display: none; }
+  html[data-design] .scorer-layout-pitch .rung-controls { gap: 18px; padding: 9px; }
+  html[data-design] .scorer-layout-pitch .rung-button { padding: 10px 8px; }
+}
