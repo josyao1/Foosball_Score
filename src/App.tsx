@@ -38,7 +38,7 @@ export function App() {
           </nav>
           <span className="connection">
             <i className="dot" />
-            {store.cloud ? "Shared table" : "Local demo"}
+            {store.cloud ? "Shared table" : "Local table"}
           </span>
         </div>
       </header>
@@ -47,8 +47,7 @@ export function App() {
         {!store.cloud && (
           <div className="demo-banner">
             <span>
-              <span className="demo-badge">Demo</span>Sample rivalries to
-              explore. Changes stay in this browser.
+              <span className="demo-badge">Local</span>Changes stay in this browser.
             </span>
             <button className="text-button" onClick={() => setClear(true)}>
               Start fresh
@@ -103,7 +102,7 @@ export function App() {
         </span>
         <span>
           <Wifi size={13} />
-          {store.cloud ? "Shared with your friends" : "Your browser, your demo"}
+          {store.cloud ? "Shared with your friends" : "Saved in this browser"}
         </span>
       </footer>
       {clear && (

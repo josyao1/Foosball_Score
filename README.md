@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Open the printed local URL. With no Supabase key, the app uses clearly labeled sample rivalries in browser local storage. Demo changes persist across reloads. **Start fresh** clears only that browser’s demo data. Demo records are never uploaded automatically.
+Open the printed local URL. With no Supabase key, the app starts with an empty local table in browser storage. Local changes persist across reloads. **Start fresh** clears only that browser’s local table. Local records are never uploaded automatically.
 
 ## Supabase setup
 
@@ -68,3 +68,15 @@ Superdesign exploration artifacts are recorded in `.superdesign/`; the implement
 - [Supabase Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)
 - [Vite environment variables](https://vite.dev/guide/env-and-mode)
 - [Vercel deployments](https://vercel.com/docs/deployments)
+
+### Record book
+
+The temporary sample preview has been retired. Its isolated browser storage is
+cleared on app startup; existing shared and ordinary local records are preserved.
+No sample games are created in the application.
+
+The rivalry record book is derived from finished games. Click a record to open
+its game and select the goal sequence in the momentum chart. Quickest
+wins use the last goal timestamp and exclude early finishes and games that
+continued after a winning score. Runs and bursts include opponent own goals;
+all-rung achievements exclude them. Corrections and deletions update records.

@@ -10,6 +10,7 @@ import { useStore } from "../lib/store";
 import { RivalrySummary } from "../components/RivalrySummary";
 import { ConfirmDialog } from "../components/Dialog";
 import { RivalryBreakdown } from "../components/RivalryBreakdown";
+import { RecordBook } from "../components/Records";
 import { GameCard } from "./Home";
 export function RivalryPage() {
   const design=useDesign();
@@ -131,6 +132,7 @@ export function RivalryPage() {
           </div>
         )}
       </section>
+      <RecordBook games={games} rivalry={r}/>
       <div className="danger-actions"><button className="text-button muted" disabled={store.busy} onClick={()=>setDeleteSnapshot(Object.fromEntries(games.map(g=>[g.id,g.revision])))}><Trash2 size={15}/>Delete rivalry</button></div>
       {deleteSnapshot&&<ConfirmDialog title="Delete rivalry?" description={`Delete ${r.player_a} vs ${r.player_b} and all ${Object.keys(deleteSnapshot).length} games and their goals? This cannot be undone.`} confirm="Delete rivalry" danger onClose={()=>setDeleteSnapshot(null)} onConfirm={async()=>{await store.deleteRivalry(r.id,deleteSnapshot);navigate('/')}}/>}
     </>

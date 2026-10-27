@@ -1,5 +1,4 @@
 import type { Data, Game, Rivalry } from "./types";
-import { createDemoData } from "./demo";
 export interface Repository {
   load(): Promise<Data>;
   createRivalry(a: string, b: string): Promise<Rivalry>;
@@ -21,9 +20,10 @@ export class LocalRepository implements Repository {
   constructor(
     private storage: Pick<Storage, "getItem" | "setItem">,
     private seed?: Data,
+    private key = STORAGE_KEY,
   ) {}
   private read(): Data {
-    const raw = this.storage.getItem(STORAGE_KEY);
+    const raw = this.storage.getItem(this.key);
     if (raw) {
       try {
         const d = JSON.parse(raw);
@@ -36,13 +36,13 @@ export class LocalRepository implements Repository {
         );
       }
     }
-    const d = this.seed ?? createDemoData();
+    const d = this.seed ?? { rivalries: [], games: [] };
     this.write(d);
     return d;
   }
   private write(data: Data) {
     try {
-      this.storage.setItem(STORAGE_KEY, JSON.stringify(data));
+      this.storage.setItem(this.key, JSON.stringify(data));
     } catch {
       throw new Error(
         "Browser storage is unavailable or full. Allow site storage before saving.",

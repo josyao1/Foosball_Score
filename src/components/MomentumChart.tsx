@@ -1,3 +1,5 @@
+import { momentWindow, recordLabels } from "../lib/records";
+import type { Moment } from "../lib/records";
 import { useId, useRef, useState } from 'react';
 import type { KeyboardEvent, PointerEvent } from 'react';
 import { clock, creditedSide, duration, gameStats, orderedGoals } from '../lib/stats';
@@ -9,11 +11,12 @@ const LEFT = 54, RIGHT = 690, TOP = 14, CENTER = 94, BOTTOM = 174;
 const exactClock = (ms: number) => `${clock(ms)}.${String(Math.floor(ms) % 1000).padStart(3, '0')}`;
 
 /** Every step is a recorded goal; the horizontal axis is actual elapsed time. */
-export function MomentumChart({ game, rivalry }: { game: Game; rivalry: Rivalry }) {
+export function MomentumChart({ game, rivalry, highlight }: { game: Game; rivalry: Rivalry; highlight?: Moment }) {
   const id = useId().replace(/:/g, '');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const points = useRef<(SVGGElement | null)[]>([]);
   const goals = orderedGoals(game.goals);
+  const highlightedWindow = highlight ? momentWindow(game, highlight) : null;
   const { momentum } = gameStats(game);
   const limit = Math.max(2, ...momentum.map(p => Math.abs(p.lead)));
   const total = Math.max(1, duration(game), ...momentum.map(p => p.elapsed));
@@ -22,7 +25,7 @@ export function MomentumChart({ game, rivalry }: { game: Game; rivalry: Rivalry 
   const steps = momentum.map((p, i) => i ? `H${x(p.elapsed)}V${y(p.lead)}` : `M${LEFT},${CENTER}`).join(' ') + ` H${RIGHT}`;
   const area = `${steps} V${CENTER} H${LEFT} Z`;
   const final = momentum[momentum.length - 1];
-  const selectedIndex = Math.max(0, selectedId ? goals.findIndex(g => g.id === selectedId) : goals.length - 1);
+  const selectedIndex = Math.max(0, selectedId ? goals.findIndex(g => g.id === selectedId) : highlight?.end ?? goals.length - 1);
   const goal = goals[selectedIndex];
   const selected = momentum[selectedIndex + 1];
   const choose = (index: number, focus = false) => {
@@ -48,8 +51,9 @@ export function MomentumChart({ game, rivalry }: { game: Game; rivalry: Rivalry 
     });
     choose(nearest);
   };
-  return <section className="momentum-report" aria-labelledby={`${id}-heading`}>
+  return <section id="momentum" style={{ scrollMarginTop: 100 }} className="momentum-report" aria-labelledby={`${id}-heading`}>
     <header className="momentum-heading"><div><h2 id={`${id}-heading`}>Momentum</h2><p>Goal lead over time</p></div><span className="momentum-result"><small>{game.ended_at ? 'Final' : 'Current'}</small><strong>{final.a} – {final.b}</strong><time>{clock(total)}</time></span></header>
+    {highlight && <p className="record-focus-note">{recordLabels[highlight.kind]} · {clock(highlightedWindow?.startMs ?? 0)}–{clock(highlightedWindow?.endMs ?? 0)}. Shaded below.</p>}
     <div className="momentum-player"><i className="momentum-kit black" aria-hidden="true"/><strong>{rivalry.player_a}</strong><span>Black · leads above</span></div>
     {!goals.length ? <div className="momentum-empty"><strong>Tied · 0 – 0</strong><p>The first goal will start the momentum chart.</p></div> : <>
       <div className="momentum-visually-hidden">Goal difference</div>
@@ -59,6 +63,7 @@ export function MomentumChart({ game, rivalry }: { game: Game; rivalry: Rivalry 
         {[0, .25, .5, .75, 1].map(fraction => <g key={fraction} className="momentum-time-grid"><line x1={x(total * fraction)} x2={x(total * fraction)} y1={TOP} y2={BOTTOM}/><text x={x(total * fraction)} y={202} textAnchor={fraction === 0 ? 'start' : fraction === 1 ? 'end' : 'middle'}>{clock(total * fraction)}</text></g>)}
         {[-limit, 0, limit].map(lead => <g key={lead} className={`momentum-lead-grid ${lead === 0 ? 'is-tied' : ''}`}><line x1={LEFT} x2={RIGHT} y1={y(lead)} y2={y(lead)}/><text x={LEFT - 10} y={y(lead) + 5} textAnchor="end">{lead === 0 ? 'Tied' : `${lead > 0 ? '+' : '−'}${Math.abs(lead)}`}</text></g>)}
         <path d={area} className="momentum-area-black" clipPath={`url(#${id}-black)`}/><path d={area} className="momentum-area-white" clipPath={`url(#${id}-white)`}/>
+        {highlightedWindow && <rect className="momentum-record-window" x={x(highlightedWindow.startMs)} y={TOP} width={Math.max(3, x(highlightedWindow.endMs) - x(highlightedWindow.startMs))} height={BOTTOM - TOP}/>}
         <path d={steps} className="momentum-step-outline"/><path d={steps} className="momentum-step"/>
         <line className="momentum-selection-line" x1={x(selected.elapsed)} x2={x(selected.elapsed)} y1={TOP} y2={BOTTOM}/>
         {goals.map((g, index) => { const p = momentum[index + 1]; const label = `Goal ${index + 1}, ${exactClock(g.elapsed_ms)}, ${playerName(rivalry, creditedSide(g))} scores, ${p.a} to ${p.b}`; return <g key={g.id} ref={el => { points.current[index] = el; }} role="button" tabIndex={index === selectedIndex ? 0 : -1} aria-label={label} aria-pressed={index === selectedIndex} className={`momentum-point ${index === selectedIndex ? 'selected' : ''}`} onFocus={() => choose(index)} onKeyDown={e => onKey(e, index)} onClick={e => { e.stopPropagation(); choose(index); }}><title>{label}</title><circle className="momentum-point-target" cx={x(p.elapsed)} cy={y(p.lead)} r="14"/><circle className="momentum-point-dot" cx={x(p.elapsed)} cy={y(p.lead)} r={index === selectedIndex ? 6 : 3.5}/></g>; })}

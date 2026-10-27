@@ -1,0 +1,47 @@
+.record-book { margin: 30px 0; min-width: 0; }
+.record-book .section-heading { margin-bottom: 16px; }
+.record-ledger { border-top: 3px solid var(--text); border-bottom: 1px solid var(--line); background: var(--panel); }
+.record-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, .8fr); gap: 20px; align-items: center; padding: 20px 24px; color: var(--text); text-decoration: none; border-top: 1px solid var(--line); }
+.record-row:first-child { border-top: 0; }
+.record-row:hover { background: var(--panel-light); }
+.record-row:focus-visible { outline: 3px solid var(--text); outline-offset: -3px; }
+.record-row h3 { font-size: 19px; margin: 0 0 8px; }
+.record-row p, .record-note, .record-rules p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.record-row p { margin: 6px 0 0; max-width: 38ch; }
+.record-player { display: inline-flex; align-items: center; gap: 7px; overflow-wrap: anywhere; min-width: 0; }
+.record-side { display: inline-block; width: 9px; height: 9px; border: 1px solid #777; border-radius: 50%; flex-shrink: 0; }
+.record-side.a { background: #000; }
+.record-side.b { background: #fff; }
+.record-number { display: grid; gap: 7px; min-width: 0; }
+.record-number > strong { font-size: 28px; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.record-number small, .record-source small { color: var(--muted); font-size: 12px; }
+.record-sequence { display: grid; gap: 7px; }
+.record-source { display: grid; gap: 5px; justify-items: end; text-align: right; font-size: 13px; }
+.record-open { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; text-decoration: underline; text-underline-offset: 3px; }
+.record-unset { grid-template-columns: minmax(0, 1fr) auto; color: var(--muted); }
+.record-unset:hover { background: transparent; }
+.record-empty { padding: 24px 0; border-top: 1px solid var(--line); color: var(--muted); }
+.record-rates, .record-rules { border-bottom: 1px solid var(--line); }
+.record-rates summary, .record-rules summary { cursor: pointer; min-height: 44px; padding: 10px 0; }
+.record-rules summary { font-size: 12px; color: var(--muted); }
+.record-rules p { max-width: 90ch; margin: 10px 0; }
+.record-rate-row { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr)); gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.record-rate-row > :not(:first-child) { text-align: right; }
+.record-rate-row .record-player { justify-content: flex-end; }
+.record-rate-row small { color: var(--muted); white-space: nowrap; }
+.game-highlight-tags { display: flex; flex-wrap: wrap; gap: 6px 8px; max-width: 800px; margin: -16px auto 24px; }
+.game-highlight-tag { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; max-width: 100%; padding: 8px 12px; min-height: 44px; border: 1px solid var(--line); border-radius: 999px; color: var(--text); text-decoration: none; font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+.game-highlight-tag > span { color: var(--muted); min-width: 0; }
+.game-highlight-tag > strong { min-width: 0; font-weight: 600; }
+.game-highlight-tag:hover, .game-highlight-tag.is-selected { background: var(--panel-light); border-color: var(--text); }
+.game-highlight-tag:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.record-focus-note { font-size: 12px; padding: 10px 0; margin: 0; border-top: 1px dashed var(--line); color: var(--text); }
+.momentum-record-window { fill: var(--text); opacity: .12; pointer-events: none; }
+@media (max-width: 700px) {
+  .record-row { grid-template-columns: minmax(0, 1fr) minmax(0, .85fr); gap: 12px; padding: 16px; }
+  .record-row h3 { font-size: 17px; }.record-number > strong { font-size: 24px; }
+  .record-source { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; text-align: left; border-top: 1px dashed var(--line); padding-top: 10px; }
+  .record-open { margin: 0; }.record-source small { flex-basis: 100%; order: 1; }
+  .record-row p { font-size: 11px; }
+  .record-rate-row { font-size: 12px; gap: 8px; }
+}

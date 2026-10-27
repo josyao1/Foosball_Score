@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Flag,
@@ -9,6 +9,8 @@ import {
   CircleCheck,
   Trash2,
 } from "lucide-react";
+import { GameHighlightTags } from "../components/Records";
+import { selectedMoment } from "../lib/records";
 import { gameTime } from "../lib/time";
 import { useStore } from "../lib/store";
 import { changeGoal, removeGoal } from "../lib/mutations";
@@ -31,6 +33,8 @@ import { ConfirmDialog } from "../components/Dialog";
 import { Momentum, RungStats, Timeline } from "../components/GameReport";
 export function GamePage() {
   const design=useDesign();
+  const [searchParams] = useSearchParams();
+  const recordKey = searchParams.get("record");
   const { id } = useParams(),
     store = useStore(),
     navigate = useNavigate(),
@@ -43,6 +47,9 @@ export function GamePage() {
       null,
     ),
     [removing, setRemoving] = useState<Goal | null>(null);
+  useEffect(() => {
+    if (recordKey) document.getElementById("momentum")?.scrollIntoView?.({ block: "start" });
+  }, [id, recordKey]);
   useEffect(() => {
     const i = window.setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(i);
@@ -63,6 +70,7 @@ export function GamePage() {
         </Link>
       </div>
     );
+  const highlight = selectedMoment(game, recordKey);
   const live = !game.ended_at,
     s = score(game.goals),
     w = winner(game),
@@ -216,8 +224,9 @@ export function GamePage() {
         </div>
       ) : (
         <>
+          <GameHighlightTags game={game} rivalry={r} selected={highlight}/>
           <div className="report-grid">
-            <Momentum game={game} rivalry={r} />
+            <Momentum key={`${game.id}-${recordKey}`} game={game} rivalry={r} highlight={highlight} />
             <RungStats game={game} rivalry={r} />
           </div>
           <Timeline
