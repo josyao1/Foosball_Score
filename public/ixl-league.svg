@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="36" height="36" role="img" aria-labelledby="logo-title">
+  <title id="logo-title">IXL League foosball logo</title>
+  <rect width="36" height="36" rx="8" fill="#F5E9D6"/>
+
+  <!-- Table and quiet field markings. -->
+  <rect x="3" y="3" width="30" height="30" rx="5" fill="none" stroke="#573A2B" stroke-width="1.25"/>
+  <path d="M12 3h12v3H12zM12 33h12v-3H12z" fill="#573A2B" fill-opacity=".1"/>
+  <path d="M3 18h30" stroke="#573A2B" stroke-width=".75" stroke-opacity=".2"/>
+  <circle cx="18" cy="18" r="5" fill="none" stroke="#573A2B" stroke-width=".75" stroke-opacity=".2"/>
+  <path d="M3 10.5h30M3 26.5h30" stroke="#573A2B" stroke-opacity=".3"/>
+
+  <!-- One continuous rod carrying three molded players. -->
+  <rect x="3" y="17" width="30" height="2" rx="1" fill="#573A2B"/>
+  <rect x="1" y="16.5" width="2" height="3" rx=".5" fill="#E5A93B"/>
+  <rect x="33" y="16.5" width="2" height="3" rx=".5" fill="#E5A93B"/>
+
+  <!-- I. -->
+  <rect x="7.5" y="11" width="5" height="12" rx="1" fill="#1D1D1D"/>
+  <rect x="7.5" y="22" width="5" height="2" rx=".5" fill="#573A2B"/>
+
+  <!-- X: a normal solid player silhouette, with the letter on its body. -->
+  <rect x="15.5" y="11" width="5" height="12" rx="1" fill="#FFFFFF" stroke="#573A2B" stroke-opacity=".4" stroke-width=".35"/>
+  <path d="M16.65 14.7l2.7 4.8m0-4.8l-2.7 4.8" fill="none" stroke="#573A2B" stroke-width=".85" stroke-linecap="round"/>
+  <rect x="15.5" y="22" width="5" height="2" rx=".5" fill="#573A2B"/>
+
+  <!-- L. -->
+  <path d="M24.5 11H27v9h2a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1h-4.5a1 1 0 0 1-1-1V12a1 1 0 0 1 1-1Z" fill="#1D1D1D"/>
+  <rect x="23.5" y="22" width="5" height="2" rx=".5" fill="#573A2B"/>
+
+  <!-- Ball sits clear of the player's foot; panel detail stays legible small. -->
+  <g transform="translate(25.6 27.5)">
+    <circle r="2.65" fill="#FFFFFF" stroke="#1D1D1D" stroke-width=".55"/>
+    <path d="M0-1.12 1.06-.35.66.91H-.66L-1.06-.35Z" fill="#1D1D1D"/>
+    <path d="M0-1.12V-2.4M1.06-.35 2.32-.75M.66.91 1.43 1.97M-.66.91-1.43 1.97M-1.06-.35-2.32-.75" fill="none" stroke="#1D1D1D" stroke-width=".3" stroke-linecap="round"/>
+    <path d="M-.58-2.36 0-1.96.58-2.36M2.09-1.29 1.87-.58 2.43-.18M1.9 1.55 1.18 1.61 1.02 2.23M-1.02 2.23-1.18 1.61-1.9 1.55M-2.43-.18-1.87-.58-2.09-1.29" fill="#1D1D1D"/>
+  </g>
+</svg>

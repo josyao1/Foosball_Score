@@ -26,7 +26,7 @@ export function App() {
       <header className="app-header">
         <div className="header-inner">
           <Link to="/" className="brand">
-            <img src="/favicon.svg" alt="" />
+            <img src="/ixl-league.svg" width="36" height="36" alt="" />
             <span>
               table<span className="brand-light">talk</span>
               <span className="brand-period">.</span>
