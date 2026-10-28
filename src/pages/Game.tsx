@@ -185,7 +185,7 @@ export function GamePage() {
         )}
       </section>
       {live ? (
-        <div className="live-bottom">
+        <div className="live-bottom live-feed-layout">
           <Timeline
             game={game}
             rivalry={r}
@@ -196,8 +196,9 @@ export function GamePage() {
               setDraft(g);
             }}
           />
-          <div className="game-tips">
-            <h3>Scoring</h3>
+          <div className="live-game-footer">
+            <details className="game-help">
+            <summary>Scoring help</summary>
             <p>
               Tap a rung. Regular goals save after 3 seconds. Selecting a flag
               stops the countdown so you can confirm it. Own goals go to the other player.
@@ -206,6 +207,7 @@ export function GamePage() {
               The clock keeps running if you leave. Come back here to pick up
               where you left off.
             </p>
+            </details>
             <span className="save-status">
               <CircleCheck size={14} />
               {store.busy
@@ -254,7 +256,7 @@ export function GamePage() {
           </div>
         </>
       )}
-      <div className="danger-actions"><button className="text-button muted" disabled={store.busy} onClick={()=>openConfirm('delete')}><Trash2 size={15}/>Delete game</button></div>
+      {!live && <div className="danger-actions"><button className="text-button muted" disabled={store.busy} onClick={()=>openConfirm('delete')}><Trash2 size={15}/>Delete game</button></div>}
       {confirm==='delete'&&<ConfirmDialog title="Delete game?" description={`Delete this game (${score(cg.goals).a}–${score(cg.goals).b}) and all of its goals? Rivalry stats will update. This cannot be undone.`} confirm="Delete game" danger onClose={()=>setConfirm(null)} onConfirm={async()=>{await store.deleteGame(cg);navigate(`/rivalry/${r.id}`)}}/>}
       {draft && (
         <GoalDialog
