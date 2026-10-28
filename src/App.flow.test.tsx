@@ -223,3 +223,22 @@ it('recovers from unreadable local data through the visible reset control', asyn
   fireEvent.click(screen.getByRole('link', { name: 'All rivalries' }));
   expect(await screen.findByRole('heading', { name: 'No rivalries yet' })).toBeTruthy();
 });
+
+it('automatically commits a tapped regular goal through the real store and keeps its tap time', async () => {
+  vi.useFakeTimers();
+  try {
+    vi.setSystemTime(new Date('2026-01-01T00:00:01.234Z'));
+    seed({ rivalries: [rivalry], games: [baseGame] });
+    openApp('/game/g');
+    await act(async () => {});
+    fireEvent.click(screen.getByRole('button', { name: 'Ada goalie goal' }));
+    expect(screen.getByText('Regular goal saves in 3…')).toBeTruthy();
+    await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    const saved = stored().games[0];
+    expect(saved.goals).toHaveLength(1);
+    expect(saved.goals[0]).toMatchObject({ actor_side: 'a', rung: 'goalie', flags: [], elapsed_ms: 1234, occurred_at: '2026-01-01T00:00:01.234Z' });
+    expect(score(saved.goals)).toEqual({ a: 1, b: 0 });
+    expect(saved.revision).toBe(2);
+  } finally { vi.useRealTimers(); }
+});

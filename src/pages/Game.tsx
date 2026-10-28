@@ -9,6 +9,7 @@ import {
   CircleCheck,
   Trash2,
 } from "lucide-react";
+import { ScreenAwake } from "../components/ScreenAwake";
 import { GameHighlightTags } from "../components/Records";
 import { selectedMoment } from "../lib/records";
 import { gameTime } from "../lib/time";
@@ -136,6 +137,7 @@ export function GamePage() {
           <span>{clock(duration(game, now))}</span>
           <span className="clock-rule">First to 10 · win by 2</span>
         </div>
+        {live && <ScreenAwake key={game.id}/>}
         <div aria-live="polite" aria-atomic="true">
           <GameScoreboard
             rivalry={r}
@@ -197,8 +199,8 @@ export function GamePage() {
           <div className="game-tips">
             <h3>Scoring</h3>
             <p>
-              Tap a rung, add any shot flags, then save. Own goals go to the
-              other player.
+              Tap a rung. Regular goals save after 3 seconds. Selecting a flag
+              stops the countdown so you can confirm it. Own goals go to the other player.
             </p>
             <p>
               The clock keeps running if you leave. Come back here to pick up

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CornerUpRight, Zap, Undo2, Check } from "lucide-react";
 import { Dialog } from "./Dialog";
 import { clock } from "../lib/stats";
@@ -20,9 +20,58 @@ export function GoalDialog({
   const [draft, setDraft] = useState(goal),
     [pending, setPending] = useState(false),
     [error, setError] = useState("");
+  const [autoEnabled, setAutoEnabled] = useState(!editing && goal.flags.length === 0);
+  const [secondsLeft, setSecondsLeft] = useState(3);
+  const autoAllowed = useRef(autoEnabled), inFlight = useRef(false), dismissed = useRef(false), mounted = useRef(false);
+  const latestSave = useRef<() => Promise<void>>(async () => {});
+  function stopAutoSave() {
+    autoAllowed.current = false;
+    setAutoEnabled(false);
+  }
+  function dismiss() {
+    dismissed.current = true;
+    stopAutoSave();
+  }
+  async function save() {
+    if (inFlight.current || dismissed.current || !mounted.current) return;
+    inFlight.current = true;
+    stopAutoSave();
+    setPending(true);
+    setError("");
+    try {
+      await onSave(draft);
+      if (mounted.current) {
+        dismissed.current = true;
+        onClose();
+      }
+    } catch (e) {
+      inFlight.current = false;
+      if (mounted.current) {
+        setError(e instanceof Error ? e.message : "Could not save the goal.");
+        setPending(false);
+      }
+    }
+  }
+  // The page clock/polling can rerender without restarting the deadline or using a stale game revision.
+  useLayoutEffect(() => { latestSave.current = save; });
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+  useEffect(() => {
+    if (editing || !autoEnabled) return;
+    const deadline = Date.now() + 3000;
+    const tick = window.setInterval(() => setSecondsLeft(Math.max(0, Math.ceil((deadline - Date.now()) / 1000))), 250);
+    const timeout = window.setTimeout(() => {
+      if (autoAllowed.current && !dismissed.current) void latestSave.current();
+    }, 3000);
+    return () => { clearInterval(tick); clearTimeout(timeout); };
+  }, [editing, autoEnabled]);
   const own = draft.flags.includes("own_goal"),
     credited = own ? otherSide(draft.actor_side) : draft.actor_side;
   function toggle(flag: GoalFlag) {
+    if (inFlight.current || dismissed.current) return;
+    stopAutoSave();
     setDraft((g) => ({
       ...g,
       flags: g.flags.includes(flag)
@@ -33,21 +82,11 @@ export function GoalDialog({
     }));
   }
   return (
-    <Dialog title={editing ? "Edit goal" : "Add goal"} onClose={onClose} dismissible={!pending}>
+    <Dialog title={editing ? "Edit goal" : "Add goal"} onClose={() => { dismiss(); onClose(); }} onDismiss={dismiss} dismissible={!pending}>
       <form
-        onSubmit={async (e) => {
+        onSubmit={(e) => {
           e.preventDefault();
-          if (pending) return;
-          setPending(true);
-          try {
-            await onSave(draft);
-            onClose();
-          } catch (e) {
-            setError(
-              e instanceof Error ? e.message : "Could not save the goal.",
-            );
-            setPending(false);
-          }
+          void save();
         }}
       >
         <div className={`goal-preview side-${credited}`}>
@@ -127,6 +166,8 @@ export function GoalDialog({
               key={flag}
               className={`flag-option ${draft.flags.includes(flag) ? "selected" : ""}`}
               aria-pressed={draft.flags.includes(flag)}
+              onPointerDown={stopAutoSave}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") stopAutoSave(); }}
               onClick={() => toggle(flag)}
             >
               <Icon size={20} />
@@ -145,6 +186,11 @@ export function GoalDialog({
             ? `${playerName(rivalry, draft.actor_side)} made the own goal. ${playerName(rivalry, credited)} gets the point.`
             : "Leave all off for a regular goal. Dunk and bank can be combined."}
         </p>
+        {!editing && !pending && (
+          <p className="goal-auto-save" role="status">
+            {autoEnabled ? `Regular goal saves in ${secondsLeft}…` : "Auto-save stopped. Confirm when ready."}
+          </p>
+        )}
         {error && (
           <p className="form-error" role="alert">
             {error}

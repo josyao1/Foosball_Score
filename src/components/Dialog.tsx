@@ -5,11 +5,13 @@ export function Dialog({
   title,
   onClose,
   dismissible = true,
+  onDismiss,
   children,
 }: {
   title: string;
   onClose: () => void;
   dismissible?: boolean;
+  onDismiss?: () => void;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null),
@@ -25,6 +27,7 @@ export function Dialog({
       aria-labelledby={id}
       onCancel={(e) => {
         if (!dismissible) e.preventDefault();
+        else onDismiss?.();
       }}
       onClose={(e) => {
         if (!e.currentTarget.open && dismissible) onClose();
@@ -36,7 +39,7 @@ export function Dialog({
           className="icon-button"
           aria-label="Close dialog"
           disabled={!dismissible}
-          onClick={() => ref.current?.close()}
+          onClick={() => { onDismiss?.(); ref.current?.close(); }}
         >
           <X size={20} />
         </button>

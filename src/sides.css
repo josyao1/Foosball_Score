@@ -151,9 +151,9 @@ html[data-design] .rung-button:focus-visible { outline: 3px solid var(--text); o
 /* Scores remain bare; the kit dots identify sides. */
 html[data-design] :is(.rc-record-numbers > .rc-a, .rc-record-numbers > .rc-b, .rc-broadcast-result .rc-a, .rc-broadcast-result .rc-b, .rc-matrix-grid dd.rc-a, .rc-matrix-grid dd.rc-b) { color: var(--text); background: none; box-shadow: none; padding: 0; }
 .ixl-league { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); margin-left: 16px; white-space: nowrap; }
-.ixl-league svg { width: 36px; height: 16px; }
+.ixl-league svg { width: 43px; height: 16px; flex-shrink: 0; }
 .ixl-league > span { font-size: 11px; letter-spacing: .04em; }
-@media(max-width:600px) { .ixl-league { margin-left: 0; gap: 4px; } .ixl-league svg { width: 29px; } .ixl-league > span { font-size: 10px; } }
+@media(max-width:600px) { .ixl-league { margin-left: 0; gap: 4px; } .ixl-league svg { width: 35px; } .ixl-league > span { font-size: 10px; } }
 
 @media(max-width:600px) { .header-inner { gap: 12px; flex-wrap: wrap; height: auto; min-height: 72px; padding-block: 12px; } .header-inner .connection { font-size: 10px; } .header-inner .brand { font-size: 22px; } .header-inner .brand img { width: 25px; height: 25px; } }
 

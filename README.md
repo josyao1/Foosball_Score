@@ -37,12 +37,13 @@ Live at [foosball-score.vercel.app](https://foosball-score.vercel.app). The sepa
 ## Match rules
 
 - First to **10**, win by **2**. The app announces a winning score; **Finish game** confirms the result. Early finishes are allowed; ties count as draws and break winning streaks.
-- Tap the rung of the player who hit the ball. Timestamp locks at that tap, while the dialog lets you choose a regular goal, dunk, bank, or own goal.
+- Tap the rung of the player who hit the ball. The original tap timestamp is preserved. A regular goal saves automatically after 3 seconds; choosing any special flag stops that countdown so you can select flags and confirm manually. Closing the popup cancels the goal. Editing existing goals is always manual; failed saves stay open for review and manual retry.
 - **Own goal** credits the opponent; the recorded rung belongs to the player who made the mistake. Own goals are excluded from offensive rung totals and counted separately. Dunk and bank can combine; own goal is exclusive.
 - Undo the latest live goal. Completed games allow goal corrections/removal; scores and rivalry stats update automatically. An empty game cannot be finished.
 - Game dates and start times use **America/Los_Angeles**, including automatic PST/PDT changes. Goal timestamps are elapsed MM:SS.
 - Game and rivalry deletion require confirmation and reject stale snapshots. Deleting a rivalry removes only its own games and goals.
 - The clock includes time away from the page. Refresh resumes the same game; one live game per rivalry.
+- Live games request a native screen wake lock while the tab is visible. **Screen awake** confirms a granted lock; use **Turn off** for normal screen timeout. Switching tabs/apps, finishing, or leaving releases it; returning to the live game requests it again. A browser or Low Power Mode can refuse/release the request, which is shown honestly with a retry option. Requires HTTPS (the Vercel site) or trusted localhost; a phone opening a computer’s plain HTTP LAN address may not support it.
 - **Biggest blowout:** largest final margin. **Biggest choke:** largest lead the eventual loser held. Only completed games count toward rivalry records.
 - Cloud writes are atomic and revision checked; simultaneous scorers get a visible conflict rather than an overwritten game. State refreshes every 8 seconds and on focus. Cloud mode needs a connection; failed saves stay open for retry. There is no offline cloud queue.
 

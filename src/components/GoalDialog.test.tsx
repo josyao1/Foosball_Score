@@ -1,0 +1,101 @@
+// @vitest-environment jsdom
+import { StrictMode } from 'react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { GoalDialog } from './GoalDialog';
+import type { Goal, Rivalry } from '../lib/types';
+const rivalry: Rivalry = { id: 'r', player_a: 'Josh', player_b: 'Brooks', created_at: '2026-10-27T18:00:00Z' };
+const goal: Goal = { id: 'g', actor_side: 'a', rung: 'goalie', flags: [], elapsed_ms: 1234, occurred_at: '2026-10-27T18:00:01.234Z' };
+const tick = async (ms: number) => { await act(async () => { await vi.advanceTimersByTimeAsync(ms); }); };
+beforeEach(() => {
+  vi.useFakeTimers();
+  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, value: function (this: HTMLDialogElement) { this.open = true; } });
+  Object.defineProperty(HTMLDialogElement.prototype, 'close', { configurable: true, value: function (this: HTMLDialogElement) { if (this.open) { this.open = false; queueMicrotask(() => this.dispatchEvent(new Event('close'))); } } });
+});
+afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
+it('saves exactly once at three seconds with the original tap timestamp, including StrictMode and rerenders', async () => {
+  const save = vi.fn().mockResolvedValue(undefined), close = vi.fn();
+  const view = render(<StrictMode><GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={close}/></StrictMode>);
+  expect(screen.getByText('Regular goal saves in 3…')).toBeTruthy();
+  await tick(1000);
+  expect(screen.getByText('Regular goal saves in 2…')).toBeTruthy();
+  view.rerender(<StrictMode><GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={close}/></StrictMode>);
+  await tick(1999);
+  expect(save).not.toHaveBeenCalled();
+  await tick(1);
+  expect(save).toHaveBeenCalledExactlyOnceWith(goal);
+  expect(close).toHaveBeenCalledOnce();
+  await tick(5000);
+  expect(save).toHaveBeenCalledOnce();
+});
+it('permanently stops auto-save after any flag interaction, even if toggled back off', async () => {
+  const save = vi.fn().mockResolvedValue(undefined);
+  render(<GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={() => {}}/>);
+  await tick(2999);
+  fireEvent.click(screen.getByRole('button', { name: /Dunk/ }));
+  fireEvent.click(screen.getByRole('button', { name: /Dunk/ }));
+  await tick(5000);
+  expect(save).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: /Add goal for Josh/ }));
+  await tick(0);
+  expect(save).toHaveBeenCalledExactlyOnceWith(goal);
+});
+it('uses the latest save callback and supports combined flags after cancelling the countdown', async () => {
+  const oldSave = vi.fn(), save = vi.fn().mockResolvedValue(undefined);
+  const view = render(<GoalDialog goal={goal} rivalry={rivalry} onSave={oldSave} onClose={() => {}}/>);
+  await tick(1000);
+  view.rerender(<GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={() => {}}/>);
+  await tick(2000);
+  expect(oldSave).not.toHaveBeenCalled();
+  expect(save).toHaveBeenCalledExactlyOnceWith(goal);
+  view.unmount(); save.mockClear();
+  render(<GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={() => {}}/>);
+  fireEvent.click(screen.getByRole('button', { name: /Dunk/ }));
+  fireEvent.click(screen.getByRole('button', { name: /Bank shot/ }));
+  await tick(4000);
+  expect(save).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: /Add goal for Josh/ }));
+  await tick(0);
+  expect(save.mock.calls[0][0].flags).toEqual(['dunk', 'bank']);
+});
+it.each(['close', 'escape', 'unmount'])('cancels before the deadline on %s', async mode => {
+  const save = vi.fn(), close = vi.fn();
+  const view = render(<GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={close}/>);
+  await tick(2999);
+  if (mode === 'close') fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
+  if (mode === 'escape') fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
+  if (mode === 'unmount') view.unmount();
+  await tick(1000);
+  expect(save).not.toHaveBeenCalled();
+});
+it('does not double-submit when manual save races the timeout or a pending save is submitted again', async () => {
+  let resolve!: () => void;
+  const save = vi.fn(() => new Promise<void>(r => { resolve = r; }));
+  render(<GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={() => {}}/>);
+  await tick(2999);
+  const form = screen.getByRole('dialog').querySelector('form')!;
+  fireEvent.submit(form); fireEvent.submit(form);
+  await tick(5000);
+  expect(save).toHaveBeenCalledOnce();
+  await act(async () => resolve());
+});
+it('leaves failed automatic saves open for manual retry without automatically retrying', async () => {
+  const save = vi.fn().mockRejectedValueOnce(new Error('Connection interrupted')).mockResolvedValue(undefined), close = vi.fn();
+  render(<GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={close}/>);
+  await tick(3000);
+  expect(screen.getByRole('alert').textContent).toContain('Connection interrupted');
+  expect(close).not.toHaveBeenCalled();
+  await tick(8000);
+  expect(save).toHaveBeenCalledOnce();
+  fireEvent.click(screen.getByRole('button', { name: /Add goal for Josh/ }));
+  await tick(0);
+  expect(save).toHaveBeenCalledTimes(2);
+  expect(close).toHaveBeenCalledOnce();
+});
+it('never automatically saves an edit', async () => {
+  const save = vi.fn();
+  render(<GoalDialog goal={goal} rivalry={rivalry} editing onSave={save} onClose={() => {}}/>);
+  await tick(10000);
+  expect(save).not.toHaveBeenCalled();
+  expect(screen.queryByText(/Regular goal saves/)).toBeNull();
+});

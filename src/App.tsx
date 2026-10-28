@@ -32,7 +32,7 @@ export function App() {
               <span className="brand-period">.</span>
             </span>
           </Link>
-          <span className="ixl-league" aria-label="IXL League"><svg viewBox="0 0 100 38" aria-hidden="true"><path d="M1 1h15v36H1zM20 1h20l12 15L64 1h20L63 20l13 17H56L44 23 33 37H16l19-20zM79 1h15v25h6v11H79z" fill="currentColor"/></svg><span>League</span></span>
+          <span className="ixl-league" aria-label="IXL League"><svg viewBox="0 0 116 38" aria-hidden="true"><path d="M1 1h15v36H1zM22 1h16l10 11L58 1h16L56 19l18 18H58L48 26 38 37H22l18-18zM79 1h15v25h18v11H79z" fill="currentColor"/></svg><span>League</span></span>
           <nav aria-label="Main navigation">
             <Link to="/">Rivalries</Link>
           </nav>
