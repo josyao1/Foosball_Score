@@ -1,15 +1,68 @@
-import { playerDistribution, GOAL_TYPES } from '../lib/distribution';
-import { RUNGS, playerName } from '../lib/types';
-import type { Game,Rivalry,Side } from '../lib/types';
+import { useEffect, useId, useState } from 'react';
+import { completedGamesInPeriod, goalShare, GOAL_TYPES, playerDistribution, STATS_PERIODS } from '../lib/distribution';
+import type { ShotType, StatsPeriod } from '../lib/distribution';
+import { playerName } from '../lib/types';
+import type { Game, GoalFlag, Rivalry, Side } from '../lib/types';
+import { GoalBall } from './GoalBall';
+import { RungTable } from './GameRungStats';
 import '../breakdown.css';
-type Entry={label:string;value:number};
-const pct=(n:number,total:number)=>total?Math.round(n/total*100):0;
-function Distribution({entries,total,kind}:{entries:Entry[];total:number;kind:string}){
- if(kind==='table')return <table className="distribution-table"><thead><tr><th scope="col">Type</th><th scope="col">Goals</th><th scope="col">Share</th></tr></thead><tbody>{entries.map(e=><tr key={e.label}><th scope="row">{e.label}</th><td>{e.value}</td><td>{pct(e.value,total)}%</td></tr>)}</tbody></table>;
- if(kind==='donut') {let cursor=0;const segments=entries.map((e,i)=>{const start=cursor;cursor+=total?e.value/total*100:0;return `var(--segment-${i+1}) ${start}% ${cursor}%`});return <div className="donut-layout"><div className="distribution-donut" style={{background:total?`conic-gradient(${segments.join(',')})`:'var(--line)'}} role="img" aria-label={entries.map(e=>`${e.label}: ${e.value}, ${pct(e.value,total)}%`).join('; ')}><span><b>{total}</b><small>goals</small></span></div><ul className="distribution-legend">{entries.map((e,i)=><li key={e.label}><i style={{background:`var(--segment-${i+1})`}}/><span>{e.label}</span><b>{e.value}</b><small>{pct(e.value,total)}%</small></li>)}</ul></div>}
- if(kind==='stacked')return <><div className="distribution-stack" role="img" aria-label={entries.map(e=>`${e.label}: ${e.value}`).join('; ')}>{entries.filter(e=>e.value).map(e=><span key={e.label} style={{flex:e.value,background:`var(--segment-${entries.indexOf(e)+1})`}}>{pct(e.value,total)>=12?`${pct(e.value,total)}%`:''}</span>)}</div><ul className="distribution-legend">{entries.map((e,i)=><li key={e.label}><i style={{background:`var(--segment-${i+1})`}}/><span>{e.label}</span><b>{e.value}</b><small>{pct(e.value,total)}%</small></li>)}</ul></>;
- return <div className={`distribution-rows ${kind==='field'?'field-rows':''}`}>{entries.map(e=><div className="distribution-row" key={e.label}><div><span>{e.label}</span><strong>{e.value}<small>{pct(e.value,total)}%</small></strong></div>{kind==='dots'?<div className="tally-dots" aria-hidden="true">{Array.from({length:20},(_,i)=><i key={i} className={i<Math.round(pct(e.value,total)/5)?'filled':''}/>)}</div>:<div className="distribution-track"><i style={{width:`${pct(e.value,total)}%`}}/></div>}</div>)}</div>
-}
-export function RivalryBreakdown({games,rivalry,layout='bars'}:{games:Game[];rivalry:Rivalry;layout?:string}){
- const d=playerDistribution(games);return <section className={`rivalry-breakdown distribution-layout-${layout}`}><div className="section-heading"><h2>Player stats</h2><span className="muted breakdown-scope">Completed games</span></div><div className="breakdown-grid">{(['a','b'] as Side[]).map(side=><article key={side} className={`panel player-breakdown side-${side}`}><header><h3>{playerName(rivalry,side)}</h3><span>{d[side].scored} goals scored</span></header><div className="breakdown-sections"><section><h4>Goals by rung</h4><Distribution entries={RUNGS.map(r=>({label:r[0].toUpperCase()+r.slice(1),value:d[side].rungs[r]}))} total={d[side].scored} kind={layout}/></section><section><h4>Goal types</h4><Distribution entries={GOAL_TYPES.map(([key,label])=>({label,value:d[side].types[key]}))} total={d[side].total} kind={layout==='field'?'stacked':layout}/></section></div><p className="breakdown-note">Own goals made are included in goal types, excluded from rung totals.</p></article>)}</div></section>
+import './rivalry-player-stats.css';
+
+const SIDES:Side[] = ['a', 'b'];
+const FLAGS:Record<ShotType,GoalFlag[]> = {
+ regular:[], dunk:['dunk'], bank:['bank'], combo:['dunk','bank'], own_goal:['own_goal'],
+};
+
+export function RivalryBreakdown({games,rivalry}:{games:Game[];rivalry:Rivalry}) {
+ const id = useId();
+ const [period,setPeriod] = useState<StatsPeriod>('all');
+ const [now,setNow] = useState(Date.now);
+ useEffect(() => {
+  const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+  return () => window.clearInterval(timer);
+ }, []);
+ const completed = completedGamesInPeriod(games,period,Math.max(now,Date.now()));
+ const d = playerDistribution(completed);
+ const periodLabel = STATS_PERIODS.find(([key]) => key === period)![1];
+ return <section className="rivalry-breakdown rivalry-player-stats" aria-labelledby={`${id}-heading`}>
+  <header className="section-heading player-stats-heading">
+   <h2 id={`${id}-heading`}>Player stats</h2>
+   <div className="segmented stats-period" role="group" aria-label="Player stats period">
+    {STATS_PERIODS.map(([key,label]) => <button type="button" key={key}
+     className={period === key ? 'active' : ''} aria-pressed={period === key}
+     aria-label={`${key === 'all' ? 'All time' : key}: ${label}`}
+     onClick={() => {setNow(Date.now());setPeriod(key)}}>{key === 'all' ? 'All time' : key}</button>)}
+   </div>
+  </header>
+  <div className="panel shared-player-stats">
+   <p className="stats-period-summary" role="status">{periodLabel} · {completed.length} completed {completed.length === 1 ? 'game' : 'games'}</p>
+   {completed.length === 0 && <p className="stats-period-empty">No completed games in this period.</p>}
+   <div className="shared-stats-visuals">
+    <section className="rivalry-rung-section">
+     <h3>Goals by rung</h3>
+     <p className="stats-visual-caption">Count + share of each player’s goals scored</p>
+     <RungTable rungs={{a:d.a.rungs,b:d.b.rungs}} rivalry={rivalry} totals={{a:d.a.scored,b:d.b.scored}}/>
+    </section>
+    <section className="rivalry-type-section">
+     <h3>Goal types</h3>
+     <p className="stats-visual-caption">Count + share of each player’s recorded goals</p>
+     <div className="rung-table-players type-player-headings">
+      {SIDES.map(side => <span key={side} className="rung-table-player"><i className={`stats-kit stats-kit-${side}`} aria-hidden="true"/><strong>{playerName(rivalry,side)}</strong></span>)}
+     </div>
+     <ul className="rivalry-type-list" role="list">
+      {GOAL_TYPES.map(([key,label]) => <li key={key} className={`rivalry-type-row type-${key}`}>
+       <div className="type-share-value type-share-a" role="group" aria-label={`${rivalry.player_a}, ${label}: ${d.a.types[key]} goals, ${goalShare(d.a.types[key],d.a.total)}%`}>
+        <strong className={d.a.types[key] ? '' : 'is-zero'}>{d.a.types[key]}</strong><small>{goalShare(d.a.types[key],d.a.total)}%</small>
+       </div>
+       <div className="type-share-label"><span aria-hidden="true"><GoalBall flags={FLAGS[key]} size={27}/></span><span>{key === 'own_goal' ? 'Own goals made' : label}</span></div>
+       <div className="type-share-value type-share-b" role="group" aria-label={`${rivalry.player_b}, ${label}: ${d.b.types[key]} goals, ${goalShare(d.b.types[key],d.b.total)}%`}>
+        <strong className={d.b.types[key] ? '' : 'is-zero'}>{d.b.types[key]}</strong><small>{goalShare(d.b.types[key],d.b.total)}%</small>
+       </div>
+      </li>)}
+     </ul>
+     <p className="rung-table-note">Each goal counts once. Dunk + bank is its own type. Own goals count for the player who made them, only here.</p>
+    </section>
+   </div>
+  </div>
+ </section>;
 }

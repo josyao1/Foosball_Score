@@ -17,7 +17,6 @@ export function RivalryPage() {
   const { id } = useParams(),
     store = useStore(),
     navigate = useNavigate(),
-    [filter, setFilter] = useState("all"),
 [deleteSnapshot,setDeleteSnapshot]=useState<Record<string,number>|null>(null);
   const r = store.rivalries.find((r) => r.id === id);
   if (!r)
@@ -74,37 +73,15 @@ export function RivalryPage() {
         </button>
       </div>
       <RivalrySummary rivalry={r} games={games} designId={design.id}/>
-      <RivalryBreakdown games={games} rivalry={r} layout={design.statsLayout}/>
+      <RivalryBreakdown games={games} rivalry={r}/>
       <section>
         <div className="section-heading">
           <div>
             <h2>Game history</h2>
           </div>
-          <div className="segmented" aria-label="Filter games">
-            {["all", "finished", "live"].map((f) => (
-              <button
-                key={f}
-                aria-pressed={filter === f}
-                className={filter === f ? "active" : ""}
-                onClick={() => setFilter(f)}
-              >
-                {f === "all"
-                  ? "All games"
-                  : f === "finished"
-                    ? "Finished"
-                    : "Live"}
-              </button>
-            ))}
-          </div>
         </div>
         <div className="game-list">
-          {games
-            .filter(
-              (g) =>
-                filter === "all" ||
-                (filter === "live" ? !g.ended_at : !!g.ended_at),
-            )
-            .map((g) => (
+          {games.map((g) => (
               <GameCard
                 key={g.id}
                 game={g}
@@ -113,14 +90,9 @@ export function RivalryPage() {
               />
             ))}
         </div>
-        {!games.filter(
-          (g) =>
-            filter === "all" ||
-            (filter === "live" ? !g.ended_at : !!g.ended_at),
-        ).length && (
+        {!games.length && (
           <div className="empty-state">
-            <p>{games.length ? "No games in this view." : "No games yet."}</p>
-            {!games.length && (
+            <p>No games yet.</p>
               <button
                 className="button secondary"
                 onClick={() => void start()}
@@ -128,7 +100,6 @@ export function RivalryPage() {
               >
                 Start the first game
               </button>
-            )}
           </div>
         )}
       </section>

@@ -1,68 +1,15 @@
-import {GoalBall, GoalLegend} from "./GoalBall";
-import { Pencil, Trash2, Zap, CornerUpRight, Undo2 } from "lucide-react";
+import {GoalActions} from "./GoalActions";
+import {GoalBall, GoalLegend, goalKind, GOAL_LABELS} from "./GoalBall";
+import { Zap, CornerUpRight, Undo2 } from "lucide-react";
 import {
   clock,
   creditedSide,
-  gameStats,
   orderedGoals,
 } from "../lib/stats";
-import { RUNGS, playerName } from "../lib/types";
+import { playerName } from "../lib/types";
 import type { Game, Goal, Rivalry } from "../lib/types";
 export { MomentumChart as Momentum } from "./MomentumChart";
-export function RungStats({ game, rivalry }: { game: Game; rivalry: Rivalry }) {
-  const s = gameStats(game);
-  return (
-    <section className="panel">
-      <div className="section-heading compact">
-        <div>
-          <h2>Goals by rung</h2>
-          <p>Goals by rung, excluding own goals.</p>
-        </div>
-      </div>
-      <div className="rung-stat-legend">
-        <span className="text-a">{rivalry.player_a}</span>
-        <span className="text-b">{rivalry.player_b}</span>
-      </div>
-      {RUNGS.map((r) => (
-        <div className="rung-stat" key={r}>
-          <strong className="text-a">{s.rungs.a[r]}</strong>
-          <div className="rung-bar left">
-            <i
-              style={{
-                width: `${(s.rungs.a[r] / Math.max(1, ...Object.values(s.rungs.a), ...Object.values(s.rungs.b))) * 100}%`,
-              }}
-            />
-          </div>
-          <span>{r}</span>
-          <div className="rung-bar right">
-            <i
-              style={{
-                width: `${(s.rungs.b[r] / Math.max(1, ...Object.values(s.rungs.a), ...Object.values(s.rungs.b))) * 100}%`,
-              }}
-            />
-          </div>
-          <strong className="text-b">{s.rungs.b[r]}</strong>
-        </div>
-      ))}
-      <div className="shot-totals">
-        {[
-          { label: "Dunks", data: s.dunks },
-          { label: "Bank shots", data: s.banks },
-          { label: "Own goals made", data: s.ownGoals },
-        ].map(({ label, data }) => (
-          <div key={label}>
-            <span>{label}</span>
-            <strong>
-              <em className="text-a">{data.a}</em>
-              <span> / </span>
-              <em className="text-b">{data.b}</em>
-            </strong>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
+export { RungStats } from "./GameRungStats";
 export function Timeline({
   game,
   rivalry,
@@ -101,55 +48,31 @@ export function Timeline({
               <time>{clock(goal.elapsed_ms)}</time>
               <GoalBall flags={goal.flags}/>
               <div className="timeline-description">
-                <strong>{playerName(rivalry, creditedSide(goal))}</strong>
-                <span>
+                <div className="timeline-player"><strong>{playerName(rivalry, creditedSide(goal))}</strong>
+                <div className="goal-tags">
+                  {!!goal.flags.length && <span className={`goal-pill goal-pill-${goalKind(goal.flags)}`}>
+                    {goal.flags.includes('own_goal') ? <Undo2 size={11}/> : goal.flags.includes('dunk') ? <Zap size={11}/> : <CornerUpRight size={11}/>}
+                    {GOAL_LABELS[goalKind(goal.flags)]}
+                  </span>}
+                </div></div>
+                <span className="timeline-detail">
                   {goal.flags.includes("own_goal")
                     ? `${playerName(rivalry, goal.actor_side)} own goal · `
                     : ""}
                   {goal.rung} rung
                 </span>
-                <div className="goal-tags">
-                  {goal.flags.map((f) => (
-                    <span key={f}>
-                      {f === "dunk" ? (
-                        <Zap size={11} />
-                      ) : f === "bank" ? (
-                        <CornerUpRight size={11} />
-                      ) : (
-                        <Undo2 size={11} />
-                      )}{" "}
-                      {f === "own_goal"
-                        ? "Own goal"
-                        : f === "bank"
-                          ? "Bank"
-                          : "Dunk"}
-                    </span>
-                  ))}
-                </div>
               </div>
               <strong className="timeline-score">
-                <span className="text-a">{a}</span>
+                <span className={`text-a ${creditedSide(goal) === "a" ? "timeline-score-changed" : "timeline-score-unchanged"}`}>{a}</span>
                 <span className="muted"> – </span>
-                <span className="text-b">{b}</span>
+                <span className={`text-b ${creditedSide(goal) === "b" ? "timeline-score-changed" : "timeline-score-unchanged"}`}>{b}</span>
               </strong>
-              {onEdit && (
-                <button
-                  className="icon-button"
-                  onClick={() => onEdit(goal)}
-                  aria-label={`Edit goal at ${clock(goal.elapsed_ms)}`}
-                >
-                  <Pencil size={15} />
-                </button>
-              )}
-              {onRemove && (
-                <button
-                  className="icon-button"
-                  onClick={() => onRemove(goal)}
-                  aria-label={`Remove goal at ${clock(goal.elapsed_ms)}`}
-                >
-                  <Trash2 size={15} />
-                </button>
-              )}
+              {(onEdit || onRemove) && <GoalActions
+                time={clock(goal.elapsed_ms)}
+                description={`${playerName(rivalry, creditedSide(goal))} · ${goal.rung} rung${goal.flags.includes('own_goal') ? ` · own goal by ${playerName(rivalry, goal.actor_side)}` : goal.flags.length ? ` · ${goal.flags.join(' + ')}` : ''}`}
+                onEdit={onEdit ? () => onEdit(goal) : undefined}
+                onRemove={onRemove ? () => onRemove(goal) : undefined}
+              />}
             </li>
           ))}
         </ol>

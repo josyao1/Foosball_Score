@@ -75,6 +75,7 @@ it('creates, resumes, scores, finishes early, corrects, removes, and deletes a r
   await screen.findByRole('heading', { name: 'Game result' });
   expect(screen.getByText('Bea wins.')).toBeTruthy();
 
+  fireEvent.click(screen.getByRole('button', { name: 'Goal actions at 0:15' }));
   fireEvent.click(screen.getByRole('button', { name: 'Edit goal at 0:15' }));
   dialog = await screen.findByRole('dialog');
   fireEvent.change(within(dialog).getByLabelText('Player who hit it'), { target: { value: 'a' } });
@@ -82,6 +83,7 @@ it('creates, resumes, scores, finishes early, corrects, removes, and deletes a r
   await confirm('Save correction');
   expect(screen.getByText('Ada wins.')).toBeTruthy();
   expect(stored().games[0].goals.find(g => g.elapsed_ms === 15000)?.rung).toBe('defender');
+  fireEvent.click(screen.getByRole('button', { name: 'Goal actions at 0:15' }));
   fireEvent.click(screen.getByRole('button', { name: 'Remove goal at 0:15' }));
   await confirm('Remove goal');
   expect(screen.getByText('Draw.')).toBeTruthy();
@@ -184,7 +186,8 @@ it('announces win by two but keeps scoring live until the user finishes', async 
 it('rejects an old edit after another tab changes that goal', async () => {
   seed({ rivalries: [rivalry], games: [{ ...baseGame, goals: [goal] }] });
   openApp('/game/g');
-  fireEvent.click(await screen.findByRole('button', { name: 'Edit goal at 0:01' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Goal actions at 0:01' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit goal at 0:01' }));
   const dialog = await screen.findByRole('dialog');
   fireEvent.change(within(dialog).getByLabelText('Rung'), { target: { value: 'middle' } });
   const latest = stored();

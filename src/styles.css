@@ -1102,7 +1102,7 @@ nav a {
   flex: 1;
   min-width: 0;
 }
-.timeline-description > strong {
+.timeline-player > strong {
   font-size: 13px;
   font-weight: 550;
   overflow-wrap: anywhere;
@@ -1135,6 +1135,73 @@ nav a {
   background: #253a45;
   border-radius: 4px;
   padding: 3px 5px;
+}
+.game-report-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+@media (max-width: 900px) {
+  .game-report-overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Balance the paired desktop reports without scaling their text or artwork.
+   Intrinsic grid height still allows long names and record notes to wrap. */
+@media (min-width: 901px) {
+  .game-report-overview {
+    align-items: stretch;
+  }
+  .game-report-overview > .momentum-report {
+    display: flex;
+    flex-direction: column;
+  }
+  .game-report-overview .momentum-plot-wrap {
+    flex-shrink: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+  .game-report-overview .momentum-plot {
+    height: 240px;
+    max-height: 240px;
+  }
+  .game-report-overview > .game-rung-stats {
+    padding: 16px 18px;
+  }
+  .game-report-overview .game-rung-stats > .section-heading {
+    margin-bottom: 12px;
+  }
+  .game-report-overview .rung-table-players {
+    padding-bottom: 7px;
+  }
+  .game-report-overview .rung-table-field {
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+  .game-report-overview .rung-table-row {
+    min-height: 46px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  .game-report-overview .game-goal-types {
+    margin-top: 12px;
+    padding-top: 10px;
+  }
+  .game-report-overview .game-goal-types > h3 {
+    margin-bottom: 8px;
+  }
+  .game-report-overview .game-goal-type-groups {
+    gap: 12px;
+  }
+  .game-report-overview .game-goal-type > header {
+    min-height: 30px;
+    margin-bottom: 4px;
+  }
+  .game-report-overview .game-goal-type dl > div {
+    padding: 3px 0;
+  }
 }
 .report-grid {
   display: grid;
@@ -1878,7 +1945,7 @@ input::placeholder {
   .timeline-dot {
     margin: 0 2px;
   }
-  .timeline-description > strong {
+  .timeline-player > strong {
     font-size: 12px;
   }
   .timeline-description > span {

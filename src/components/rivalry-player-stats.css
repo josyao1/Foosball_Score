@@ -1,0 +1,76 @@
+.rivalry-player-stats .section-heading.player-stats-heading{flex-direction:row;align-items:center;flex-wrap:nowrap;gap:10px}
+.player-stats-heading h2{white-space:nowrap}
+.stats-period{flex-shrink:0;max-width:100%}
+.stats-period button{min-height:40px;min-width:44px;white-space:nowrap}
+.stats-period button:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+.shared-player-stats{min-width:0}
+.stats-period-summary{margin:0 0 20px;font-size:12px;color:var(--muted)}
+.stats-period-empty{margin:0 0 18px;font-size:13px}
+.shared-stats-visuals{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:32px}
+.shared-stats-visuals>section{min-width:0}
+.shared-stats-visuals h3{font-size:22px;margin:0 0 5px}
+.stats-visual-caption{font-size:11px;color:var(--muted);margin:0 0 20px;line-height:1.5}
+.rivalry-type-section{border-left:1px solid var(--line);padding-left:32px}
+.shared-player-stats .rung-table-player{font-size:12px;align-items:center;justify-content:center;text-align:center}
+.shared-player-stats .rung-table-player .stats-kit{margin:0}
+.rung-table-with-shares .rung-table-player{flex-direction:column;gap:5px}
+.rung-table-with-shares .rung-player-name{justify-content:center}
+.rung-table-with-shares .rung-player-name strong{min-width:0;overflow-wrap:anywhere}
+.rung-table-with-shares .rung-table-player small{display:block;font-size:10px;font-weight:400;color:var(--muted);margin-top:0}
+.rung-table-with-shares .rung-table-row{grid-template-columns:56px minmax(0,1fr) 56px;min-height:65px;gap:8px}
+.rung-table-with-shares .rung-field-markings{inset:10px 70px}
+.rung-table-with-shares .rung-table-count{padding:0 3px;font-size:24px;line-height:1.2}
+.rung-table-with-shares .rung-table-count small{display:block;font-size:11px;font-weight:400;color:var(--muted);margin-top:3px}
+.rung-table-with-shares .rung-table-count.is-zero{opacity:1;color:var(--muted)}
+.rivalry-type-list{list-style:none;padding:0;margin:0}
+.rivalry-type-row{display:grid;grid-template-columns:56px minmax(0,1fr) 56px;gap:12px;align-items:center;padding:10px 9px;border-bottom:1px solid var(--line);min-height:57px}
+.rivalry-type-row:last-child{border-bottom:0}
+.type-share-value{text-align:center;font-variant-numeric:tabular-nums;line-height:1.2}
+.type-share-value strong{font-size:23px;font-weight:650}
+.type-share-value .is-zero{font-weight:400;color:var(--muted)}
+.type-share-value small{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+.type-share-label{display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;line-height:1.3;text-align:center}
+.type-share-label>span:first-child{display:flex;flex-shrink:0}
+@media(max-width:800px){
+ .shared-stats-visuals{grid-template-columns:1fr;gap:24px}
+ .rivalry-type-section{border-left:0;border-top:1px solid var(--line);padding:22px 0 0}
+ .shared-player-stats .rung-table{max-width:none}
+}
+@media(max-width:420px){
+ .shared-player-stats{padding:16px 12px}
+ .shared-stats-visuals h3{font-size:20px}
+ .rung-table-with-shares .rung-table-row{grid-template-columns:44px minmax(0,1fr) 44px;gap:4px}
+ .rung-table-with-shares .rung-table-count,.type-share-value strong{font-size:21px}
+ .rivalry-type-row{gap:6px;padding-inline:0;grid-template-columns:44px minmax(0,1fr) 44px}
+}
+@media(max-width:600px){
+ .rivalry-player-stats .player-stats-heading h2{font-size:clamp(17px,4.8vw,22px)}
+ .player-stats-heading .stats-period{width:auto;gap:2px;padding:2px}
+ .player-stats-heading .stats-period button{min-width:30px;min-height:40px;padding:6px;font-size:10px}
+ .player-stats-heading .stats-period button:last-child{min-width:50px}
+}
+
+/* On narrow screens the five types run across the panel, with two compact
+   player totals below each icon. The side markers keep the rows identifiable. */
+@media(max-width:800px){
+ .rivalry-type-section .stats-visual-caption{margin-bottom:12px}
+ .type-player-headings{padding:0 0 12px}
+ .rivalry-type-list{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0}
+ .rivalry-type-row{grid-template-columns:minmax(0,1fr);grid-template-areas:"label" "black" "white";gap:0;padding:0 4px;border-bottom:0;border-right:1px solid var(--line);min-width:0}
+ .rivalry-type-row:last-child{border-right:0}
+ .type-share-label{grid-area:label;flex-direction:column;gap:5px;min-width:0;font-size:10px;justify-content:flex-start;min-height:68px}
+ .type-share-label>span:last-child{overflow-wrap:anywhere}
+ .type-share-a{grid-area:black}
+ .type-share-b{grid-area:white}
+ .type-share-value{padding:7px 0;min-width:0}
+ .type-share-value:before{content:"";display:inline-block;width:7px;height:7px;margin-right:4px;border:1px solid #8b8178;border-radius:50%;vertical-align:2px;background:#141414}
+ .type-share-b:before{background:#fff}
+ .type-share-value strong{font-size:18px}
+ .type-share-value small{font-size:10px;margin-top:2px}
+}
+@media(max-width:420px){
+ .rung-table-with-shares .rung-field-markings{inset:10px 54px}
+ .rung-table-with-shares .rung-table-row{min-height:61px}
+ .rivalry-type-row{padding-inline:2px}
+ .type-share-value:before{margin-right:3px;width:6px;height:6px}
+}

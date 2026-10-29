@@ -229,7 +229,7 @@ export function GamePage() {
       ) : (
         <>
           <GameHighlightTags game={game} rivalry={r} selected={highlight}/>
-          <div className="report-grid">
+          <div className="game-report-overview">
             <Momentum key={`${game.id}-${recordKey}`} game={game} rivalry={r} highlight={highlight} />
             <RungStats game={game} rivalry={r} />
           </div>
