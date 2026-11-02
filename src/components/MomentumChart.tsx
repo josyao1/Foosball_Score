@@ -13,16 +13,16 @@ import '../momentum.css';
 const LEFT = 54, RIGHT = 690, TOP = 14, CENTER = 94, BOTTOM = 174;
 const exactClock = (ms: number) => `${clock(ms)}.${String(Math.floor(ms) % 1000).padStart(3, '0')}`;
 const PARTICLES = [[0,-28],[21,-21],[29,0],[21,21],[0,28],[-21,21],[-29,0],[-21,-21]];
-type Props = { game: Game; rivalry: Rivalry; highlight?: Moment };
+type Props = { game: Game; rivalry: Rivalry; highlight?: Moment; watchMoment?: boolean };
 
 export function MomentumChart(props: Props) {
   // A changed score/timestamp invalidates the old replay, including edits from another phone.
-  const version = JSON.stringify([props.game.id, props.game.goals, props.highlight]);
+  const version = JSON.stringify([props.game.id, props.game.goals, props.highlight, props.watchMoment]);
   return <MomentumView key={version} {...props}/>;
 }
 
 /** Every step is a recorded goal; the horizontal axis is actual elapsed game time. */
-function MomentumView({ game, rivalry, highlight }: Props) {
+function MomentumView({ game, rivalry, highlight, watchMoment }: Props) {
   const id = useId().replace(/:/g, '');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<{ index: number; key: number; burst: boolean } | null>(null);
@@ -37,7 +37,7 @@ function MomentumView({ game, rivalry, highlight }: Props) {
   const limit = Math.max(2, ...momentum.map(p => Math.abs(p.lead)));
   // Finish at the last goal, not the later tap on the Finish game button.
   const total = Math.max(1, momentum[momentum.length - 1].elapsed);
-  const replay = useMomentumReplay(total);
+  const replay = useMomentumReplay(total, watchMoment && highlightedWindow ? Math.max(0, highlightedWindow.startMs - 1000) : undefined);
   const replaying = replay.position !== null;
   const chartTotal = replaying ? total : Math.max(total, duration(game));
   const playhead = replay.position ?? chartTotal;

@@ -241,7 +241,7 @@ export function GamePage() {
         <>
           <GameHighlightTags game={game} rivalry={r} selected={highlight}/>
           <div className="game-report-overview">
-            <Momentum key={`${game.id}-${recordKey}`} game={game} rivalry={r} highlight={highlight} />
+            <Momentum key={`${game.id}-${recordKey}`} game={game} rivalry={r} highlight={highlight} watchMoment={searchParams.get("play") === "1"} />
             <RungStats game={game} rivalry={r} />
           </div>
           <Timeline

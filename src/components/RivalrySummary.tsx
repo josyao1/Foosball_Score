@@ -1,6 +1,6 @@
 import { useId } from "react";
 import { Link } from "react-router-dom";
-import { rivalryStats, score } from "../lib/stats";
+import { rivalryStats, score, playingTimeLabel } from "../lib/stats";
 import { otherSide, playerName } from "../lib/types";
 import type { Game, Rivalry, Side } from "../lib/types";
 import "../rivalry-summary.css";
@@ -107,7 +107,7 @@ function ArcadeSummary({ data }: SummaryProps) {
 function ClaySummary({ data }: SummaryProps) {
   const { rivalry, stats: s } = data;
   return <section className="rs-summary rs-clay" aria-label="Head to head ticket">
-    <div className="rs-ticket-body"><header><h2>Head to head</h2><span>Wins</span></header>{(["a", "b"] as const).map(side => <div className="rs-ticket-score" key={side}><div><TeamLabel rivalry={rivalry} side={side} /><small>{s.goals[side]} total goals</small></div><strong>{s.wins[side]}</strong></div>)}<div className="rs-ticket-average"><span>Avg. goals / game</span><strong>{data.average}</strong></div></div>
+    <div className="rs-ticket-body"><header><h2>Head to head</h2><span>Wins</span></header>{(["a", "b"] as const).map(side => <div className="rs-ticket-score" key={side}><div><TeamLabel rivalry={rivalry} side={side} /><small>{s.goals[side]} total goals</small></div><strong>{s.wins[side]}</strong></div>)}<div className="rs-ticket-average"><span>Avg. goals / game</span><strong>{data.average}</strong></div><div className="rs-ticket-average" title="Completed games, from start to last goal; rounded to the nearest minute"><span>Time spent playing</span><strong>{playingTimeLabel(s.playingMs)}</strong></div></div>
     <aside className="rs-ticket-stub"><div className="rs-result-stamps"><span><strong>{s.completed}</strong>played</span><span><strong>{s.draws}</strong>draws</span></div><dl><div><dt>Current streak</dt><dd><Streak data={data} /></dd></div><div><dt>Biggest blowout</dt><dd><Blowout data={data} /></dd></div><div><dt>Biggest choke</dt><dd><Choke data={data} /></dd></div></dl></aside>
   </section>;
 }

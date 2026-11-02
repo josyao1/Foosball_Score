@@ -92,7 +92,7 @@
 .rc-ticket-stub::before, .rc-ticket-stub::after { content: ""; position: absolute; top: -7px; width: 12px; height: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 50%; }
 .rc-ticket-stub::before { left: -7px; }
 .rc-ticket-stub::after { right: -7px; }
-.rc-ticket-stub-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
+.rc-ticket-stub-heading { display: flex; align-items: baseline; justify-content: flex-end; gap: 14px; }
 .rc-ticket-stats-link { display: inline-flex; align-items: baseline; gap: 6px; min-height: 32px; color: var(--text); font-size: 12px; font-weight: 650; }
 .rc-ticket-stats-link:hover { text-decoration: underline; text-underline-offset: 4px; }
 .rc-ticket a:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }

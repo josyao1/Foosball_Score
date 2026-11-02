@@ -68,6 +68,18 @@ describe('momentum replay', () => {
   expect(screen.getByRole('button', {name:'Play replay'})).toBeTruthy();
   expect(frames.size).toBe(0);
  });
+ it('starts an explicit record replay just before its moment and leaves ordinary links paused', () => {
+  const highlight = {kind:'run' as const,value:1,side:'b' as const,start:1,end:1};
+  const { container, rerender } = render(<MomentumChart game={game} rivalry={rivalry} highlight={highlight}/>);
+  expect(screen.queryByRole('button', {name:'Pause replay'})).toBeNull();
+  rerender(<MomentumChart game={game} rivalry={rivalry} highlight={highlight} watchMoment/>);
+  expect(screen.getByRole('button', {name:'Pause replay'})).toBeTruthy();
+  expect(container.querySelector('.momentum-result time')?.textContent).toBe('0:39');
+  expect(container.querySelector('.momentum-result strong')?.textContent).toBe('1 – 0');
+  advance(63);
+  expect(container.querySelector('.momentum-result strong')?.textContent).toBe('1 – 1');
+  expect(screen.getByRole('button', {name:'Play replay'})).toBeTruthy();
+ });
  it('cycles 16→2→4→8→16 and changes playback speed without resetting the clock', () => {
   const {container} = render(<MomentumChart game={game} rivalry={rivalry}/>);
   const speed = () => screen.getByRole('button', {name:/Replay speed/});

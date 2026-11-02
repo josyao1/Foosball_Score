@@ -44,7 +44,8 @@ export function gameHighlights(game: Game) {
     if (leader) previousLeader = leader;
     for (const s of ['a', 'b'] as const) {
       const deficit = after[otherSide(s)] - after[s];
-      if (deficit > largestDeficit[s]) { largestDeficit[s] = deficit; deficitIndex[s] = i; }
+      // At an equal deficit, the later score is the harder comeback.
+      if (deficit > 0 && deficit >= largestDeficit[s]) { largestDeficit[s] = deficit; deficitIndex[s] = i; }
     }
     if (!goal.flags.includes('own_goal')) rungSets[goal.actor_side].add(goal.rung);
     if (i === 0 || credited[i - 1] !== side) runStart = i;
@@ -82,8 +83,12 @@ export function recordBook(games: Game[]) {
     const highlights = gameHighlights(game), w = winner(game);
     for (const moment of Object.values(highlights.moments)) {
       const old = book[moment.kind];
-      if (!old || (lowerWins.has(moment.kind) ? moment.value < old.moment.value : moment.value > old.moment.value)) book[moment.kind] = { game, moment, ties: 0 };
-      else if (moment.value === old.moment.value) old.ties++;
+      const equalValue = old && moment.value === old.moment.value;
+      // start is the goal index at the deficit: a higher index means a later
+      // score stage, independent of breaks or how slowly the game was played.
+      const laterComeback = equalValue && moment.kind === 'comeback' && moment.start > old.moment.start;
+      if (!old || laterComeback || (lowerWins.has(moment.kind) ? moment.value < old.moment.value : moment.value > old.moment.value)) book[moment.kind] = { game, moment, ties: 0 };
+      else if (equalValue && (moment.kind !== 'comeback' || moment.start === old.moment.start)) old.ties++;
     }
     for (const side of ['a', 'b'] as const) {
       for (const [key, eligible] of [

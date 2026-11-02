@@ -35,6 +35,13 @@ export const duration = (g: Game, now = Date.now()) =>
     0,
     (g.ended_at ? Date.parse(g.ended_at) : now) - Date.parse(g.started_at),
   );
+// Aggregate before rounding; a delayed Finish tap is not playing time.
+export const playingTime = (games: Game[]) => games.reduce((total, game) =>
+  total + (game.ended_at ? game.goals.reduce((last, goal) => Math.max(last, goal.elapsed_ms), 0) : 0), 0);
+export const playingTimeLabel = (ms: number) => {
+  const minutes = Math.max(0, Math.round(ms / 60000));
+  return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+};
 export { gameDate as dateLabel } from './time';
 export function gameStats(game: Game) {
   const rungs = {
@@ -103,6 +110,7 @@ export function rivalryStats(games: Game[]) {
     draws,
     goals,
     totalGoals: goals.a + goals.b,
+    playingMs: playingTime(completed),
     streak,
     longestStreak,
     blowout,

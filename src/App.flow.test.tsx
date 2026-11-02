@@ -297,7 +297,9 @@ it('keeps a winning game live across polling and reopens after the next goal', a
 it('credits an own goal to the opponent before opening the winning popup', async()=>{
  seed({rivalries:[rivalry],games:[scoredGame(8,9)]});
  openApp('/game/g');
- fireEvent.click(await screen.findByRole('button',{name:'Ada goalie goal'}));
+ const rung = await screen.findByRole('button',{name:'Ada goalie goal'});
+ await waitFor(() => expect((rung as HTMLButtonElement).disabled).toBe(false));
+ fireEvent.click(rung);
  const dialog=screen.getByRole('dialog');
  fireEvent.click(within(dialog).getByRole('button',{name:/Own goal/}));
  fireEvent.click(within(dialog).getByRole('button',{name:'Add goal for Bea'}));
@@ -310,7 +312,7 @@ it('saves the result and immediately opens one fresh rematch', async()=>{
  fireEvent.click(within(await winningPopup()).getByRole('button',{name:'Finish & rematch'}));
  await waitFor(()=>expect(stored().games).toHaveLength(2));
  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
- expect(screen.getByRole('heading',{name:'Live game'})).toBeTruthy();
+ expect(await screen.findByRole('heading',{name:'Live game'})).toBeTruthy();
  const old=stored().games.find(g=>g.id==='g')!,next=stored().games.find(g=>g.id!=='g')!;
  expect(old.ended_at).not.toBeNull();
  expect(old.goals).toHaveLength(18);

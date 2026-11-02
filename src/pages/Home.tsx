@@ -6,11 +6,12 @@ import {
   Swords,
   Activity,
   Target,
+  Timer,
   ChevronRight,
 } from "lucide-react";
 import { gameTime } from "../lib/time";
 import { useStore } from "../lib/store";
-import { dateLabel, score, winner } from "../lib/stats";
+import { dateLabel, score, winner, playingTime, playingTimeLabel } from "../lib/stats";
 import { playerName } from "../lib/types";
 import type { Game, Rivalry } from "../lib/types";
 import { RivalryCollection } from "../components/RivalryCollection";
@@ -162,12 +163,17 @@ export function Home() {
         <div>
           <Activity size={19} />
           <strong>{completed.length}</strong>
-          <span>games played</span>
+          <span>games<span className="overview-detail"> played</span></span>
         </div>
         <div>
           <Target size={19} />
           <strong>{completed.reduce((n, g) => n + g.goals.length, 0)}</strong>
-          <span>goals scored</span>
+          <span>goals<span className="overview-detail"> scored</span></span>
+        </div>
+        <div aria-label={`${playingTimeLabel(playingTime(completed))} spent playing`} title="Completed games, from start to last goal; rounded to the nearest minute">
+          <Timer size={19} />
+          <strong>{playingTimeLabel(playingTime(completed))}</strong>
+          <span className="overview-detail">spent playing</span>
         </div>
       </div>
       <section>

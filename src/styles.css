@@ -2268,3 +2268,17 @@ html[data-design] .screen-awake-warning .text-button { color: var(--error-text);
 .live-game-footer .save-status { margin: 0; min-width: 0; padding: 10px 0; }
 .live-game-footer .save-status svg { flex-shrink: 0; }
 .live-game-footer > button { min-height: 44px; font-size: 12px; }
+
+/* Keep all four totals on one line, with shorter labels on narrow screens. */
+.overview-strip { flex-wrap: nowrap; gap: clamp(12px, 3vw, 32px); overflow-x: auto; }
+.overview-strip > div { flex: 0 0 auto; white-space: nowrap; }
+.overview-strip strong { white-space: nowrap; }
+@media (max-width: 700px) {
+  .overview-strip { display: flex; justify-content: space-between; gap: 10px; }
+  .overview-strip > div { flex-wrap: nowrap; gap: 4px; }
+  .overview-strip .overview-detail { display: none; }
+}
+@media (max-width: 380px) {
+  .overview-strip { gap: 8px; }
+  .overview-strip strong { font-size: 14px; }
+}

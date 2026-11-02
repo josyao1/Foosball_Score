@@ -6,6 +6,8 @@ import {
   rivalryStats,
   gameStats,
   clock,
+  playingTime,
+  playingTimeLabel,
 } from "./stats";
 import type { Game, Goal, Side } from "./types";
 const goals = (sides: Side[]): Goal[] =>
@@ -84,5 +86,28 @@ describe("rivalry history", () => {
     expect(s.banks.a).toBe(1);
     expect(s.rungs.a.attacker).toBe(1);
     expect(s.rungs.b.attacker).toBe(1);
+  });
+});
+
+describe('time spent playing', () => {
+  const timed = (ms: number, complete = true) => ({ ...game(['a'], 0, complete), goals: [{ ...goals(['a'])[0], elapsed_ms: ms }] });
+  it('sums the last goal of completed games and rounds the total once', () => {
+    const games = [timed(20000), timed(20000), timed(900000, false), game([])];
+    expect(playingTime(games)).toBe(40000);
+    expect(playingTimeLabel(playingTime(games))).toBe('1 min');
+    expect(rivalryStats(games).playingMs).toBe(40000);
+  });
+  it('ignores finish-button delays and goal array ordering', () => {
+    const g = timed(90000);
+    g.goals.push({ ...g.goals[0], id:'earlier', elapsed_ms:1000 });
+    expect(playingTime([g])).toBe(90000);
+    expect(playingTimeLabel(playingTime([g]))).toBe('2 min');
+  });
+  it('formats empty time and minute/hour boundaries without seconds', () => {
+    expect(playingTimeLabel(playingTime([]))).toBe('0 min');
+    expect(playingTimeLabel(29999)).toBe('0 min');
+    expect(playingTimeLabel(30000)).toBe('1 min');
+    expect(playingTimeLabel(59.5 * 60000)).toBe('1h 0m');
+    expect(playingTimeLabel(125 * 60000)).toBe('2h 5m');
   });
 });

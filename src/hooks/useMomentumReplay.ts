@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
 /** Null position means the normal, complete chart. Replay never mutates game data. */
-export function useMomentumReplay(total: number) {
-  const [position, setPosition] = useState<number | null>(null);
-  const [playing, setPlaying] = useState(false);
+export function useMomentumReplay(total: number, startAt?: number) {
+  const [position, setPosition] = useState<number | null>(startAt ?? null);
+  const [playing, setPlaying] = useState(startAt !== undefined);
   const [speed, setSpeed] = useState(16);
   const [advancedByPlayback, setAdvancedByPlayback] = useState(false);
-  const cursor = useRef<number | null>(null);
+  const cursor = useRef<number | null>(startAt ?? null);
 
   const moveTo = (ms: number | null) => {
     setAdvancedByPlayback(false);
