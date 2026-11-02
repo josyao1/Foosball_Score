@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { StrictMode } from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { App } from './App';
@@ -168,7 +168,7 @@ it('keeps rivalry creation open and its names fixed while saving', async () => {
   expect(await screen.findByRole('button', { name: 'Start a game' })).toBeTruthy();
 });
 
-it('announces win by two but keeps scoring live until the user finishes', async () => {
+it('prompts at win by two, skips 10–9, and keeps scoring live when asked', async () => {
   const goals: Goal[] = Array.from({ length: 18 }, (_, index) => ({ ...goal, id: `goal-${index}`, actor_side: index % 2 ? 'b' : 'a', elapsed_ms: (index + 1) * 1000, occurred_at: new Date(Date.parse(baseGame.started_at) + (index + 1) * 1000).toISOString() }));
   seed({ rivalries: [rivalry], games: [{ ...baseGame, goals }] });
   openApp('/game/g');
@@ -177,7 +177,10 @@ it('announces win by two but keeps scoring live until the user finishes', async 
   expect(score(stored().games[0].goals)).toEqual({ a: 10, b: 9 });
   expect(screen.queryByText(/has the winning score/)).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Ada attacker goal' }));
-  await confirm('Add goal for Ada');
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add goal for Ada' }));
+  const winning = await screen.findByRole('dialog', {name:'Winning score'});
+  fireEvent.click(within(winning).getByRole('button', {name:'Keep playing'}));
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   expect(screen.getByText(/Ada has the winning score/)).toBeTruthy();
   expect(stored().games[0].ended_at).toBeNull();
   expect(screen.getByRole('button', { name: 'Ada attacker goal' })).toBeTruthy();
@@ -244,4 +247,178 @@ it('automatically commits a tapped regular goal through the real store and keeps
     expect(score(saved.goals)).toEqual({ a: 1, b: 0 });
     expect(saved.revision).toBe(2);
   } finally { vi.useRealTimers(); }
+});
+
+function scoredGame(a:number,b:number):Game {
+ const sides:Goal['actor_side'][]=[...Array<Goal['actor_side']>(a).fill('a'),...Array<Goal['actor_side']>(b).fill('b')];
+ return {...baseGame,goals:sides.map((side,i)=>({...goal,id:`scored-${i}`,actor_side:side,elapsed_ms:(i+1)*1000,occurred_at:new Date(Date.parse(baseGame.started_at)+(i+1)*1000).toISOString()}))};
+}
+async function winningPopup(){return screen.findByRole('dialog',{name:'Winning score'})}
+it('opens the winning popup after a regular goal auto-saves, and undo restores the previous score', async()=>{
+ vi.useFakeTimers();
+ try {
+  vi.setSystemTime(new Date('2026-01-01T00:01:00Z'));
+  seed({rivalries:[rivalry],games:[scoredGame(9,8)]});
+  openApp('/game/g');
+  await act(async()=>{});
+  fireEvent.click(screen.getByRole('button',{name:'Ada attacker goal'}));
+  await act(async()=>{await vi.advanceTimersByTimeAsync(3000)});
+  const dialog=screen.getByRole('dialog',{name:'Winning score'});
+  expect(score(stored().games[0].goals)).toEqual({a:10,b:8});
+  fireEvent.click(within(dialog).getByRole('button',{name:'Undo goal'}));
+  await act(async()=>{});
+  expect(score(stored().games[0].goals)).toEqual({a:9,b:8});
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(stored().games[0].ended_at).toBeNull();
+ } finally {vi.useRealTimers()}
+});
+it('finishes directly from the winning popup without a second confirmation', async()=>{
+ seed({rivalries:[rivalry],games:[scoredGame(10,8)]});
+ openApp('/game/g');
+ fireEvent.click(within(await winningPopup()).getByRole('button',{name:'Finish game'}));
+ await screen.findByRole('heading',{name:'Game result'});
+ await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
+ expect(stored().games).toHaveLength(1);
+ expect(stored().games[0].ended_at).not.toBeNull();
+ expect(score(stored().games[0].goals)).toEqual({a:10,b:8});
+});
+it('keeps a winning game live across polling and reopens after the next goal', async()=>{
+ seed({rivalries:[rivalry],games:[scoredGame(10,8)]});
+ openApp('/game/g');
+ fireEvent.click(within(await winningPopup()).getByRole('button',{name:'Keep playing'}));
+ await act(async()=>window.dispatchEvent(new Event('storage')));
+ expect(screen.queryByRole('dialog')).toBeNull();
+ expect(stored().games[0].ended_at).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Ada goalie goal'}));
+ fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'Add goal for Ada'}));
+ expect(await winningPopup()).toBeTruthy();
+ expect(score(stored().games[0].goals)).toEqual({a:11,b:8});
+});
+it('credits an own goal to the opponent before opening the winning popup', async()=>{
+ seed({rivalries:[rivalry],games:[scoredGame(8,9)]});
+ openApp('/game/g');
+ fireEvent.click(await screen.findByRole('button',{name:'Ada goalie goal'}));
+ const dialog=screen.getByRole('dialog');
+ fireEvent.click(within(dialog).getByRole('button',{name:/Own goal/}));
+ fireEvent.click(within(dialog).getByRole('button',{name:'Add goal for Bea'}));
+ expect((await winningPopup()).textContent).toContain('Bea has the winning score');
+ expect(score(stored().games[0].goals)).toEqual({a:8,b:10});
+});
+it('saves the result and immediately opens one fresh rematch', async()=>{
+ seed({rivalries:[rivalry],games:[scoredGame(10,8)]});
+ openApp('/game/g');
+ fireEvent.click(within(await winningPopup()).getByRole('button',{name:'Finish & rematch'}));
+ await waitFor(()=>expect(stored().games).toHaveLength(2));
+ await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
+ expect(screen.getByRole('heading',{name:'Live game'})).toBeTruthy();
+ const old=stored().games.find(g=>g.id==='g')!,next=stored().games.find(g=>g.id!=='g')!;
+ expect(old.ended_at).not.toBeNull();
+ expect(old.goals).toHaveLength(18);
+ expect(next).toMatchObject({rivalry_id:'r',ended_at:null,revision:1,goals:[]});
+ expect(Date.parse(next.started_at)).toBeGreaterThanOrEqual(Date.parse(old.ended_at!));
+ expect((screen.getByRole('button',{name:'Finish game'}) as HTMLButtonElement).disabled).toBe(true);
+});
+it('preserves the saved result when rematch creation fails and retries without finishing twice', async()=>{
+ seed({rivalries:[rivalry],games:[scoredGame(10,8)]});
+ const original=LocalRepository.prototype.saveGame;
+ let failed=false;
+ vi.spyOn(LocalRepository.prototype,'saveGame').mockImplementation(function(this:LocalRepository,g:Game){
+  if(g.id!=='g'&&!failed){failed=true;return Promise.reject(new Error('Connection interrupted'))}
+  return original.call(this,g);
+ });
+ openApp('/game/g');
+ fireEvent.click(within(await winningPopup()).getByRole('button',{name:'Finish & rematch'}));
+ const dialog=await screen.findByRole('dialog',{name:'Game saved'});
+ expect((await within(dialog).findByRole('alert')).textContent).toContain('Connection interrupted');
+ expect(stored().games).toHaveLength(1);
+ expect(stored().games[0]).toMatchObject({revision:2});
+ expect(stored().games[0].ended_at).not.toBeNull();
+ fireEvent.click(within(dialog).getByRole('button',{name:'Start rematch'}));
+ await waitFor(()=>expect(stored().games).toHaveLength(2));
+ expect(stored().games.find(g=>g.id==='g')!.revision).toBe(2);
+ await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
+});
+it('blocks stale winning-score choices after another device changes the score', async()=>{
+ seed({rivalries:[rivalry],games:[scoredGame(10,8)]});
+ openApp('/game/g');
+ const dialog=await winningPopup();
+ const latest=stored();latest.games[0].revision++;latest.games[0].goals.pop();seed(latest);
+ await act(async()=>window.dispatchEvent(new Event('storage')));
+ expect((within(dialog).getByRole('button',{name:'Finish game'}) as HTMLButtonElement).disabled).toBe(true);
+ expect((within(dialog).getByRole('button',{name:'Undo goal'}) as HTMLButtonElement).disabled).toBe(true);
+ fireEvent.click(within(dialog).getByRole('button',{name:'Review score'}));
+ expect(await winningPopup()).toBeTruthy();
+ expect(stored().games[0].ended_at).toBeNull();
+});
+it('keeps all winning choices locked while saving and ignores a second rematch tap', async()=>{
+ seed({rivalries:[rivalry],games:[scoredGame(10,8)]});
+ const original=LocalRepository.prototype.saveGame;
+ let resolve!:()=>void;
+ const waiting=new Promise<void>(r=>{resolve=r});
+ vi.spyOn(LocalRepository.prototype,'saveGame').mockImplementation(async function(this:LocalRepository,g:Game){
+  if(g.id==='g'&&g.ended_at)await waiting;
+  return original.call(this,g);
+ });
+ openApp('/game/g');
+ const dialog=await winningPopup(),button=within(dialog).getByRole('button',{name:'Finish & rematch'});
+ fireEvent.click(button);fireEvent.click(button);
+ expect(within(dialog).getAllByRole('button').every(b=>(b as HTMLButtonElement).disabled)).toBe(true);
+ const cancel=new Event('cancel',{cancelable:true});fireEvent(dialog,cancel);expect(cancel.defaultPrevented).toBe(true);
+ expect(stored().games).toHaveLength(1);
+ await act(async()=>resolve());
+ await waitFor(()=>expect(stored().games).toHaveLength(2));
+ expect(stored().games.filter(g=>!g.ended_at)).toHaveLength(1);
+ await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
+});
+it('does not start a rematch if saving the result fails', async()=>{
+ seed({rivalries:[rivalry],games:[scoredGame(10,8)]});
+ const saving=vi.spyOn(LocalRepository.prototype,'saveGame').mockRejectedValue(new Error('Unable to save result'));
+ openApp('/game/g');
+ const dialog=await winningPopup();
+ fireEvent.click(within(dialog).getByRole('button',{name:'Finish & rematch'}));
+ expect((await within(dialog).findByRole('alert')).textContent).toContain('Unable to save result');
+ expect(saving).toHaveBeenCalledOnce();
+ expect(stored().games).toHaveLength(1);
+ expect(stored().games[0].ended_at).toBeNull();
+ expect((within(dialog).getByRole('button',{name:'Keep playing'}) as HTMLButtonElement).disabled).toBe(false);
+});
+it('resumes the existing rematch after a create response is lost instead of duplicating it', async()=>{
+ seed({rivalries:[rivalry],games:[scoredGame(10,8)]});
+ const original=LocalRepository.prototype.saveGame;
+ let lost=false;
+ vi.spyOn(LocalRepository.prototype,'saveGame').mockImplementation(async function(this:LocalRepository,g:Game){
+  const result=await original.call(this,g);
+  if(g.id!=='g'&&!lost){lost=true;throw new Error('Response lost')}
+  return result;
+ });
+ openApp('/game/g');
+ fireEvent.click(within(await winningPopup()).getByRole('button',{name:'Finish & rematch'}));
+ const dialog=await screen.findByRole('dialog',{name:'Game saved'});
+ await within(dialog).findByRole('alert');
+ expect(stored().games).toHaveLength(2);
+ fireEvent.click(within(dialog).getByRole('button',{name:'Start rematch'}));
+ await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
+ expect(stored().games).toHaveLength(2);
+ expect(screen.getByRole('heading',{name:'Live game'})).toBeTruthy();
+});
+
+function HistoryBackControl(){const navigate=useNavigate();return <button onClick={()=>navigate(-1)}>Browser back</button>}
+it('does not create a rematch or pull the user back after leaving during a pending finish', async()=>{
+ seed({rivalries:[rivalry],games:[scoredGame(10,8)]});
+ const original=LocalRepository.prototype.saveGame;
+ let resolve!:()=>void;
+ const waiting=new Promise<void>(r=>{resolve=r});
+ vi.spyOn(LocalRepository.prototype,'saveGame').mockImplementation(async function(this:LocalRepository,g:Game){
+  if(g.id==='g'&&g.ended_at)await waiting;
+  return original.call(this,g);
+ });
+ render(<StrictMode><MemoryRouter initialEntries={['/','/game/g']}><StoreProvider><App/><HistoryBackControl/></StoreProvider></MemoryRouter></StrictMode>);
+ fireEvent.click(within(await winningPopup()).getByRole('button',{name:'Finish & rematch'}));
+ // Simulate a browser history action, which is available outside the modal.
+ fireEvent.click(screen.getByRole('button',{name:'Browser back'}));
+ await screen.findByRole('heading',{name:'Rivalries'});
+ await act(async()=>resolve());
+ expect(screen.getByRole('heading',{name:'Rivalries'})).toBeTruthy();
+ expect(stored().games).toHaveLength(1);
+ expect(stored().games[0].ended_at).not.toBeNull();
 });

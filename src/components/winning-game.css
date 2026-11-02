@@ -1,0 +1,10 @@
+.winning-game-score{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;text-align:center;margin:22px 0 12px}
+.winning-game-score>div{display:flex;flex-direction:column;gap:8px;min-width:0}
+.winning-game-score>div>span{font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+.winning-game-score strong{font:600 44px/1.1 var(--heading-font);font-variant-numeric:tabular-nums}
+.winning-game-score>span{font-size:22px;color:var(--muted);align-self:end;padding-bottom:12px}
+.winning-game-copy{color:var(--muted);text-align:center;line-height:1.5;margin:0 0 22px}
+.winning-game-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.winning-game-actions .button{min-width:0;min-height:52px;padding:12px 8px;white-space:normal;overflow-wrap:anywhere;line-height:1.4;font-size:12px;gap:6px}
+.winning-game-actions svg{flex-shrink:0}
+@media(max-width:380px){.winning-game-actions{gap:8px}.winning-game-actions .button{font-size:11px;flex-direction:column;gap:4px}.winning-game-score strong{font-size:38px}}

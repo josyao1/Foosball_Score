@@ -9,6 +9,7 @@ import {
   CircleCheck,
   Trash2,
 } from "lucide-react";
+import { WinningGameDialog } from "../components/WinningGameDialog";
 import { ScreenAwake } from "../components/ScreenAwake";
 import { GameHighlightTags } from "../components/Records";
 import { selectedMoment } from "../lib/records";
@@ -47,7 +48,11 @@ export function GamePage() {
     [confirm, setConfirm] = useState<"finish" | "discard" | "undo" | "delete" | null>(
       null,
     ),
-    [removing, setRemoving] = useState<Goal | null>(null);
+    [removing, setRemoving] = useState<Goal | null>(null),
+    [winningGame,setWinningGame] = useState<Game|null>(null),
+    [dismissedWin,setDismissedWin] = useState<string|null>(null);
+  const game = store.games.find((g) => g.id === id),
+    r = store.rivalries.find((r) => r.id === game?.rivalry_id);
   useEffect(() => {
     if (recordKey) document.getElementById("momentum")?.scrollIntoView?.({ block: "start" });
   }, [id, recordKey]);
@@ -59,9 +64,15 @@ export function GamePage() {
     setDraft(null);
     setConfirm(null);
     setRemoving(null);
+    setWinningGame(null);
+    setDismissedWin(null);
   }, [id]);
-  const game = store.games.find((g) => g.id === id),
-    r = store.rivalries.find((r) => r.id === game?.rivalry_id);
+  useEffect(() => {
+    if (!game || game.ended_at || !isWinningScore(score(game.goals)) ||
+      draft || confirm || removing || winningGame || store.busy ||
+      dismissedWin === `${game.id}:${game.revision}`) return;
+    setWinningGame(game);
+  }, [game,draft,confirm,removing,winningGame,store.busy,dismissedWin]);
   if (!game || !r)
     return (
       <div className="empty-state">
@@ -258,6 +269,15 @@ export function GamePage() {
       )}
       {!live && <div className="danger-actions"><button className="text-button muted" disabled={store.busy} onClick={()=>openConfirm('delete')}><Trash2 size={15}/>Delete game</button></div>}
       {confirm==='delete'&&<ConfirmDialog title="Delete game?" description={`Delete this game (${score(cg.goals).a}–${score(cg.goals).b}) and all of its goals? Rivalry stats will update. This cannot be undone.`} confirm="Delete game" danger onClose={()=>setConfirm(null)} onConfirm={async()=>{await store.deleteGame(cg);navigate(`/rivalry/${r.id}`)}}/>}
+      {winningGame && winningGame.id === id && <WinningGameDialog
+        snapshot={winningGame}
+        rivalry={r}
+        onClose={acknowledged => {
+          setDismissedWin(`${acknowledged.id}:${acknowledged.revision}`);
+          setWinningGame(null);
+        }}
+        onRematch={next => {setWinningGame(null);navigate(`/game/${next.id}`)}}
+      />}
       {draft && (
         <GoalDialog
           key={draft.id}
