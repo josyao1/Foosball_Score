@@ -84,3 +84,7 @@ its game and select the goal sequence in the momentum chart. Quickest
 wins use the last goal timestamp and exclude early finishes and games that
 continued after a winning score. Runs and bursts include opponent own goals;
 all-rung achievements exclude them. Corrections and deletions update records.
+
+### Scorigami
+
+The second navigation tab shows score frequency as two bar charts: regular finishes (10–0 through 10–8) and overtime (11–9, 12–10, and so on). Both use the same game-count scale and combine reversed table sides. Early finishes, draws, one-point wins, and nonstandard continued scores are excluded from this view; game history stays unchanged. Tap any bar for its count, percentage, latest game, and earlier occurrences. Filter by rivalry or view all games. Regular charts shorten labels to the opponent's score on phones; overtime extends only to the highest qualifying score and pages five outcomes at a time. Native buttons support keyboard selection. This view derives from existing game data and does not require a migration.

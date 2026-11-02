@@ -142,7 +142,7 @@ html[data-design] .tally-dots i.filled { box-shadow: 0 0 0 1px var(--kit-edge); 
 /* Team aliases were previously also used for UI accents; keep those readable. */
 html[data-design] :is(.brand-period, .how-to-icon, .stat-card > svg, .winner-line, .rivalry-card-bottom svg) { color: var(--text); }
 html[data-design] :is(.text-button:hover, .stat-card a:hover strong) { color: var(--text); }
-html[data-design] .app-header nav a { border-bottom-color: var(--text); }
+html[data-design] .app-header nav a { border-bottom-color: transparent; }
 html[data-design] .flag-option.selected { background: var(--panel-light); border-color: var(--text); }
 html[data-design] .flag-option.selected .checkbox { background: var(--kit-black); color: var(--kit-white); border-color: var(--kit-edge); }
 html[data-design] :is(button, a, input, select, .rc-table-wrap):focus-visible { outline-color: var(--text); }
@@ -416,3 +416,11 @@ html[data-design] .timeline-score .timeline-score-unchanged{font-weight:400;colo
 .timeline-player{display:flex;align-items:center;gap:6px;min-width:0}
 .timeline-player>strong{min-width:0}
 .timeline-player .goal-tags{flex-shrink:0}
+
+/* Both primary destinations share the same header tab row. */
+.app-header nav { gap: 18px; min-width: 0; }
+.app-header nav a { border-bottom-color: transparent; white-space: nowrap; }
+html[data-design] .app-header nav a[aria-current="page"] { border-bottom-color: var(--text); }
+@media (min-width: 701px) and (max-width: 1000px) {
+  html[data-design] .header-inner { gap: 22px; }
+}
