@@ -1,5 +1,5 @@
 import { Timer } from 'lucide-react';
-import { gameHighlights } from '../lib/records';
+import { gameHighlights, momentWindow } from '../lib/records';
 import type { Moment } from '../lib/records';
 import { clock } from '../lib/stats';
 import type { Game } from '../lib/types';
@@ -8,7 +8,11 @@ import type { Game } from '../lib/types';
 export function RecordMomentGraphic({ game, moment }: { game: Game; moment: Moment }) {
   if (moment.kind === 'triple' || moment.kind === 'response') return null;
   const { goals, scores } = gameHighlights(game);
-  if (moment.kind === 'quickest') {
+  if (moment.kind === 'drought') {
+    const window = momentWindow(game, moment);
+    return <div className="record-stopwatch record-drought-timer"><Timer size={46} strokeWidth={1.3} aria-hidden="true"/><div><span>Neither side scored between</span><strong>{clock(window.startMs)} – {clock(window.endMs)}</strong></div></div>;
+  }
+  if (moment.kind === 'quickest' || moment.kind === 'longest') {
     const final = scores.at(-1)!;
     return <div className="record-stopwatch"><Timer size={46} strokeWidth={1.3} aria-hidden="true"/><div><span>Final score</span><strong>{final.a} – {final.b}</strong></div><small>From kickoff<br/>to the winning goal</small></div>;
   }

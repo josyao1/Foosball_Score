@@ -5,17 +5,24 @@ export function Dialog({
   title,
   onClose,
   dismissible = true,
+  closeOnBackdrop = false,
   onDismiss,
   children,
 }: {
   title: string;
   onClose: () => void;
   dismissible?: boolean;
+  closeOnBackdrop?: boolean;
   onDismiss?: () => void;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null),
     id = useId();
+  const startedOutside = useRef(false);
+  const isOutside = (el: HTMLDialogElement, x: number, y: number) => {
+    const rect = el.getBoundingClientRect();
+    return x < rect.left || x > rect.right || y < rect.top || y > rect.bottom;
+  };
   useEffect(() => {
     const el = ref.current!;
     el.showModal();
@@ -25,6 +32,16 @@ export function Dialog({
     <dialog
       ref={ref}
       aria-labelledby={id}
+      onPointerDown={e => {
+        startedOutside.current = e.target === e.currentTarget && isOutside(e.currentTarget, e.clientX, e.clientY);
+      }}
+      onClick={e => {
+        if (closeOnBackdrop && dismissible && startedOutside.current && e.target === e.currentTarget && isOutside(e.currentTarget, e.clientX, e.clientY)) {
+          onDismiss?.();
+          e.currentTarget.close();
+        }
+        startedOutside.current = false;
+      }}
       onCancel={(e) => {
         if (!dismissible) e.preventDefault();
         else onDismiss?.();

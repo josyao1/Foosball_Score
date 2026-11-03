@@ -5,6 +5,7 @@ import { useStore } from "./lib/store";
 import { SiteDesign } from "./components/SiteDesign";
 import { Home } from "./pages/Home";
 import { Scorigami } from "./pages/Scorigami";
+import { HallOfFame } from "./pages/HallOfFame";
 import { RivalryPage } from "./pages/Rivalry";
 import { GamePage } from "./pages/Game";
 import { ConfirmDialog } from "./components/Dialog";
@@ -17,6 +18,7 @@ function ScrollToTop() {
 }
 export function App() {
   const isScorigami = !!useMatch("/scorigami");
+  const isHallOfFame = !!useMatch("/hall-of-fame");
   const store = useStore(),
     [clear, setClear] = useState(false);
   return (
@@ -36,8 +38,9 @@ export function App() {
           </Link>
           <span className="ixl-league" aria-label="IXL League"><svg viewBox="0 0 116 38" aria-hidden="true"><path d="M1 1h15v36H1zM22 1h16l10 11L58 1h16L56 19l18 18H58L48 26 38 37H22l18-18zM79 1h15v25h18v11H79z" fill="currentColor"/></svg><span>League</span></span>
           <nav aria-label="Main navigation">
-            <Link to="/" aria-current={!isScorigami ? "page" : undefined}>Rivalries</Link>
+            <Link to="/" aria-current={!isScorigami && !isHallOfFame ? "page" : undefined}>Rivalries</Link>
             <Link to="/scorigami" aria-current={isScorigami ? "page" : undefined}>Scorigami</Link>
+            <Link to="/hall-of-fame" aria-current={isHallOfFame ? "page" : undefined}>Hall of Fame</Link>
           </nav>
           <span className="connection">
             <i className="dot" />
@@ -84,6 +87,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/scorigami" element={<Scorigami />} />
+            <Route path="/hall-of-fame" element={<HallOfFame />} />
             <Route path="/rivalry/:id" element={<RivalryPage />} />
             <Route path="/game/:id" element={<GamePage />} />
             <Route

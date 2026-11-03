@@ -80,6 +80,15 @@ describe('momentum replay', () => {
   expect(container.querySelector('.momentum-result strong')?.textContent).toBe('1 – 1');
   expect(screen.getByRole('button', {name:'Play replay'})).toBeTruthy();
  });
+ it('starts a full-game Hall of Fame replay at kickoff without a record selection', () => {
+  const {container} = render(<MomentumChart game={game} rivalry={rivalry} watchMoment/>);
+  expect(screen.getByRole('button', {name:'Pause replay'})).toBeTruthy();
+  expect(container.querySelector('.momentum-result time')?.textContent).toBe('0:00');
+  expect(container.querySelector('.momentum-result strong')?.textContent).toBe('0 – 0');
+  advance(125);
+  expect(container.querySelector('.momentum-result time')?.textContent).toBe('0:02');
+  expect(container.querySelector('.momentum-result strong')?.textContent).toBe('1 – 0');
+ });
  it('cycles 16→2→4→8→16 and changes playback speed without resetting the clock', () => {
   const {container} = render(<MomentumChart game={game} rivalry={rivalry}/>);
   const speed = () => screen.getByRole('button', {name:/Replay speed/});

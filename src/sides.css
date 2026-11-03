@@ -424,3 +424,18 @@ html[data-design] .app-header nav a[aria-current="page"] { border-bottom-color: 
 @media (min-width: 701px) and (max-width: 1000px) {
   html[data-design] .header-inner { gap: 22px; }
 }
+
+/* Three tabs get their own row before brand + navigation can collide. */
+@media (max-width: 1000px) {
+  html[data-design="clay"] .header-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-rows: auto auto; height: auto; min-height: 88px; gap: 0 16px; padding-block: 5px; }
+  html[data-design="clay"] .header-inner .brand { grid-column: 1; grid-row: 1; min-height: 44px; }
+  html[data-design="clay"] .header-inner .ixl-league { grid-column: 2; grid-row: 1; margin-left: 0; }
+  html[data-design="clay"] .header-inner .connection { grid-column: 3; grid-row: 1; }
+  html[data-design="clay"] .header-inner > nav { grid-column: 1 / -1; grid-row: 2; gap: 20px; min-width: 0; }
+  html[data-design="clay"] .header-inner > nav a { min-height: 44px; font-size: 13px; }
+}
+@media (max-width: 600px) {
+  html[data-design="clay"] .header-inner { grid-template-columns: minmax(0, 1fr) auto; }
+  html[data-design="clay"] .header-inner .connection { display: none; }
+  html[data-design="clay"] .header-inner > nav { justify-content: space-between; gap: 8px; }
+}

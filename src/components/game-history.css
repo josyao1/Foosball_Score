@@ -1,0 +1,10 @@
+.game-history { min-width: 0; }
+.game-history h2 { scroll-margin-top: 110px; }
+.history-range { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.history-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px; margin-top: 20px; }
+.history-page-group { display: inline-flex; align-items: center; gap: 4px; }
+.history-pagination button { display: grid; place-items: center; min-width: 32px; min-height: 44px; padding: 5px; border: 1px solid var(--line); background: var(--panel); border-radius: 6px; color: var(--text); font: inherit; font-size: 12px; cursor: pointer; }
+.history-pagination button[aria-current="page"] { background: var(--text); color: var(--panel); }
+.history-pagination button:disabled { opacity: .35; cursor: default; }
+.history-page-gap { color: var(--muted); font-size: 11px; }
+.game-card-date .game-card-duration { display: block; margin-top: 2px; white-space: nowrap; }

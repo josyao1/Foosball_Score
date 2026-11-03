@@ -87,4 +87,22 @@ all-rung achievements exclude them. Corrections and deletions update records.
 
 ### Scorigami
 
-The second navigation tab shows score frequency as two bar charts: regular finishes (10–0 through 10–8) and overtime (11–9, 12–10, and so on). Both use the same game-count scale and combine reversed table sides. Early finishes, draws, one-point wins, and nonstandard continued scores are excluded from this view; game history stays unchanged. Tap any bar for its count, percentage, latest game, and earlier occurrences. Filter by rivalry or view all games. Regular charts shorten labels to the opponent's score on phones; overtime extends only to the highest qualifying score and pages five outcomes at a time. Native buttons support keyboard selection. This view derives from existing game data and does not require a migration.
+The second navigation tab shows score frequency as two bar charts: regular finishes (10–0 through 10–8) and overtime (11–9, 12–10, and so on). Both use the same game-count scale and combine reversed table sides. Early finishes, draws, one-point wins, and nonstandard continued scores are excluded from this view; game history stays unchanged. Tap any bar for its count, percentage, first and latest games with Pacific timestamps and elapsed playing time. Filter by rivalry or view all games. Regular charts shorten labels to the opponent's score on phones; overtime extends only to the highest qualifying score and pages five outcomes at a time. Native buttons support keyboard selection. This view derives from existing game data and does not require a migration.
+
+Rivalry history displays ten games per numbered page. Clay's head-to-head ticket contains the conditional win rates (after scoring first, reaching 9–9, or trailing by three); the record book no longer repeats them. Score popups include each participant's wins and losses at that score. Names are matched case-insensitively across rivalries; team labels remain one participant.
+
+New goals auto-save after three seconds, including special flags. Each flag interaction restarts the countdown; the initial rung-tap timestamp remains fixed. Goal edits and failed-save retries require manual confirmation.
+
+### Hall of Fame
+
+The third tab ranks completed games across all rivalries as match posters, with a
+featured #1, actual time-proportional momentum traces, Pacific dates and earned
+captions. Tap the Classic score to see all eight factors: close finish (20), closeness throughout (20), lead
+changes (15), winning comeback (20), total goals (10), dunk/bank goals (5),
+duration through the final goal (5), and both sides holding match point (5).
+The complete calculation is in `src/lib/hallOfFame.ts`; scores are fixed rather
+than relative to the current sample of games. Rankings use the unrounded total,
+then earlier start time and ID for ties. Only games that finish at their first
+valid first-to-10, win-by-two result qualify. No seed data or migration is needed.
+Replay links start the existing game momentum player at kickoff at 16×; ordinary
+game links remain paused. The posters and third navigation tab adapt for phones.

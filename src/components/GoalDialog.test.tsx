@@ -28,35 +28,45 @@ it('saves exactly once at three seconds with the original tap timestamp, includi
   await tick(5000);
   expect(save).toHaveBeenCalledOnce();
 });
-it('permanently stops auto-save after any flag interaction, even if toggled back off', async () => {
+it('restarts three seconds after each flag change, including switching it back off', async () => {
   const save = vi.fn().mockResolvedValue(undefined);
   render(<GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={() => {}}/>);
   await tick(2999);
   fireEvent.click(screen.getByRole('button', { name: /Dunk/ }));
-  fireEvent.click(screen.getByRole('button', { name: /Dunk/ }));
-  await tick(5000);
+  await tick(2000);
   expect(save).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: /Add goal for Josh/ }));
-  await tick(0);
+  fireEvent.click(screen.getByRole('button', { name: /Dunk/ }));
+  await tick(2999);
+  expect(save).not.toHaveBeenCalled();
+  await tick(1);
   expect(save).toHaveBeenCalledExactlyOnceWith(goal);
 });
-it('uses the latest save callback and supports combined flags after cancelling the countdown', async () => {
+it('uses the latest callback and automatically saves combined flags with the original timestamp', async () => {
   const oldSave = vi.fn(), save = vi.fn().mockResolvedValue(undefined);
   const view = render(<GoalDialog goal={goal} rivalry={rivalry} onSave={oldSave} onClose={() => {}}/>);
   await tick(1000);
-  view.rerender(<GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={() => {}}/>);
-  await tick(2000);
-  expect(oldSave).not.toHaveBeenCalled();
-  expect(save).toHaveBeenCalledExactlyOnceWith(goal);
-  view.unmount(); save.mockClear();
-  render(<GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={() => {}}/>);
   fireEvent.click(screen.getByRole('button', { name: /Dunk/ }));
+  await tick(1000);
   fireEvent.click(screen.getByRole('button', { name: /Bank shot/ }));
-  await tick(4000);
+  view.rerender(<GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={() => {}}/>);
+  await tick(2999);
   expect(save).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: /Add goal for Josh/ }));
-  await tick(0);
-  expect(save.mock.calls[0][0].flags).toEqual(['dunk', 'bank']);
+  await tick(1);
+  expect(oldSave).not.toHaveBeenCalled();
+  expect(save).toHaveBeenCalledExactlyOnceWith({...goal,flags:['dunk','bank']});
+});
+it('lets a pointer interaction near the deadline finish before saving an own goal', async () => {
+  const save = vi.fn().mockResolvedValue(undefined);
+  render(<GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={() => {}}/>);
+  await tick(2999);
+  const own=screen.getByRole('button',{name:/Own goal/});
+  fireEvent.pointerDown(own);
+  await tick(50);
+  expect(save).not.toHaveBeenCalled();
+  fireEvent.click(own);
+  expect(screen.getByRole('button',{name:/Add goal for Brooks/})).toBeTruthy();
+  await tick(3000);
+  expect(save).toHaveBeenCalledExactlyOnceWith({...goal,flags:['own_goal']});
 });
 it.each(['close', 'escape', 'unmount'])('cancels before the deadline on %s', async mode => {
   const save = vi.fn(), close = vi.fn();
@@ -95,7 +105,22 @@ it('leaves failed automatic saves open for manual retry without automatically re
 it('never automatically saves an edit', async () => {
   const save = vi.fn();
   render(<GoalDialog goal={goal} rivalry={rivalry} editing onSave={save} onClose={() => {}}/>);
+  fireEvent.click(screen.getByRole('button', { name: /Dunk/ }));
   await tick(10000);
   expect(save).not.toHaveBeenCalled();
   expect(screen.queryByText(/Regular goal saves/)).toBeNull();
+});
+
+it('keeps manual retry after a failed special-goal save even when flags change', async () => {
+ const save=vi.fn().mockRejectedValueOnce(new Error('Offline')).mockResolvedValue(undefined);
+ render(<GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={()=>{}}/>);
+ fireEvent.click(screen.getByRole('button',{name:/Dunk/}));
+ await tick(3000);
+ expect(save).toHaveBeenCalledOnce();
+ fireEvent.click(screen.getByRole('button',{name:/Bank shot/}));
+ await tick(5000);
+ expect(save).toHaveBeenCalledOnce();
+ fireEvent.click(screen.getByRole('button',{name:/Add goal for Josh/}));
+ await tick(0);
+ expect(save).toHaveBeenLastCalledWith({...goal,flags:['dunk','bank']});
 });

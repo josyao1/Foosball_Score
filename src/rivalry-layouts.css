@@ -225,3 +225,9 @@
 @media (prefers-reduced-motion: reduce) {
   .rc-ticket-carousel-list { scroll-behavior: auto; }
 }
+
+.rc-ticket-stub-heading { align-items: center; gap: 10px; }
+.rc-ticket-stub-heading > .rc-status { flex: 1; flex-wrap: nowrap; overflow: hidden; }
+.rc-ticket-stub-heading > .rc-status > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rc-ticket-stub-heading .rc-live { flex-shrink: 0; }
+.rc-ticket-stub-heading > .rc-ticket-stats-link { flex-shrink: 0; white-space: nowrap; }

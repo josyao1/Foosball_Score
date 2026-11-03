@@ -86,3 +86,12 @@
 .sc-frequency { color: var(--muted); font-size: 11px; margin: 4px 0 12px; }
 .sc-history { border-top: 1px solid var(--line); margin-top: 12px; }
 .sc-history summary { min-height: 44px; padding: 12px 0; cursor: pointer; font-size: 12px; }
+
+.sc-player-rates { margin: 14px 0; }
+.sc-player-rates h3 { margin: 0 0 6px; font-family: inherit; font-size: 12px; font-weight: 600; }
+.sc-player-rates ul { margin: 0; padding: 0; list-style: none; }
+.sc-player-rates li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 7px 0; font-size: 13px; }
+.sc-player-rates li > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.sc-player-rates li > span:last-child { display: flex; align-items: baseline; gap: 8px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.sc-player-rates small { color: var(--muted); font-size: 10px; }
+.sc-match-duration { font-size: 11px; color: var(--muted); }

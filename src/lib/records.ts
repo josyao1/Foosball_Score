@@ -2,7 +2,7 @@ import { creditedSide, isWinningScore, orderedGoals, score, winner } from './sta
 import { RUNGS, otherSide } from './types';
 import type { Game, Side } from './types';
 
-export type RecordKind = 'run' | 'burst' | 'quickest' | 'triple' | 'response' | 'comeback' | 'leadChanges';
+export type RecordKind = 'run' | 'burst' | 'quickest' | 'longest' | 'drought' | 'triple' | 'response' | 'comeback' | 'leadChanges';
 export interface Moment {
   kind: RecordKind;
   value: number;
@@ -12,6 +12,7 @@ export interface Moment {
 }
 export const recordLabels: Record<RecordKind, string> = {
   run: 'Biggest run', burst: '30-second burst', quickest: 'Quickest win',
+  longest: 'Longest win', drought: 'Longest drought',
   triple: 'Fastest three goals', response: 'Fastest response',
   comeback: 'Biggest comeback', leadChanges: 'Most lead changes',
 };
@@ -20,6 +21,7 @@ export function gameHighlights(game: Game) {
   const goals = orderedGoals(game.goals);
   const scores: Record<Side, number>[] = [{ a: 0, b: 0 }];
   const timeAhead = { a: 0, b: 0, tied: 0 };
+  const hadMatchPoint = { a: false, b: false };
   const rungSets = { a: new Set<string>(), b: new Set<string>() };
   const moments: Partial<Record<RecordKind, Moment>> = {};
   const largestDeficit = { a: 0, b: 0 }, deficitIndex = { a: 0, b: 0 };
@@ -34,9 +36,15 @@ export function gameHighlights(game: Game) {
     const before = scores[i], side = credited[i];
     const leading = before.a === before.b ? 'tied' : before.a > before.b ? 'a' : 'b';
     timeAhead[leading] += goal.elapsed_ms - lastTime;
+    if (goal.elapsed_ms > lastTime) consider({ kind: 'drought', value: goal.elapsed_ms - lastTime, side: null, start: Math.max(0, i - 1), end: i });
     lastTime = goal.elapsed_ms;
     const after = { ...before, [side]: before[side] + 1 };
     scores.push(after);
+    if (!isWinningScore(after)) {
+      for (const candidate of ['a', 'b'] as const) {
+        if (isWinningScore({...after, [candidate]: after[candidate] + 1})) hadMatchPoint[candidate] = true;
+      }
+    }
     if (i < goals.length - 1 && isWinningScore(after)) wonBeforeLast = true;
     if (after.a === 9 && after.b === 9) reachedDeuce = true;
     const leader = after.a === after.b ? null : after.a > after.b ? 'a' : 'b';
@@ -64,18 +72,21 @@ export function gameHighlights(game: Game) {
   const final = scores.at(-1)!;
   const w = winner(game);
   if (game.ended_at && goals.length && w) {
-    if (isWinningScore(final) && !wonBeforeLast) moments.quickest = { kind: 'quickest', value: lastTime, side: w, start: 0, end: goals.length - 1 };
+    if (isWinningScore(final) && !wonBeforeLast) {
+      moments.quickest = { kind: 'quickest', value: lastTime, side: w, start: 0, end: goals.length - 1 };
+      moments.longest = { ...moments.quickest, kind: 'longest' };
+    }
     if (largestDeficit[w] > 0) moments.comeback = { kind: 'comeback', value: largestDeficit[w], side: w, start: deficitIndex[w], end: goals.length - 1 };
   }
   if (leadChanges) moments.leadChanges = { kind: 'leadChanges', value: leadChanges, side: null, start: 0, end: goals.length - 1 };
-  return { moments, scores, goals, timeAhead, totalMs: lastTime, leadChanges, reachedDeuce, largestDeficit, allRungs: (['a', 'b'] as const).filter(side => rungSets[side].size === RUNGS.length) };
+  return { moments, scores, goals, timeAhead, totalMs: lastTime, leadChanges, reachedDeuce, hadMatchPoint, largestDeficit, allRungs: (['a', 'b'] as const).filter(side => rungSets[side].size === RUNGS.length) };
 }
 export interface BookRecord { game: Game; moment: Moment; ties: number }
 export function recordBook(games: Game[]) {
   const book: Partial<Record<RecordKind, BookRecord>> = {};
   const rates = {
-    a: { opener: [0, 0], clutch: [0, 0], comeback: [0, 0] },
-    b: { opener: [0, 0], clutch: [0, 0], comeback: [0, 0] },
+    a: { opener: [0, 0], clutch: [0, 0], comeback: [0, 0], matchPoint: [0, 0] },
+    b: { opener: [0, 0], clutch: [0, 0], comeback: [0, 0], matchPoint: [0, 0] },
   };
   // Earliest game holds a tied record; stable IDs resolve simultaneous starts.
   const completed = games.filter(g => g.ended_at).sort((a, b) => a.started_at.localeCompare(b.started_at) || a.id.localeCompare(b.id));
@@ -94,6 +105,7 @@ export function recordBook(games: Game[]) {
       for (const [key, eligible] of [
         ['opener', highlights.goals.length > 0 && creditedSide(highlights.goals[0]) === side],
         ['clutch', highlights.reachedDeuce],
+        ['matchPoint', highlights.hadMatchPoint[side]],
         ['comeback', highlights.largestDeficit[side] >= 3],
       ] as const) {
         if (eligible) { rates[side][key][1]++; if (w === side) rates[side][key][0]++; }
@@ -107,11 +119,12 @@ export function selectedMoment(game: Game, key: string | null) {
 }
 export function momentScore(game: Game, moment: Moment) {
   const { scores } = gameHighlights(game);
+  if (moment.kind === 'drought') return `${scores[moment.end].a}–${scores[moment.end].b} throughout`;
   const before = scores[moment.start + (moment.kind === 'comeback' ? 1 : 0)], after = scores[moment.end + 1];
   return `${before.a}–${before.b} → ${after.a}–${after.b}`;
 }
 export function recordValue(moment: Moment) {
-  if (lowerWins.has(moment.kind)) {
+  if (lowerWins.has(moment.kind) || moment.kind === 'longest' || moment.kind === 'drought') {
     const seconds = Math.round(moment.value / 100) / 10;
     return seconds >= 60 ? `${Math.floor(seconds / 60)}:${(seconds % 60).toFixed(1).padStart(4, '0')}` : `${seconds}s`;
   }
@@ -122,5 +135,5 @@ export const gameFinalScore = (game: Game) => { const s = score(game.goals); ret
 
 export function momentWindow(game: Game, moment: Moment) {
   const goals = orderedGoals(game.goals);
-  return { startMs: moment.kind === "quickest" || moment.kind === "leadChanges" ? 0 : goals[moment.start].elapsed_ms, endMs: goals[moment.end].elapsed_ms };
+  return { startMs: moment.kind === "quickest" || moment.kind === "longest" || moment.kind === "leadChanges" || (moment.kind === 'drought' && moment.end === 0) ? 0 : goals[moment.start].elapsed_ms, endMs: goals[moment.end].elapsed_ms };
 }

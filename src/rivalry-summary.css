@@ -270,3 +270,64 @@
   .rs-forest { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .rs-forest-facts > div { grid-template-columns: 110px minmax(0, 1fr); gap: 13px; }
 }
+
+/* Keep the extra rivalry stats in the same receipt footer. */
+.rs-clay .rs-ticket-stub { display: flex; flex-direction: column; gap: 16px; }
+.rs-ticket-footer-heading { display: flex; align-items: center; gap: 20px; }
+.rs-played-count { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; color: var(--muted); font-size: 11px; }
+.rs-played-count strong { font-size: 26px; line-height: 1.2; color: var(--text); }
+.rs-ticket-footer-heading > div { display: grid; gap: 3px; font-size: 12px; }
+.rs-ticket-footer-heading > div > span { color: var(--muted); font-size: 11px; }
+.rs-ticket-footer-heading > div > strong { font-weight: 500; }
+.rs-ticket-stub .rs-ticket-facts { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.rs-win-rates { table-layout: fixed; border-collapse: collapse; width: 100%; font-size: 11px; }
+.rs-win-rates th, .rs-win-rates td { padding: 9px 4px; border-top: 1px solid var(--line); vertical-align: middle; text-align: right; }
+.rs-win-rates th { font-weight: 450; color: var(--muted); }
+.rs-win-rates tr > :first-child { width: 42%; padding-left: 0; text-align: left; }
+.rs-win-rates tr > :last-child { padding-right: 0; }
+.rs-win-rates thead th { color: var(--text); font-weight: 600; padding-top: 12px; }
+.rs-win-rates td strong { font-size: 13px; }
+.rs-win-rates td small { display: block; font-size: 10px; }
+.rs-rate-player { display: inline; overflow-wrap: anywhere; }
+.rs-rate-dot { display: inline-block; width: 7px; height: 7px; margin-right: 4px; border: 1px solid #777; border-radius: 50%; vertical-align: 1px; }
+.rs-rate-dot.black { background: #111; }
+.rs-rate-dot.white { background: #fff; }
+@media (min-width: 561px) and (max-width: 800px) {
+ .rs-clay { grid-template-columns: minmax(0,1fr); }
+ .rs-clay .rs-ticket-stub { border-left: 0; border-top: 2px dashed var(--line); }
+ .rs-clay .rs-ticket-stub::before { left: -7px; top: -7px; }
+ .rs-clay .rs-ticket-stub::after { left: auto; right: -7px; top: -7px; bottom: auto; }
+}
+
+/* A single comparison keeps both players aligned from wins through win rates. */
+.rs-clay.rs-clay-unified { display: block; container: h2h-ticket / inline-size; }
+.rs-clay-unified .rs-ticket-body { padding-bottom: 14px; }
+.rs-clay-unified .rs-ticket-body > header { margin-bottom: 8px; }
+.rs-clay-unified .rs-win-rates { font-size: 12px; }
+.rs-clay-unified .rs-win-rates tr > :first-child { width: 40%; }
+.rs-clay-unified .rs-win-rates th, .rs-clay-unified .rs-win-rates td { padding-block: 10px; }
+.rs-clay-unified .rs-win-rates tr > :not(:first-child) { text-align: center; }
+.rs-clay-unified .rs-win-rates thead th { border-top: 0; font-size: 14px; }
+.rs-clay-unified .rs-comparison-totals td { font-size: 16px; }
+.rs-clay-unified .rs-comparison-wins > * { border-top: 0; }
+.rs-clay-unified .rs-comparison-wins strong { font-size: 42px; line-height: 1.1; }
+.rs-clay-unified .rs-comparison-divider th { padding-top: 16px; border-top: 1px dashed var(--line); font-size: 11px; font-weight: 600; }
+.rs-clay-unified .rs-comparison-divider + tr > * { border-top: 0; }
+.rs-clay-unified .rs-win-rates td small { display: inline; padding-left: 5px; }
+.rs-clay-unified .rs-ticket-stub { border-left: 0; border-top: 2px dashed var(--line); gap: 14px; padding: 16px 26px; }
+.rs-clay-unified .rs-ticket-stub::before { top: -7px; left: -7px; }
+.rs-clay-unified .rs-ticket-stub::after { top: -7px; left: auto; right: -7px; bottom: auto; }
+.rs-ticket-footer-metrics { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 11px; color: var(--muted); }
+.rs-ticket-footer-metrics strong { font-size: 14px; color: var(--text); }
+.rs-ticket-footer-facts > div { display: grid; grid-template-columns: 105px minmax(0,1fr); gap: 12px; align-items: baseline; }
+.rs-ticket-footer-facts dd { text-align: right; }
+.rs-ticket-footer-facts .rs-game-fact { justify-content: flex-end; }
+@container h2h-ticket (max-width: 440px) {
+ .rs-clay-unified .rs-ticket-body { padding: 16px; }
+ .rs-clay-unified .rs-ticket-stub { padding-inline: 16px; }
+ .rs-clay-unified .rs-win-rates { font-size: 11px; }
+ .rs-clay-unified .rs-win-rates thead th { font-size: 12px; }
+ .rs-clay-unified .rs-win-rates td small { display: block; padding-left: 0; }
+ .rs-clay-unified .rs-comparison-wins strong { font-size: 34px; }
+ .rs-ticket-footer-facts > div { grid-template-columns: 90px minmax(0,1fr); gap: 10px; }
+}

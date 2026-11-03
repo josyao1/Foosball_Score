@@ -71,6 +71,8 @@
 .record-stopwatch span, .record-stopwatch small { color: var(--muted); font-size: 11px; line-height: 1.5; }
 .record-stopwatch strong { font-size: 24px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .record-stopwatch > small { margin-left: auto; text-align: right; }
+.record-drought-timer > div { min-width: 0; }
+.record-drought-timer strong { font-size: clamp(16px, 6cqi, 24px); white-space: normal; overflow-wrap: anywhere; }
 @container (max-width: 360px) {
   .record-stopwatch { gap: 10px; }
   .record-stopwatch > small { max-width: 10ch; }

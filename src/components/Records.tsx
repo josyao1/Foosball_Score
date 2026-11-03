@@ -9,10 +9,12 @@ import type { Game, Rivalry, Side } from '../lib/types';
 import '../records.css';
 import { RecordMomentGraphic } from './RecordMomentGraphic';
 
-const kinds: RecordKind[] = ['run', 'comeback', 'quickest', 'leadChanges', 'triple', 'response'];
+const kinds: RecordKind[] = ['run', 'comeback', 'leadChanges', 'drought', 'quickest', 'longest', 'triple', 'response'];
 const explanations: Record<RecordKind, string> = {
   run: 'Consecutive points without an answer.', burst: 'Most points in a rolling 30-second window.',
   quickest: 'Start to final goal. First to 10, win by 2; no early finishes or goals after the winning score.',
+  longest: 'Start to final goal. First to 10, win by 2; no early finishes or goals after the winning score.',
+  drought: 'Longest stretch with neither player scoring, including kickoff to the first goal. Ends at a recorded goal.',
   comeback: 'Largest deficit overcome to win; later scores break ties.', triple: 'Time from the first to third point; opponent goals can occur between them.',
   response: 'Fastest goal immediately after conceding.', leadChanges: 'Switches in who is ahead. Tying the score is not a lead change.',
 };
@@ -21,12 +23,12 @@ function Player({ rivalry, side }: { rivalry: Rivalry; side: Side }) {
   return <span className="record-player"><i className={`record-side ${side}`} aria-hidden="true"/>{playerName(rivalry, side)}</span>;
 }
 function Sequence({ game, moment }: { game: Game; moment: Moment }) {
-  return <span className="record-sequence" aria-label={`Score moves from ${momentScore(game, moment)}`}>
+  return <span className="record-sequence" aria-label={`${moment.kind === 'drought' ? 'Score held at' : 'Score moves from'} ${momentScore(game, moment)}`}>
     <small>{momentScore(game, moment)}</small>
   </span>;
 }
 export function RecordBook({ games, rivalry }: { games: Game[]; rivalry: Rivalry }) {
-  const { book, rates, completed } = useMemo(() => recordBook(games), [games]);
+  const { book, completed } = useMemo(() => recordBook(games), [games]);
   const recordCount = kinds.filter(kind => book[kind]).length;
   return <section className="record-book" aria-labelledby="record-book-title">
     <div className="section-heading"><div><h2 id="record-book-title"><BookOpen size={24} aria-hidden="true"/> Record book</h2><p>{completed.length} finished {completed.length === 1 ? 'game' : 'games'} · {recordCount} records</p></div></div>
@@ -49,12 +51,7 @@ export function RecordBook({ games, rivalry }: { games: Game[]; rivalry: Rivalry
       })}
       {kinds.some(kind => !book[kind]) && <div className="record-unwritten"><span>Still to be set</span><p>{kinds.filter(kind => !book[kind]).map(kind => recordLabels[kind]).join(' · ')}</p></div>}
     </div>}
-    <section className="record-rates" aria-labelledby="record-rates-title"><h3 id="record-rates-title">More rivalry stats</h3>
-      <div className="record-rate-table" role="table" aria-label="Rivalry win rates">
-        <div role="row" className="record-rate-row"><span role="columnheader">Wins / games</span>{(['a', 'b'] as const).map(side => <strong role="columnheader" key={side}><Player rivalry={rivalry} side={side}/></strong>)}</div>
-        {([['opener', 'After scoring first'], ['clutch', 'After reaching 9–9'], ['comeback', 'After trailing by 3+']] as const).map(([key, label]) => <div role="row" className="record-rate-row" key={key}><span role="rowheader">{label}</span>{(['a', 'b'] as const).map(side => { const [wins, total] = rates[side][key]; return <span role="cell" key={side}>{total ? <><strong>{Math.round(wins / total * 100)}%</strong> <small>({wins}/{total})</small></> : '—'}</span>; })}</div>)}
-      </div>
-    </section>
+
   </section>;
 }
 export function GameHighlightTags({ game, rivalry, selected }: { game: Game; rivalry: Rivalry; selected?: Moment }) {

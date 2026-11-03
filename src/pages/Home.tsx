@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { gameTime } from "../lib/time";
 import { useStore } from "../lib/store";
-import { dateLabel, score, winner, playingTime, playingTimeLabel } from "../lib/stats";
+import { dateLabel, score, winner, playingTime, playingTimeLabel, clock } from "../lib/stats";
 import { playerName } from "../lib/types";
 import type { Game, Rivalry } from "../lib/types";
 import { RivalryCollection } from "../components/RivalryCollection";
@@ -98,7 +98,7 @@ export function GameCard({
             ? `Game ${String(index).padStart(2, "0")}`
             : dateLabel(game.started_at)}
         </span>
-        <small>{index !== undefined ? `${dateLabel(game.started_at)} · ${gameTime(game.started_at)}` : gameTime(game.started_at)}</small>
+        <small>{index !== undefined ? `${dateLabel(game.started_at)} · ${gameTime(game.started_at)}` : gameTime(game.started_at)}{game.ended_at && <span className="game-card-duration">Game time {clock(playingTime([game]))}</span>}</small>
       </div>
       <div className="mini-match">
         <span className={`mini-name ${w === "a" ? "text-a" : ""}`}>

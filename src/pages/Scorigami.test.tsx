@@ -97,16 +97,26 @@ it('opens and dismisses a small score popup with latest game, count and focus re
  expect(screen.queryByRole('dialog')).toBeNull();
 });
 
-it('keeps the board on its own and makes full score history available inside the popup', () => {
- fixture.games=Array.from({length:6},(_,i)=>game(`match-${i}`,10,8));
- const {container}=render(<MemoryRouter><Scorigami/></MemoryRouter>);
- expect(container.querySelector('.sc-details')).toBeNull();
+it('shows only the earliest and latest games with date, Pacific time and game duration', () => {
+ fixture.games=Array.from({length:6},(_,i)=>({...game(`match-${i}`,10,8,'r',`2026-11-0${i+1}T19:00:00Z`),started_at:`2026-11-0${i+1}T18:00:00Z`}));
+ render(<MemoryRouter><Scorigami/></MemoryRouter>);
  fireEvent.click(screen.getByRole('button',{name:'10–8: 6 games'}));
  const popup=screen.getByRole('dialog');
- const summary=within(popup).getByText('Previous games (5)');
- fireEvent.click(summary);
- fireEvent.click(within(popup).getByRole('button',{name:'Show all 6 games'}));
- expect(within(popup).getAllByRole('link')).toHaveLength(6);
+ const links=within(popup).getAllByRole('link');
+ expect(links.map(link=>link.getAttribute('href'))).toEqual(['/game/match-5','/game/match-0']);
+ expect(within(popup).getByText('First game')).toBeTruthy();
+ expect(within(popup).getByText('Latest game')).toBeTruthy();
+ expect(within(popup).getAllByText('Game time 0:18')).toHaveLength(2);
+ expect(within(popup).getByText(/Nov 1, 2026 · 10:00 AM PST/)).toBeTruthy();
+ expect(within(popup).queryByText(/Previous games/)).toBeNull();
+});
+it('shows a single occurrence once as the first and latest game',()=>{
+ fixture.games=[game('only',10,6)];
+ render(<MemoryRouter><Scorigami/></MemoryRouter>);
+ fireEvent.click(screen.getByRole('button',{name:'10–6: 1 game'}));
+ const popup=screen.getByRole('dialog');
+ expect(within(popup).getByText('First & latest game')).toBeTruthy();
+ expect(within(popup).getAllByRole('link')).toHaveLength(1);
 });
 
 it('shows a compact overtime empty state and resets it when rivalry changes', () => {
@@ -131,4 +141,21 @@ it('dismisses the popup when a live refresh removes its overtime bar', () => {
  view.rerender(<MemoryRouter><Scorigami/></MemoryRouter>);
  expect(screen.queryByRole('dialog')).toBeNull();
  expect(screen.getByRole('button',{name:'11–9: 1 game'})).toBeTruthy();
+});
+
+it('shows win percentages only for participants in the selected score and rivalry', () => {
+ fixture.games=[game('win',10,6),game('loss',6,10),game('other-score',10,8,'other')];
+ render(<MemoryRouter><Scorigami/></MemoryRouter>);
+ fireEvent.click(screen.getByRole('button',{name:'10–6: 2 games'}));
+ const rates=screen.getByRole('region',{name:'Player win rates at this score'});
+ expect(within(rates).getAllByText('50%')).toHaveLength(2);
+ expect(within(rates).getByText('Josh')).toBeTruthy();
+ expect(within(rates).getByText('Brooks')).toBeTruthy();
+ expect(within(rates).queryByText('Andrew')).toBeNull();
+ fireEvent.change(screen.getByLabelText('Rivalry'),{target:{value:'other'}});
+ fireEvent.click(screen.getByRole('button',{name:'10–8: 1 game'}));
+ const filtered=screen.getByRole('region',{name:'Player win rates at this score'});
+ expect(within(filtered).getByText('100%')).toBeTruthy();
+ expect(within(filtered).getByText('0%')).toBeTruthy();
+ expect(within(filtered).queryByText('Josh')).toBeNull();
 });

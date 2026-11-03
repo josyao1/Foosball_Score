@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { scorigami } from './scorigami';
+import { scorigami, scorePlayerStats } from './scorigami';
 import type { Game } from './types';
 
 export function scoredGame(id: string, a: number, b: number, rivalry = 'r', ended = '2026-11-01T19:00:00Z'): Game {
@@ -33,4 +33,16 @@ describe('scorigami final scores', () => {
     expect(scorigami([g]).buckets.has('48-45')).toBe(false);
     expect(scorigami([])).toMatchObject({maxScore:10,completed:[],common:undefined});
   });
+});
+
+it('calculates per-score player win rates across reversed sides without uninvolved players', () => {
+ const rivalries=[{id:'r',player_a:'Josh',player_b:'Brooks',created_at:''},{id:'other',player_a:' brooks ',player_b:'Alex',created_at:''},{id:'unused',player_a:'Nobody',player_b:'Else',created_at:''}];
+ const games=[scoredGame('a',10,6),scoredGame('b',6,10),scoredGame('c',10,6,'other')];
+ const stats=scorePlayerStats(games,rivalries);
+ expect(stats.find(p=>p.name==='Josh')).toMatchObject({wins:1,played:2,percentage:50});
+ expect(stats.find(p=>p.name.toLowerCase()==='brooks')).toMatchObject({wins:2,played:3,percentage:67});
+ expect(stats.find(p=>p.name==='Alex')).toMatchObject({wins:0,played:1,percentage:0});
+ expect(stats).toHaveLength(3);
+ expect(scorePlayerStats([],rivalries)).toEqual([]);
+ expect(scorePlayerStats([scoredGame('missing',10,6,'missing')],rivalries)).toEqual([]);
 });

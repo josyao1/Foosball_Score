@@ -37,7 +37,7 @@ function MomentumView({ game, rivalry, highlight, watchMoment }: Props) {
   const limit = Math.max(2, ...momentum.map(p => Math.abs(p.lead)));
   // Finish at the last goal, not the later tap on the Finish game button.
   const total = Math.max(1, momentum[momentum.length - 1].elapsed);
-  const replay = useMomentumReplay(total, watchMoment && highlightedWindow ? Math.max(0, highlightedWindow.startMs - 1000) : undefined);
+  const replay = useMomentumReplay(total, watchMoment ? (highlightedWindow ? Math.max(0, highlightedWindow.startMs - 1000) : 0) : undefined);
   const replaying = replay.position !== null;
   const chartTotal = replaying ? total : Math.max(total, duration(game));
   const playhead = replay.position ?? chartTotal;

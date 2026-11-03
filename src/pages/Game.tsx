@@ -37,6 +37,7 @@ export function GamePage() {
   const design=useDesign();
   const [searchParams] = useSearchParams();
   const recordKey = searchParams.get("record");
+  const watchReplay = searchParams.get("play") === "1";
   const { id } = useParams(),
     store = useStore(),
     navigate = useNavigate(),
@@ -54,8 +55,8 @@ export function GamePage() {
   const game = store.games.find((g) => g.id === id),
     r = store.rivalries.find((r) => r.id === game?.rivalry_id);
   useEffect(() => {
-    if (recordKey) document.getElementById("momentum")?.scrollIntoView?.({ block: "start" });
-  }, [id, recordKey]);
+    if (recordKey || watchReplay) document.getElementById("momentum")?.scrollIntoView?.({ block: "start" });
+  }, [id, recordKey, watchReplay]);
   useEffect(() => {
     const i = window.setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(i);
@@ -211,8 +212,8 @@ export function GamePage() {
             <details className="game-help">
             <summary>Scoring help</summary>
             <p>
-              Tap a rung. Regular goals save after 3 seconds. Selecting a flag
-              stops the countdown so you can confirm it. Own goals go to the other player.
+              Tap a rung. Goals save after 3 seconds. Changing a special flag
+              restarts the countdown. Own goals go to the other player.
             </p>
             <p>
               The clock keeps running if you leave. Come back here to pick up
@@ -241,7 +242,7 @@ export function GamePage() {
         <>
           <GameHighlightTags game={game} rivalry={r} selected={highlight}/>
           <div className="game-report-overview">
-            <Momentum key={`${game.id}-${recordKey}`} game={game} rivalry={r} highlight={highlight} watchMoment={searchParams.get("play") === "1"} />
+            <Momentum key={`${game.id}-${recordKey}`} game={game} rivalry={r} highlight={highlight} watchMoment={watchReplay} />
             <RungStats game={game} rivalry={r} />
           </div>
           <Timeline

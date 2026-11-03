@@ -20,13 +20,22 @@ export function GoalDialog({
   const [draft, setDraft] = useState(goal),
     [pending, setPending] = useState(false),
     [error, setError] = useState("");
-  const [autoEnabled, setAutoEnabled] = useState(!editing && goal.flags.length === 0);
+  const [autoEnabled, setAutoEnabled] = useState(!editing);
+  const [autoVersion, setAutoVersion] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(3);
   const autoAllowed = useRef(autoEnabled), inFlight = useRef(false), dismissed = useRef(false), mounted = useRef(false);
   const latestSave = useRef<() => Promise<void>>(async () => {});
   function stopAutoSave() {
     autoAllowed.current = false;
     setAutoEnabled(false);
+  }
+  function restartAutoSave() {
+    if (editing || inFlight.current || dismissed.current || error) return;
+    // Block a timer already queued at the old deadline until the new effect runs.
+    autoAllowed.current = false;
+    setSecondsLeft(3);
+    setAutoEnabled(true);
+    setAutoVersion(version => version + 1);
   }
   function dismiss() {
     dismissed.current = true;
@@ -60,18 +69,19 @@ export function GoalDialog({
   }, []);
   useEffect(() => {
     if (editing || !autoEnabled) return;
+    autoAllowed.current = true;
     const deadline = Date.now() + 3000;
     const tick = window.setInterval(() => setSecondsLeft(Math.max(0, Math.ceil((deadline - Date.now()) / 1000))), 250);
     const timeout = window.setTimeout(() => {
       if (autoAllowed.current && !dismissed.current) void latestSave.current();
     }, 3000);
     return () => { clearInterval(tick); clearTimeout(timeout); };
-  }, [editing, autoEnabled]);
+  }, [editing, autoEnabled, autoVersion]);
   const own = draft.flags.includes("own_goal"),
     credited = own ? otherSide(draft.actor_side) : draft.actor_side;
   function toggle(flag: GoalFlag) {
     if (inFlight.current || dismissed.current) return;
-    stopAutoSave();
+    restartAutoSave();
     setDraft((g) => ({
       ...g,
       flags: g.flags.includes(flag)
@@ -166,8 +176,8 @@ export function GoalDialog({
               key={flag}
               className={`flag-option ${draft.flags.includes(flag) ? "selected" : ""}`}
               aria-pressed={draft.flags.includes(flag)}
-              onPointerDown={stopAutoSave}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") stopAutoSave(); }}
+              onPointerDown={restartAutoSave}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") restartAutoSave(); }}
               onClick={() => toggle(flag)}
             >
               <Icon size={20} />
@@ -188,7 +198,7 @@ export function GoalDialog({
         </p>
         {!editing && !pending && (
           <p className="goal-auto-save" role="status">
-            {autoEnabled ? `Regular goal saves in ${secondsLeft}…` : "Auto-save stopped. Confirm when ready."}
+            {autoEnabled ? `${draft.flags.length ? "Goal" : "Regular goal"} saves in ${secondsLeft}…` : "Auto-save stopped. Confirm when ready."}
           </p>
         )}
         {error && (

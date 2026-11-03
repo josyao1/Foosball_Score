@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gameHighlights, recordBook, momentScore } from './records';
+import { gameHighlights, recordBook, momentScore, momentWindow, recordValue } from './records';
 import type { Game } from './types';
 const make = (seq: string, times = [...seq].map((_, i) => (i + 1) * 10000)): Game => ({
   id: 'game', rivalry_id: 'r', revision: 1, started_at: '2026-10-01T00:00:00Z', ended_at: '2026-10-01T01:00:00Z',
@@ -26,8 +26,35 @@ describe('record book', () => {
     expect(gameHighlights(make('aaaaaaaaaa')).moments.quickest?.value).toBe(100000);
     for (const g of [make('aaaa'), { ...make('aaaaaaaaaa'), ended_at: null }, make('aaaaaaaaaaa'), make('ab'.repeat(9) + 'a')]) {
       expect(gameHighlights(g).moments.quickest).toBeUndefined();
+      expect(gameHighlights(g).moments.longest).toBeUndefined();
     }
     expect(gameHighlights(make('ababababababababababaa')).moments.quickest).toBeDefined();
+  });
+  it('ranks longest wins by the final goal, opposite to quickest wins, ignoring finish-button delays', () => {
+    const fast = make('aaaaaaaaaa');
+    const slow = {...make('bbbbbbbbbb', Array.from({length:10}, (_,i)=>(i+1)*20000)), id:'slow'};
+    const book = recordBook([fast, slow]).book;
+    expect(book.quickest?.game.id).toBe('game');
+    expect(book.longest).toMatchObject({game:{id:'slow'},moment:{value:200000,side:'b'}});
+    expect(recordValue(book.longest!.moment)).toBe('3:20.0');
+    expect(momentWindow(slow, book.longest!.moment)).toEqual({startMs:0,endMs:200000});
+  });
+  it('measures droughts across both players and ignores time after the final goal', () => {
+    const g = make('abba', [10000, 20000, 120000, 130000]);
+    const moment = gameHighlights(g).moments.drought!;
+    expect(moment).toMatchObject({value:100000,side:null,start:1,end:2});
+    expect(momentWindow(g,moment)).toEqual({startMs:20000,endMs:120000});
+    expect(momentScore(g,moment)).toBe('1–1 throughout');
+    expect(recordValue(moment)).toBe('1:40.0');
+    expect(recordBook([{...g,ended_at:null}]).book.drought).toBeUndefined();
+  });
+  it('includes kickoff droughts, handles zero-time goals and breaks equal records stably', () => {
+    const g = make('ab', [60000, 61000]);
+    const moment = gameHighlights(g).moments.drought!;
+    expect(momentWindow(g,moment)).toEqual({startMs:0,endMs:60000});
+    expect(momentScore(g,moment)).toBe('0–0 throughout');
+    expect(gameHighlights(make('ab',[0,0])).moments.drought).toBeUndefined();
+    expect(recordBook([{...g,id:'z'},g]).book.drought).toMatchObject({game:{id:'game'},ties:1});
   });
   it('does not count ties as lead changes and integrates time ahead through final goal', () => {
     const h = gameHighlights(make('abba', [10000, 20000, 30000, 40000]));
@@ -90,5 +117,28 @@ describe('comeback tiebreakers', () => {
     const whiteLate=asWhite(late);
     whiteLate.goals[0]={...whiteLate.goals[0],actor_side:'a',flags:['own_goal']};
     expect(recordBook([asWhite(early),whiteLate]).book.comeback).toMatchObject({game:{id:'late'},moment:{side:'b',value:4,start:13}});
+  });
+});
+
+describe('match-point win rate', () => {
+  it('counts each game once, including a player who had match point but lost', () => {
+    // 9–8 -> 9–9 -> 10–9 -> 10–10 -> 10–11 -> 10–12.
+    const game=make('ab'.repeat(8)+'ababb b'.replaceAll(' ',''));
+    const rates=recordBook([game]).rates;
+    expect(rates.a.matchPoint).toEqual([0,1]);
+    expect(rates.b.matchPoint).toEqual([1,1]);
+  });
+  it('requires the next goal to win by two and does not count already-won states', () => {
+    expect(gameHighlights(make('ab'.repeat(9))).hadMatchPoint).toEqual({a:true,b:false}); // A was at 9–8 before 9–9.
+    const tied=gameHighlights(make('ab'.repeat(8)+'ba')); // B was at 9–8; A never held match point.
+    expect(tied.hadMatchPoint).toEqual({a:false,b:true});
+    expect(gameHighlights(make('a'.repeat(8))).hadMatchPoint).toEqual({a:false,b:false});
+    const won=gameHighlights(make('a'.repeat(10)+'b'.repeat(9)));
+    expect(won.hadMatchPoint.b).toBe(false); // 10–9 is already won by A, not match point for B.
+  });
+  it('credits own goals correctly and excludes live games from the rate', () => {
+    const own=make('a'.repeat(8)+'ba'); own.goals[8].flags=['own_goal']; // 9–0 -> 10–0.
+    expect(recordBook([own]).rates.a.matchPoint).toEqual([1,1]);
+    expect(recordBook([{...own,ended_at:null}]).rates.a.matchPoint).toEqual([0,0]);
   });
 });

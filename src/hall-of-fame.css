@@ -1,0 +1,87 @@
+.hall-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.hall-page-heading h1 { min-width: 0; }
+.hall-filter { display: grid; gap: 5px; width: 250px; max-width: 45%; flex-shrink: 0; font-size: 11px; color: var(--muted); }
+.hall-filter select { width: 100%; min-width: 0; min-height: 44px; border: 1px solid var(--line); border-radius: 8px; color: var(--text); background: var(--panel); padding: 8px 28px 8px 10px; font-size: 13px; text-overflow: ellipsis; }
+.hall-page-heading h1 { margin: 12px 0 0; }
+.hall-page-heading > span, .hall-intro { color: var(--muted); font-size: 14px; }
+.hall-intro { margin: 12px 0 28px; }
+.hall-gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.hall-poster { container: match-poster / inline-size; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-top: 5px solid var(--text); padding: 22px; display: flex; flex-direction: column; }
+.hall-feature { grid-column: 1 / -1; border-top-width: 8px; }
+.hall-gold { background: #f7edce; border-color: #baa16b; border-top-color: #95712b; }
+.hall-silver { background: #eeede7; border-color: #b0aea5; border-top-color: #7c7d77; }
+.hall-gold .hall-rank { color: #806023; }
+.hall-silver .hall-rank { color: #646660; }
+.hall-bronze { background: #f1dfcd; border-color: #bc9576; border-top-color: #98623d; }
+.hall-bronze .hall-rank { color: #875632; }
+.hall-poster-head { display: flex; align-items: center; gap: 16px; }
+.hall-rank { font-family: Georgia, serif; font-size: 42px; font-weight: 700; line-height: 1; letter-spacing: -.05em; }
+.hall-feature .hall-rank { font-size: 64px; }
+.hall-date { display: grid; gap: 4px; color: var(--muted); font-size: 12px; }
+.hall-rating { margin-left: auto; background: transparent; color: var(--text); border: 0; border-bottom: 1px dotted var(--text); border-radius: 0; padding: 4px 0; min-height: 44px; text-align: right; cursor: pointer; }
+.hall-rating > strong { display: block; font-size: 25px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.hall-rating > span { font-size: 11px; }
+.hall-rating small { color: var(--muted); font-size: inherit; }
+.hall-poster-match { margin-top: 24px; }
+.hall-score { margin: 0; }
+.hall-score > a { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; text-align: center; align-items: end; }
+.hall-contender { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.hall-player { font-family: var(--body-font); font-size: 16px; line-height: 1.3; overflow-wrap: anywhere; min-height: 42px; }
+.hall-side { display: inline-block; width: 9px; height: 9px; border-radius: 50%; border: 1px solid #7e7c76; flex-shrink: 0; vertical-align: middle; margin-right: 6px; }
+.hall-side.black { background: #151818; }
+.hall-side.white { background: #fff; }
+.hall-contender > strong { font-family: Georgia, serif; font-size: clamp(48px, 15cqi, 88px); font-weight: 500; line-height: 1.15; font-variant-numeric: lining-nums tabular-nums; letter-spacing: -.06em; }
+.hall-score-divider { font-size: 30px; line-height: 2.8; font-weight: 400; color: var(--muted); }
+.hall-momentum { margin: 20px 0 0; min-width: 0; }
+.hall-momentum figcaption { display: flex; justify-content: space-between; gap: 16px; font-size: 11px; color: var(--muted); }
+.hall-momentum figcaption > span { max-width: 48%; overflow-wrap: anywhere; }
+.hall-momentum figcaption > span:last-child { text-align: right; }
+.hall-momentum svg { display: block; width: 100%; height: auto; aspect-ratio: 32 / 9; margin: 6px 0; overflow: visible; }
+.hall-trace { stroke: var(--text); stroke-width: 2; fill: none; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.hall-trace-fill { fill: var(--text); opacity: .1; }
+.hall-tie-line { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 5; opacity: .6; vector-effect: non-scaling-stroke; }
+.hall-trace-end { fill: var(--text); }
+.hall-axis { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.hall-captions { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 20px 0; margin: 0; }
+.hall-captions li { font-size: 12px; padding: 5px 9px; background: var(--panel-light); border-radius: 4px; overflow-wrap: anywhere; }
+.hall-poster-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: auto; border-top: 1px solid var(--line); padding-top: 8px; }
+.hall-poster-footer a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 13px; }
+.hall-play { font-weight: 650; }
+.hall-poster a:hover, .hall-rating:hover { text-decoration: underline; text-underline-offset: 4px; }
+.hall-poster :is(a, button):focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
+@container match-poster (min-width: 700px) {
+  .hall-poster-match { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: center; gap: 40px; margin-block: 32px 12px; }
+  .hall-momentum { margin: 0; }
+  .hall-player { font-size: 21px; min-height: 54px; }
+  .hall-contender > strong { font-size: 110px; }
+  .hall-score-divider { line-height: 3.8; }
+}
+@container match-poster (max-width: 340px) {
+  .hall-poster-head { gap: 10px; flex-wrap: wrap; }
+  .hall-rank { font-size: 36px; }
+  .hall-feature .hall-rank { font-size: 44px; }
+  .hall-date { font-size: 11px; }
+  .hall-rating > strong { font-size: 22px; }
+  .hall-player { font-size: 14px; }
+  .hall-score-divider { font-size: 24px; line-height: 2.6; }
+}
+.hall-breakdown > p { margin: 10px 0; }
+.hall-breakdown-total { color: var(--muted); }
+.hall-breakdown-total strong { font-family: Georgia, serif; font-size: 48px; color: var(--text); }
+.hall-breakdown dl { margin: 24px 0 16px; }
+.hall-breakdown dl > div { padding: 12px 0; border-top: 1px solid var(--line); }
+.hall-breakdown dt { display: flex; gap: 16px; justify-content: space-between; font-weight: 600; }
+.hall-breakdown dt strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hall-breakdown dt small { color: var(--muted); font-weight: 400; }
+.hall-breakdown dd { margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.hall-method-note { font-size: 12px; color: var(--muted); line-height: 1.5; }
+@media (max-width: 700px) {
+  .hall-gallery { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .hall-poster { padding: 16px; }
+}
+@media (max-width: 600px) {
+  .hall-page-heading { gap: 12px; align-items: end; }
+  .hall-page-heading h1 { font-size: 30px; letter-spacing: -1px; }
+  .hall-filter { max-width: 43%; }
+}
+

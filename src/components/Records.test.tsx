@@ -15,7 +15,8 @@ it('links each record to its existing game, with the selected record and chart a
   const data = createRecordDemoData(), r = data.rivalries[0], games = data.games.filter(g => g.rivalry_id === r.id);
   render(<MemoryRouter><RecordBook games={games} rivalry={r}/></MemoryRouter>);
   expect(screen.queryByRole('heading', {name:'30-second burst'})).toBeNull();
-  expect(document.querySelectorAll('.record-entry')).toHaveLength(6);
+  expect(document.querySelectorAll('.record-entry')).toHaveLength(8);
+  expect([...document.querySelectorAll('.record-entry h3')].map(el=>el.textContent)).toEqual(['Biggest run','Biggest comeback','Most lead changes','Longest drought','Quickest win','Longest win','Fastest three goals','Fastest response']);
   for (const { game, moment } of Object.values(recordBook(games).book).filter(entry => entry.moment.kind !== 'burst')) {
     expect(document.querySelector(`a[href="/game/${game.id}?record=${moment.kind}#momentum"]`)).toBeTruthy();
     expect(document.querySelector(`a[href="/game/${game.id}?record=${moment.kind}&play=1#momentum"]`)).toBeTruthy();
@@ -101,4 +102,10 @@ it('keeps preview spacing proportional to logged time and uses a stopwatch for q
   rerender(<RecordMomentGraphic game={game} moment={{kind:'quickest',value:12000,side:'a',start:0,end:2}}/>);
   expect(container.querySelector('.record-mini')).toBeNull();
   expect(container.querySelector('.record-stopwatch')?.textContent).toContain('3 – 0');
+  rerender(<RecordMomentGraphic game={game} moment={{kind:'longest',value:12000,side:'a',start:0,end:2}}/>);
+  expect(container.querySelector('.record-mini')).toBeNull();
+  expect(container.querySelector('.record-stopwatch')?.textContent).toContain('3 – 0');
+  rerender(<RecordMomentGraphic game={game} moment={{kind:'drought',value:10000,side:null,start:1,end:2}}/>);
+  expect(container.querySelector('.record-mini')).toBeNull();
+  expect(container.querySelector('.record-stopwatch')?.textContent).toContain('0:02 – 0:12');
 });

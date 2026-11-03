@@ -3,8 +3,8 @@ import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../lib/store';
-import { scorigami, scoreKey } from '../lib/scorigami';
-import { score } from '../lib/stats';
+import { scorigami, scoreKey, scorePlayerStats } from '../lib/scorigami';
+import { score, clock, playingTime } from '../lib/stats';
 import { gameDate, gameTime } from '../lib/time';
 import type { Game, Rivalry } from '../lib/types';
 import '../scorigami.css';
@@ -15,8 +15,9 @@ const REGULAR_SCORES = Array.from({ length: 9 }, (_, low) => [10, low] as const)
 
 function MatchLink({ game, rivalry }: { game: Game; rivalry?: Rivalry }) {
   const s = score(game.goals);
-  return <Link className="sc-match" to={`/game/${game.id}`} aria-label={`${rivalry?.player_a ?? 'Black'} ${s.a}, ${rivalry?.player_b ?? 'White'} ${s.b}. ${gameDate(game.started_at)}, ${gameTime(game.started_at)}. View game`}>
+  return <Link className="sc-match" to={`/game/${game.id}`} aria-label={`${rivalry?.player_a ?? 'Black'} ${s.a}, ${rivalry?.player_b ?? 'White'} ${s.b}. ${gameDate(game.started_at)}, ${gameTime(game.started_at)}. Game time ${clock(playingTime([game]))}. View game`}>
     <span className="sc-match-players"><span>{rivalry?.player_a ?? 'Black'} <b>{s.a}</b></span><span>{rivalry?.player_b ?? 'White'} <b>{s.b}</b></span></span>
+    <span className="sc-match-duration">Game time {clock(playingTime([game]))}</span>
     <span className="sc-match-date">{gameDate(game.started_at)} · {gameTime(game.started_at)} <ArrowUpRight size={14} aria-hidden="true"/></span>
   </Link>;
 }
@@ -27,7 +28,6 @@ export function Scorigami() {
   const [selection, setSelection] = useState<readonly [number, number]>([10, 0]);
   const [overtimePage, setOvertimePage] = useState(0);
   const [revealKey, setRevealKey] = useState<string | null>(null);
-  const [showAll, setShowAll] = useState(false);
   const charts = useRef<HTMLDivElement>(null);
   const [popupAnchor, setPopupAnchor] = useState<HTMLButtonElement | null>(null);
   const closePopup = useCallback(() => setPopupAnchor(null), []);
@@ -44,11 +44,12 @@ export function Scorigami() {
   const matches = selected?.games ?? [];
   const count = matches.length;
   const first = matches.at(-1);
+  const players = scorePlayerStats(matches, rivalries);
   const peak = data.common?.games.length ?? 1;
   const regularCount = data.completed.filter(g => { const s = score(g.goals); return Math.max(s.a, s.b) === 10; }).length;
   const overtimeCount = data.completed.length - regularCount;
   const select = (high: number, low: number, anchor: HTMLButtonElement) => {
-    setSelection([high, low]); setShowAll(false); setPopupAnchor(anchor);
+    setSelection([high, low]); setPopupAnchor(anchor);
   };
   const revealCommon = () => {
     if (!data.common) return;
@@ -61,7 +62,7 @@ export function Scorigami() {
     const anchor = charts.current?.querySelector<HTMLButtonElement>(`button[data-score="${revealKey}"]`);
     if (anchor) {
       const [high, low] = revealKey.split('-').map(Number);
-      setSelection([high, low]); setShowAll(false); setPopupAnchor(anchor);
+      setSelection([high, low]); setPopupAnchor(anchor);
     }
     setRevealKey(null);
   }, [revealKey, page]);
@@ -92,7 +93,7 @@ export function Scorigami() {
   const sectionCount = (n: number) => <span className="sc-section-count"><strong>{n}</strong> {n === 1 ? 'game' : 'games'}{data.completed.length > 0 && <span> · {Math.round(n / data.completed.length * 100)}%</span>}</span>;
 
   return <div className="scorigami-page">
-    <header className="sc-heading"><div><h1>Scorigami</h1><p>How your games finish.</p></div><label className="sc-filter">Rivalry<select value={scope} onChange={e => { setScope(e.target.value); setOvertimePage(0); setRevealKey(null); setShowAll(false); closePopup(); }}><option value="">All rivalries</option>{rivalries.map(r => <option key={r.id} value={r.id}>{r.player_a} vs {r.player_b}</option>)}</select></label></header>
+    <header className="sc-heading"><div><h1>Scorigami</h1><p>How your games finish.</p></div><label className="sc-filter">Rivalry<select value={scope} onChange={e => { setScope(e.target.value); setOvertimePage(0); setRevealKey(null); closePopup(); }}><option value="">All rivalries</option>{rivalries.map(r => <option key={r.id} value={r.id}>{r.player_a} vs {r.player_b}</option>)}</select></label></header>
     <div className="sc-summary"><span><strong>{data.buckets.size}</strong> different scores</span><span><strong>{data.completed.length}</strong> finished games</span>{data.common && <button type="button" onClick={revealCommon}>Most common <strong>{data.common.high}–{data.common.low}</strong><span>{data.common.games.length}×</span></button>}</div>
     <div ref={charts} className={`sc-distributions${overtimeCount ? ' sc-distributions--paired' : ''}`}>
       <section className="sc-distribution sc-regular" aria-labelledby="sc-regular-title">
@@ -111,8 +112,8 @@ export function Scorigami() {
     {!data.completed.length && <p className="sc-empty">Finish a game and its final score will appear here.</p>}
     <p className="sc-caption">Bar height = game count. Tap a score for details. Standard finishes only.</p>
     {popupAnchor && <ScorePopover anchor={popupAnchor} score={`${selectedHigh}–${selectedLow}`} count={count} onClose={closePopup}>
-      {count ? <><p className="sc-frequency">{Math.round(count / data.completed.length * 100)}% of finished games</p><span className="sc-popover-latest">Latest game</span><MatchLink game={matches[0]} rivalry={rivalryMap.get(matches[0].rivalry_id)}/>{first && <p className="sc-first">First recorded {gameDate(first.ended_at!)}</p>}
-        {count > 1 && <details className="sc-history"><summary>Previous games ({count - 1})</summary><div className="sc-previous">{(showAll ? matches.slice(1) : matches.slice(1, 4)).map(game => <MatchLink key={game.id} game={game} rivalry={rivalryMap.get(game.rivalry_id)}/>)}</div>{count > 4 && <button className="text-button sc-more" onClick={() => setShowAll(!showAll)}>{showAll ? 'Show fewer' : `Show all ${count} games`}</button>}</details>}
+      {count ? <><p className="sc-frequency">{Math.round(count / data.completed.length * 100)}% of finished games</p><section className="sc-player-rates" aria-label="Player win rates at this score"><h3>Win rate at this score</h3><ul>{players.map(player => <li key={player.name.toLowerCase()}><span>{player.name}</span><span><strong>{player.percentage}%</strong><small>{player.wins}W · {player.played - player.wins}L</small></span></li>)}</ul></section><span className="sc-popover-latest">{count === 1 ? 'First & latest game' : 'Latest game'}</span><MatchLink game={matches[0]} rivalry={rivalryMap.get(matches[0].rivalry_id)}/>
+        {count > 1 && first && <><span className="sc-popover-latest">First game</span><MatchLink game={first} rivalry={rivalryMap.get(first.rivalry_id)}/></>}
       </> : <p className="sc-empty">This score hasn't happened yet.</p>}
     </ScorePopover>}
     <p className="sc-credit">Inspired by <a href="https://nflscorigami.com/" target="_blank" rel="noreferrer">NFL Scorigami</a>.</p>

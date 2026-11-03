@@ -11,7 +11,7 @@ import { RivalrySummary } from "../components/RivalrySummary";
 import { ConfirmDialog } from "../components/Dialog";
 import { RivalryBreakdown } from "../components/RivalryBreakdown";
 import { RecordBook } from "../components/Records";
-import { GameCard } from "./Home";
+import { GameHistory } from "../components/GameHistory";
 export function RivalryPage() {
   const design=useDesign();
   const { id } = useParams(),
@@ -30,7 +30,7 @@ export function RivalryPage() {
     );
   const games = store.games
       .filter((g) => g.rivalry_id === id)
-      .sort((a, b) => Date.parse(b.started_at) - Date.parse(a.started_at)),
+      .sort((a, b) => Date.parse(b.started_at) - Date.parse(a.started_at) || b.id.localeCompare(a.id)),
     live = games.find((g) => !g.ended_at);
   async function start() {
     if (live) {
@@ -74,35 +74,7 @@ export function RivalryPage() {
       </div>
       <RivalrySummary rivalry={r} games={games} designId={design.id}/>
       <RivalryBreakdown games={games} rivalry={r}/>
-      <section>
-        <div className="section-heading">
-          <div>
-            <h2>Game history</h2>
-          </div>
-        </div>
-        <div className="game-list">
-          {games.map((g) => (
-              <GameCard
-                key={g.id}
-                game={g}
-                rivalry={r}
-                index={games.length - games.indexOf(g)}
-              />
-            ))}
-        </div>
-        {!games.length && (
-          <div className="empty-state">
-            <p>No games yet.</p>
-              <button
-                className="button secondary"
-                onClick={() => void start()}
-                disabled={store.busy}
-              >
-                Start the first game
-              </button>
-          </div>
-        )}
-      </section>
+      <GameHistory key={r.id} games={games} rivalry={r} onStart={() => void start()} busy={store.busy}/>
       <RecordBook games={games} rivalry={r}/>
       <div className="danger-actions"><button className="text-button muted" disabled={store.busy} onClick={()=>setDeleteSnapshot(Object.fromEntries(games.map(g=>[g.id,g.revision])))}><Trash2 size={15}/>Delete rivalry</button></div>
       {deleteSnapshot&&<ConfirmDialog title="Delete rivalry?" description={`Delete ${r.player_a} vs ${r.player_b} and all ${Object.keys(deleteSnapshot).length} games and their goals? This cannot be undone.`} confirm="Delete rivalry" danger onClose={()=>setDeleteSnapshot(null)} onConfirm={async()=>{await store.deleteRivalry(r.id,deleteSnapshot);navigate('/')}}/>}
