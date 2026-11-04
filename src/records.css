@@ -77,3 +77,12 @@
   .record-stopwatch { gap: 10px; }
   .record-stopwatch > small { max-width: 10ch; }
 }
+
+.game-highlight-tags:empty { display:none; }
+.game-achievement-tag { background:transparent;font-family:inherit;cursor:pointer; }
+.game-achievement-tag .achievement-icon { width:18px;height:18px;flex-shrink:0;color:var(--muted); }
+.game-achievement-description { text-align:center; }
+.game-achievement-description > .achievement-icon { width:72px;height:72px;display:block;margin:16px auto;color:var(--muted); }
+.game-achievement-description > strong { display:block;font-size:15px;margin-bottom:12px; }
+.game-achievement-description p { font-size:14px;line-height:1.6; }
+.game-achievement-description small { display:block;font-size:11px;color:var(--muted);margin-top:18px; }

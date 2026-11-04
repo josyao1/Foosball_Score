@@ -5,6 +5,11 @@ import type { Game, Rivalry } from './types';
 
 export interface ClassicFactor { label: string; points: number; max: number; detail: string }
 const clamp = (n: number, max: number) => Math.max(0, Math.min(max, n));
+// Full-credit benchmarks are not caps. Beyond them, points grow at half the rate.
+const benchmarkPoints = (value: number, benchmark: number, points: number) => {
+  const ratio = Math.max(0,value) / benchmark;
+  return points * (Math.min(ratio,1) + Math.max(0,ratio-1) / 2);
+};
 export const ratingLabel = (n: number) => n.toFixed(1);
 
 export function classicScore(game: Game) {
@@ -22,11 +27,11 @@ export function classicScore(game: Game) {
   const factors: ClassicFactor[] = [
     { label: 'Close finish', max: 20, points: clamp(20 - (margin - 2) * 4, 20), detail: `${margin}-goal winning margin. 20 points for a 2-goal finish, minus 4 per extra goal; 0 at 7 or more.` },
     { label: 'Closeness', max: 20, points: 20 * close / goals.length, detail: `${close} of ${goals.length} after-goal scores were within 2 goals. That share × 20.` },
-    { label: 'Lead changes', max: 15, points: clamp(leadChanges * 3, 15), detail: `${leadChanges} lead changes × 3 points, capped at 15. Ties don’t count as changes.` },
-    { label: 'Winning comeback', max: 20, points: clamp((comeback?.value ?? 0) * 3, 15) + (late ? 5 : 0), detail: `${comeback?.value ?? 0}-goal deficit recovered × 3, capped at 15; ${late ? '+5' : 'no bonus'} for recovering that deficit with the opponent at 9+.` },
-    { label: 'Total goals', max: 10, points: clamp((goals.length - 10) / 18 * 10, 10), detail: `${goals.length} goals. Scales from 0 points at 10 goals to 10 at 28.` },
-    { label: 'Special goals', max: 5, points: clamp(specials, 5), detail: `${specials} dunk or bank goals × 1 point, capped at 5. Combos count once; own goals don’t count.` },
-    { label: 'Game length', max: 5, points: clamp(totalMs / 60000 * .5, 5), detail: `${clock(totalMs)} through the final goal. Half a point per minute, capped at 5.` },
+    { label: 'Lead changes', max: 15, points: benchmarkPoints(leadChanges,3,15), detail: `${leadChanges} lead changes. 5 points each up to 3 changes; 2.5 per additional change. Ties don’t count.` },
+    { label: 'Winning comeback', max: 20, points: (comeback?.value ?? 0) * 3 + (late ? 5 : 0), detail: `${comeback?.value ?? 0}-goal deficit recovered × 3; ${late ? '+5' : 'no bonus'} for recovering that deficit with the opponent at 9+. Can exceed 20.` },
+    { label: 'Total goals', max: 10, points: benchmarkPoints(goals.length-10,12,10), detail: `${goals.length} goals. Scales from 0 points at 10 goals to 10 at 22. Each goal beyond 22 adds 5/12 of a point.` },
+    { label: 'Special goals', max: 5, points: benchmarkPoints(specials,5,5), detail: `${specials} dunk or bank goals. 1 point each up to 5, then 0.5 each. Combos count once; own goals don’t count.` },
+    { label: 'Game length', max: 5, points: benchmarkPoints(totalMs,360000,5), detail: `${clock(totalMs)} through the final goal. 5 points at 6 minutes, then 5/12 of a point per extra minute.` },
     { label: 'Match-point drama', max: 5, points: bothMatchPoint ? 5 : 0, detail: bothMatchPoint ? 'Both sides were one goal away from a valid win: +5.' : '5 points when both sides hold match point during the game.' },
   ];
   return { total: factors.reduce((sum, f) => sum + f.points, 0), factors, highlights, specials, deficitScore, bothMatchPoint };

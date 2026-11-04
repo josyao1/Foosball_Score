@@ -7,6 +7,7 @@ export function Dialog({
   dismissible = true,
   closeOnBackdrop = false,
   onDismiss,
+  className,
   children,
 }: {
   title: string;
@@ -14,6 +15,7 @@ export function Dialog({
   dismissible?: boolean;
   closeOnBackdrop?: boolean;
   onDismiss?: () => void;
+  className?: string;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null),
@@ -31,6 +33,7 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
+      className={className}
       aria-labelledby={id}
       onPointerDown={e => {
         startedOutside.current = e.target === e.currentTarget && isOutside(e.currentTarget, e.clientX, e.clientY);

@@ -61,7 +61,8 @@ it('only renders tags at the run/burst thresholds or below the response limit', 
   expect(screen.getByRole('link', { name: 'Josh 3 goals in 30s' })).toBeTruthy();
   expect(screen.getAllByRole('link')).toHaveLength(1);
   view.rerender(<MemoryRouter><GameHighlightTags game={make('ab', [1000, 4000])} rivalry={rivalry}/></MemoryRouter>);
-  expect(screen.queryByRole('group')).toBeNull();
+  expect(screen.queryByRole('link')).toBeNull();
+  expect(screen.getByRole('button',{name:'Brooks: Instant reply. Achievement details'})).toBeTruthy();
   view.rerender(<MemoryRouter><GameHighlightTags game={make('ab', [1000, 2250])} rivalry={rivalry}/></MemoryRouter>);
   expect(screen.getByRole('link', { name: /Brooks 1.3s response/ })).toBeTruthy();
   expect(view.container.querySelector('.record-dots')).toBeNull();

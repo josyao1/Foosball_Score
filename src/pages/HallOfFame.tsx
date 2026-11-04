@@ -60,7 +60,7 @@ function RatingBreakdown({ entry, onClose }: { entry: RankedClassic; onClose: ()
       <p className="hall-breakdown-total"><strong>{ratingLabel(entry.rating.total)}</strong> / 100</p>
       <p>{entry.rivalry.player_a} vs {entry.rivalry.player_b} · {gameDate(entry.game.started_at)}</p>
       <dl>{entry.rating.factors.map(factor => <div key={factor.label}><dt>{factor.label}<strong>{ratingLabel(factor.points)} <small>/ {factor.max}</small></strong></dt><dd>{factor.detail}</dd></div>)}</dl>
-      <p className="hall-method-note">Same formula for every rivalry. First to 10, win by 2; games must finish at their first winning score. Length stops at the final goal. Values are rounded for display; rankings use the unrounded total, then the earlier game.</p>
+      <p className="hall-method-note">100 is a benchmark, not a ceiling. Exceptional categories can exceed their listed points. Same formula for every rivalry. First to 10, win by 2; games must finish at their first winning score. Length stops at the final goal. Values are rounded for display; rankings use the unrounded total, then the earlier game.</p>
     </div>
   </Dialog>;
 }

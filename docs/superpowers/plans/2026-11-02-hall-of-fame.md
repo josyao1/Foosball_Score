@@ -31,3 +31,13 @@ Implementation/checklist:
 3. Full-game replay deep link, preserving record replay behavior.
 4. Component tests, full suite, build, diff check and code-only review.
 5. Leave available on localhost for user inspection; no browser automation.
+
+## November 3: benchmark scoring
+
+User approved treating 100 as a benchmark, not a ceiling. Full category credit
+now arrives at 3 lead changes (15), 22 total goals (10, starting at zero for
+10 goals), 6 minutes (5), and 5 special goals (5). Beyond each benchmark,
+extra credit accrues at half the initial rate. Winning comeback remains
+3 points per deficit goal plus 5 for a late recovery, without a cap.
+Close finish, closeness, and match-point drama stay unchanged.
+The 12–10, 5–9 comeback example now scores 91.8 rather than 80.5.

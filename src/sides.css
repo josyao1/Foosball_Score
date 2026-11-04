@@ -425,17 +425,51 @@ html[data-design] .app-header nav a[aria-current="page"] { border-bottom-color: 
   html[data-design] .header-inner { gap: 22px; }
 }
 
-/* Three tabs get their own row before brand + navigation can collide. */
-@media (max-width: 1000px) {
+/* Four tabs get their own row before brand + navigation can collide. */
+@media (max-width: 1100px) {
   html[data-design="clay"] .header-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-rows: auto auto; height: auto; min-height: 88px; gap: 0 16px; padding-block: 5px; }
   html[data-design="clay"] .header-inner .brand { grid-column: 1; grid-row: 1; min-height: 44px; }
   html[data-design="clay"] .header-inner .ixl-league { grid-column: 2; grid-row: 1; margin-left: 0; }
   html[data-design="clay"] .header-inner .connection { grid-column: 3; grid-row: 1; }
-  html[data-design="clay"] .header-inner > nav { grid-column: 1 / -1; grid-row: 2; gap: 20px; min-width: 0; }
-  html[data-design="clay"] .header-inner > nav a { min-height: 44px; font-size: 13px; }
+  html[data-design="clay"] .header-inner > nav { grid-column: 1 / -1; grid-row: 2; gap: 20px; min-width: 0; overflow-x:auto; }
+  html[data-design="clay"] .header-inner > nav a { min-height: 44px; font-size: 13px; flex-shrink:0; }
 }
 @media (max-width: 600px) {
   html[data-design="clay"] .header-inner { grid-template-columns: minmax(0, 1fr) auto; }
   html[data-design="clay"] .header-inner .connection { display: none; }
   html[data-design="clay"] .header-inner > nav { justify-content: space-between; gap: 8px; }
 }
+
+@media (max-width: 380px) {
+  html[data-design="clay"] .header-inner > nav { gap:4px; }
+  html[data-design="clay"] .header-inner > nav a { font-size:12px; padding-inline:2px; }
+}
+
+.profile-picker { display:flex;align-items:center;gap:7px;min-width:0;max-width:180px;min-height:44px;padding:6px 10px;border:1px solid var(--line);border-radius:6px;color:var(--text);background:transparent;font-size:12px; }
+.profile-picker > span { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.profile-picker > svg { flex-shrink:0; }
+.profile-copy { font-size:13px;line-height:1.5;color:var(--muted);margin-bottom:18px; }
+.profile-options { display:grid;gap:6px; }
+.profile-options button { display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;width:100%;padding:12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--text);text-align:left; }
+.profile-options button > span { min-width:0;overflow-wrap:anywhere; }
+.profile-options button[aria-pressed="true"] { background:var(--panel-light);border-color:var(--text); }
+.profile-reset { min-height:44px;padding:10px 0;margin-top:12px;background:transparent;color:var(--muted);font-size:12px;text-decoration:underline;text-underline-offset:3px; }
+html[data-design] dialog.profile-dialog { margin:auto;inset:0;position:fixed;width:min(440px,calc(100% - 32px));max-height:calc(100dvh - 48px);border:1px solid var(--line);border-radius:20px; }
+@media(max-width:1100px) { html[data-design="clay"] .header-inner > .profile-picker { grid-column:3;grid-row:1; } }
+@media(max-width:600px) {
+  html[data-design="clay"] .header-inner .ixl-league { display:none; }
+  html[data-design="clay"] .header-inner > .profile-picker { grid-column:2;max-width:150px;padding-inline:7px; }
+}
+@media(max-width:380px) { .profile-picker { font-size:11px;gap:4px; } html[data-design="clay"] .header-inner { column-gap:8px; } }
+@media(min-width:1101px) { .profile-picker { margin-left:auto;flex-shrink:0;max-width:160px; } }
+@media(max-width:380px) { html[data-design="clay"] .header-inner > .profile-picker { max-width:120px; } }
+
+.game-achievement-marker { display:inline-flex;align-items:center;justify-content:center;flex:0 0 18px;height:18px;width:18px;color:var(--muted);vertical-align:middle; }
+.game-achievement-marker > svg { display:block; }
+
+@media(max-width:600px) { html[data-design="clay"] .game-card > .game-achievement-marker { grid-column:2;grid-row:2; } }
+
+.profile-picker.needs-profile { background:#f0dfae;border-color:#b69a54;color:#654a24;font-weight:600;box-shadow:0 0 0 2px #b69a5418; }
+.profile-sparkle { color:#a77b23;animation:profile-sparkle 2.8s ease-in-out infinite; }
+@keyframes profile-sparkle { 0%,100% { opacity:.7;transform:scale(.92); } 50% { opacity:1;transform:scale(1.12); } }
+@media(prefers-reduced-motion:reduce) { .profile-sparkle { animation:none; } }

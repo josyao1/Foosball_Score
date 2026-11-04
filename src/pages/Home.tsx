@@ -1,3 +1,6 @@
+import { AchievementFeed } from "../components/AchievementFeed";
+import { GameAchievementMarker } from "../components/GameAchievements";
+import { useProfile, profileFirst, isProfileRivalry } from "../lib/profile";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -120,12 +123,13 @@ export function GameCard({
             ? `${playerName(rivalry, w)} wins`
             : "Draw"}
       </span>
-      <ChevronRight size={18} />
+      <GameAchievementMarker game={game} rivalry={rivalry} fallback={<ChevronRight size={18}/>}/>
     </Link>
   );
 }
 export function Home() {
   const design=useDesign();
+  const profile=useProfile();
   const { rivalries, games } = useStore(),
     [creating, setCreating] = useState(false);
   const completed = games.filter((g) => g.ended_at);
@@ -178,7 +182,7 @@ export function Home() {
       </div>
       <section>
         {rivalries.length ? (
-          <RivalryCollection rivalries={rivalries} games={games} layout={design.homeLayout}/>
+          <RivalryCollection rivalries={profileFirst(rivalries,r=>isProfileRivalry(r,profile))} games={games} layout={design.homeLayout}/>
         ) : (
           <div className="empty-state">
             <Swords size={40} />
@@ -193,6 +197,7 @@ export function Home() {
           </div>
         )}
       </section>
+      <AchievementFeed games={games} rivalries={rivalries}/>
       {creating && <NewRivalry onClose={() => setCreating(false)} />}
     </>
   );

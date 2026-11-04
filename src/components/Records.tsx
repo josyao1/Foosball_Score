@@ -1,3 +1,4 @@
+import { GameAchievementTags, useGameAwards } from "./GameAchievements";
 import { useMemo } from "react";
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Play, BookOpen } from 'lucide-react';
@@ -39,7 +40,7 @@ export function RecordBook({ games, rivalry }: { games: Game[]; rivalry: Rivalry
           <Link to={momentLink(game, moment)} className="record-page" aria-label={`${recordLabels[kind]}: ${recordValue(moment)}. ${moment.side ? playerName(rivalry, moment.side) : `${rivalry.player_a} vs ${rivalry.player_b}`}. ${gameDate(game.started_at)}, ${gameTime(game.started_at)}. ${ties ? `Matched in ${ties} other games. ` : ''}View game`}>
             <h3>{recordLabels[kind]}</h3>
             <div className="record-achievement"><strong>{recordValue(moment)}</strong><Sequence game={game} moment={moment}/></div>
-            <div className="record-holder">{moment.side ? <Player rivalry={rivalry} side={moment.side}/> : <span>{rivalry.player_a} & {rivalry.player_b}</span>}</div>
+            {moment.side && <div className="record-holder"><Player rivalry={rivalry} side={moment.side}/></div>}
             <RecordMomentGraphic game={game} moment={moment}/>
             <p className="record-definition">{explanations[kind]}</p>
             {ties > 0 && <small className="record-ties">Matched in {ties} other {ties === 1 ? 'game' : 'games'}</small>}
@@ -63,7 +64,8 @@ export function GameHighlightTags({ game, rivalry, selected }: { game: Game; riv
       response && response.value < 3000 ? response : undefined,
     ].filter((moment): moment is Moment => !!moment);
   }, [game]);
-  if (!game.ended_at || !moments.length) return null;
+  const awards=useGameAwards(game,rivalry);
+  if (!game.ended_at || (!moments.length && !awards.length)) return null;
   return <div className="game-highlight-tags" role="group" aria-label="Notable moments">
     {moments.map(moment => {
       const label = moment.kind === 'run' ? `${moment.value}-goal run`
@@ -73,5 +75,6 @@ export function GameHighlightTags({ game, rivalry, selected }: { game: Game; riv
         <span>{playerName(rivalry, moment.side!)}</span>{" "}<strong>{label}</strong>
       </Link>;
     })}
+    <GameAchievementTags awards={awards}/>
   </div>;
 }

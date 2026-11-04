@@ -106,3 +106,63 @@ then earlier start time and ID for ties. Only games that finish at their first
 valid first-to-10, win-by-two result qualify. No seed data or migration is needed.
 Replay links start the existing game momentum player at kickoff at 16×; ordinary
 game links remain paused. The posters and third navigation tab adapt for phones.
+
+Classic score uses 100 as a benchmark, not a cap. Full credit arrives at three
+lead changes, 22 goals, six minutes, and five special goals. Those categories
+continue at half the rate beyond the benchmark. Comebacks earn three points per
+goal recovered, plus five for a late recovery, without a cap. Finish closeness,
+the share of close scores, and both holding match point retain natural bounds.
+
+### Players
+
+The fourth tab shows Clay player passports across all rivalries. Trimmed,
+case-insensitive names share a passport; doubles labels remain separate. Only
+finished games contribute. Favorite rungs exclude own goals. Signature finishes compare dunk, bank,
+dunk + bank, and own goals made by that player, displaying ties. Percentages
+use all their recorded goals (including regular and own goals) as the denominator.
+Recent form links the last five completed games, oldest to newest. Personal bests
+link the source games for each player's longest run, biggest winning comeback,
+and quickest valid win. Runs include opponent own goals. Also shown: win rate,
+record, goals scored, playing time, best win streak, and most-played rivalry.
+
+Players also have IXL mastery badges with bronze, silver, gold, platinum, and amethyst tiers. All ten badges stay in the main grid, including unearned badges. Only one detail panel opens per passport, below its tile row. Expand
+any badge for its exact requirements and the game that earned each tier. Goals,
+wins, dunks, banks, each rung, all-four-rung games, and match-point recovery wins
+have separate progress. Own goals never earn scoring badges; dunk + bank advances
+both skills. Recovery requires a valid first-to-10, win-by-two finish after facing
+opponent match point. Badge progress is derived from finished games, so edits and
+removed games are reflected automatically. On phone widths, swipe between
+passports or use the arrows; desktop retains the grid.
+
+An Achievements button below mastery opens twenty-two illustrated one-off badges.
+Unearned badges stay grey and reveal requirements when selected; earned badges
+link to the first earning game. Win achievements require a valid finish, while
+own goals only award the appropriate actor/gift achievements. Match-point saves
+count separate scoring events; Speedrun is strictly under four minutes through
+the last goal, and Instant reply allows up to three seconds. No additional
+stored data or schema is required.
+
+The header's Select profile control remembers a participant on this browser with
+localStorage (no expiration, no login). Matching rivalries and that passport are
+shown first; other entries retain their order and remain visible. Names use the
+same trimmed, case-insensitive identity as passports; team labels remain separate.
+Users can switch or clear the preference. Other tabs on the same origin update;
+private browsing, browser data clearing, and storage restrictions can prevent
+long-term persistence. Localhost and production have separate browser storage.
+
+Game-history rows show a compact award marker in their existing arrow slot when
+an achievement occurred, without adding a metadata row. Finished-game highlight
+pills also show attributed achievement names and icons; selecting one explains
+its requirement. These reflect every qualifying game, not only first unlocks.
+
+The home page shows the latest three achievement unlock entries, grouped by player
+and earning game. Entries stay in the feed regardless of age; those earned within
+the last 12 hours are bold. Repeat performances do not refresh a first unlock.
+Circus rewards three consecutive special goals credited to the same player in one
+finished game. Own goals count for their beneficiary. Opponent points do not
+interrupt it; a regular goal credited to the player resets the sequence.
+
+Achievement collections show a compact repeat count for badges earned in multiple
+games, with every earning game linked in the detail view and gold borders on
+unlocked badges. Counts are per qualifying finished game; On a roll is earned on
+the fifth win of each new streak. First unlocks remain separate for the home feed.
