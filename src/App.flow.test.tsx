@@ -30,11 +30,12 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); localStorage.clear(); });
 
 it('creates, resumes, scores, finishes early, corrects, removes, and deletes a rivalry through the app', async () => {
+  seed({rivalries:[],games:[],players:[{id:'ada',name:'Ada',created_at:''},{id:'bea',name:'Bea',created_at:''}]});
   openApp();
   fireEvent.click(await screen.findByRole('button', { name: 'New rivalry' }));
   let dialog = await screen.findByRole('dialog');
-  fireEvent.change(within(dialog).getByLabelText('Black side'), { target: { value: 'Ada' } });
-  fireEvent.change(within(dialog).getByLabelText('White side'), { target: { value: 'Bea' } });
+  fireEvent.click(within(within(dialog).getByRole('group',{name:/Black side/})).getByRole('checkbox',{name:'Ada'}));
+  fireEvent.click(within(within(dialog).getByRole('group',{name:/White side/})).getByRole('checkbox',{name:'Bea'}));
   await confirm('Create rivalry');
   fireEvent.click(await screen.findByRole('button', { name: 'Start a game' }));
   await screen.findByRole('heading', { name: 'Live game' });
@@ -93,7 +94,8 @@ it('creates, resumes, scores, finishes early, corrects, removes, and deletes a r
   expect(stored().games).toHaveLength(0);
   fireEvent.click(await screen.findByRole('button', { name: 'Delete rivalry' }));
   await confirm('Delete rivalry');
-  expect(stored()).toEqual({ rivalries: [], games: [] });
+  expect(stored()).toMatchObject({ rivalries: [], games: [] });
+  expect(stored().players).toHaveLength(2);
   expect(await screen.findByRole('heading', { name: 'No rivalries yet' })).toBeTruthy();
 });
 
@@ -155,15 +157,16 @@ it('keeps a pending destructive confirmation open', async () => {
 
 it('keeps rivalry creation open and its names fixed while saving', async () => {
   let resolve!: (rivalry: Rivalry) => void;
-  vi.spyOn(LocalRepository.prototype, 'createRivalry').mockImplementation(() => new Promise(r => { resolve = r; }));
+  vi.spyOn(LocalRepository.prototype, 'createTeamRivalry').mockImplementation(() => new Promise(r => { resolve = r; }));
+  seed({rivalries:[],games:[],players:[{id:'ada',name:'Ada',created_at:''},{id:'bea',name:'Bea',created_at:''}]});
   openApp();
   fireEvent.click(await screen.findByRole('button', { name: 'New rivalry' }));
   const dialog = await screen.findByRole('dialog');
-  fireEvent.change(within(dialog).getByLabelText('Black side'), { target: { value: 'Ada' } });
-  fireEvent.change(within(dialog).getByLabelText('White side'), { target: { value: 'Bea' } });
+  fireEvent.click(within(within(dialog).getByRole('group',{name:/Black side/})).getByRole('checkbox',{name:'Ada'}));
+  fireEvent.click(within(within(dialog).getByRole('group',{name:/White side/})).getByRole('checkbox',{name:'Bea'}));
   fireEvent.click(within(dialog).getByRole('button', { name: 'Create rivalry' }));
   expect((within(dialog).getByRole('button', { name: 'Close dialog' }) as HTMLButtonElement).disabled).toBe(true);
-  expect((within(dialog).getByLabelText('Black side') as HTMLInputElement).disabled).toBe(true);
+  expect(within(dialog).getAllByRole('checkbox').every(el=>(el as HTMLInputElement).disabled)).toBe(true);
   await act(async () => resolve(rivalry));
   expect(await screen.findByRole('button', { name: 'Start a game' })).toBeTruthy();
 });
@@ -205,18 +208,15 @@ it('rejects an old edit after another tab changes that goal', async () => {
   await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
 });
 
-it('shows invalid-name errors and allows fixing the names without closing the form', async () => {
-  openApp();
-  fireEvent.click(await screen.findByRole('button', { name: 'New rivalry' }));
-  const dialog = await screen.findByRole('dialog');
-  fireEvent.change(within(dialog).getByLabelText('Black side'), { target: { value: 'Ada' } });
-  fireEvent.change(within(dialog).getByLabelText('White side'), { target: { value: ' ada ' } });
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Create rivalry' }));
-  expect((await within(dialog).findByRole('alert')).textContent).toContain('two different players');
-  expect(stored().rivalries).toHaveLength(0);
-  fireEvent.change(within(dialog).getByLabelText('White side'), { target: { value: 'Bea' } });
-  await confirm('Create rivalry');
-  expect(stored().rivalries).toHaveLength(1);
+it('prevents selecting the same player on both sides', async () => {
+  seed({rivalries:[],games:[],players:[{id:'ada',name:'Ada',created_at:''},{id:'bea',name:'Bea',created_at:''}]});
+  openApp();fireEvent.click(await screen.findByRole('button',{name:'New rivalry'}));
+  const dialog=await screen.findByRole('dialog');
+  fireEvent.click(within(within(dialog).getByRole('group',{name:/Black side/})).getByRole('checkbox',{name:'Ada'}));
+  expect((within(within(dialog).getByRole('group',{name:/White side/})).getByRole('checkbox',{name:'Ada'}) as HTMLInputElement).disabled).toBe(true);
+  expect((within(dialog).getByRole('button',{name:'Create rivalry'}) as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(within(within(dialog).getByRole('group',{name:/White side/})).getByRole('checkbox',{name:'Bea'}));
+  await confirm('Create rivalry');expect(stored().rivalries).toHaveLength(1);
 });
 
 it('recovers from unreadable local data through the visible reset control', async () => {
@@ -423,4 +423,49 @@ it('does not create a rematch or pull the user back after leaving during a pendi
  expect(screen.getByRole('heading',{name:'Rivalries'})).toBeTruthy();
  expect(stored().games).toHaveLength(1);
  expect(stored().games[0].ended_at).not.toBeNull();
+});
+
+it('creates a permanent player from the Players tab before any rivalry',async()=>{
+ openApp('/players');fireEvent.click(await screen.findByRole('button',{name:'New player'}));
+ fireEvent.change(screen.getByRole('textbox',{name:'Player name'}),{target:{value:'Josh'}});
+ await confirm('Create player');
+ expect(await screen.findByRole('article',{name:'Josh passport'})).toBeTruthy();
+ expect(stored().rivalries).toHaveLength(0);expect(stored().players?.[0].name).toBe('Josh');
+ fireEvent.click(screen.getByRole('button',{name:'Select profile'}));
+ expect(within(screen.getByRole('dialog')).getByRole('button',{name:'Josh'})).toBeTruthy();
+});
+
+it('records team goals against individual positions and preserves attribution after swapping and corrections',async()=>{
+ seed({rivalries:[{...rivalry,player_a:'Josh and Brooks',player_b:'Andrew'}],games:[baseGame]});
+ openApp('/game/g');
+ await screen.findByRole('heading',{name:'Live game'});
+ expect((screen.getByRole('button',{name:'Josh and Brooks goalie goal'}) as HTMLButtonElement).disabled).toBe(true);
+ fireEvent.click(screen.getByRole('button',{name:'Use these positions'}));
+ await waitFor(()=>expect((screen.getByRole('button',{name:'Josh and Brooks goalie goal'}) as HTMLButtonElement).disabled).toBe(false));
+ fireEvent.click(screen.getByRole('button',{name:'Josh and Brooks goalie goal'}));
+ await confirm('Add goal for Josh and Brooks');
+ const josh=stored().players!.find(p=>p.name.toLowerCase()==='josh')!.id;
+ expect(stored().games[0].goals[0].lineup?.a.defense).toBe(josh);
+ fireEvent.click(screen.getByRole('button',{name:'Swap black positions'}));
+ await waitFor(()=>expect(stored().games[0].lineup?.a.attack).toBe(josh));
+ fireEvent.click(screen.getByRole('button',{name:'Josh and Brooks attacker goal'}));
+ await confirm('Add goal for Josh and Brooks');
+ expect(stored().games[0].goals[1].lineup?.a.attack).toBe(josh);
+ expect(stored().games[0].goals[0].lineup?.a.defense).toBe(josh);
+});
+
+it('adds a player inside rivalry creation without losing selected sides or leaving the popup',async()=>{
+ seed({rivalries:[],games:[],players:[{id:'ada',name:'Ada',created_at:''},{id:'bea',name:'Bea',created_at:''}]});
+ openApp();fireEvent.click(await screen.findByRole('button',{name:'New rivalry'}));
+ const dialog=await screen.findByRole('dialog');
+ fireEvent.click(within(within(dialog).getByRole('group',{name:/Black side/})).getByRole('checkbox',{name:'Ada'}));
+ fireEvent.click(within(dialog).getByRole('button',{name:'Add player'}));
+ fireEvent.change(within(dialog).getByRole('textbox',{name:'Player name'}),{target:{value:'Cy'}});
+ fireEvent.click(within(dialog).getByRole('button',{name:'Save player'}));
+ await waitFor(()=>expect(within(dialog).queryByRole('textbox')).toBeNull());
+ expect((within(within(dialog).getByRole('group',{name:/Black side/})).getByRole('checkbox',{name:'Ada'}) as HTMLInputElement).checked).toBe(true);
+ expect(stored().rivalries).toHaveLength(0);
+ fireEvent.click(within(within(dialog).getByRole('group',{name:/White side/})).getByRole('checkbox',{name:'Cy'}));
+ await confirm('Create rivalry');
+ expect(stored().rivalries[0]).toMatchObject({player_a:'Ada',player_b:'Cy'});
 });

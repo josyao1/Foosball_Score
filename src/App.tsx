@@ -47,7 +47,7 @@ export function App() {
             <Link to="/hall-of-fame" aria-current={isHallOfFame ? "page" : undefined}>Hall of Fame</Link>
             <Link to="/players" aria-current={isPlayers ? "page" : undefined}>Players</Link>
           </nav>
-          <ProfilePicker rivalries={store.rivalries}/>
+          <ProfilePicker rivalries={store.rivalries} players={store.players}/>
         </div>
       </header>
       <SiteDesign/>

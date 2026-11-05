@@ -27,6 +27,14 @@ export function createCloudRepository(): Repository {
       fail(error);
       return data as Data;
     },
+    async createPlayer(name){
+      const {data,error}=await client.from('foos_players').insert({name:name.trim()}).select().single();
+      if(error?.code==='23505')throw new Error('This player already exists.');
+      fail(error);return data;
+    },
+    async createTeamRivalry(a,b){
+      const {data,error}=await client.rpc('foos_create_team_rivalry',{p_a:a,p_b:b});fail(error);return data;
+    },
     async createRivalry(a, b) {
       validateNames(a, b);
       const { data, error } = await client
@@ -38,20 +46,22 @@ export function createCloudRepository(): Repository {
       return data;
     },
     async saveGame(game: Game) {
-      const { data, error } = await client.rpc("foos_save_game", {
+      const { data, error } = await client.rpc("foos_save_game_v2", {
         p_id: game.id,
         p_rivalry_id: game.rivalry_id,
         p_started_at: game.started_at,
         p_ended_at: game.ended_at,
         p_expected_revision: game.revision,
+        p_lineup: game.lineup ?? null,
         p_goals: game.goals.map(
-          ({ id, actor_side, rung, flags, elapsed_ms, occurred_at }) => ({
+          ({ id, actor_side, rung, flags, elapsed_ms, occurred_at, lineup }) => ({
             id,
             actor_side,
             rung,
             flags,
             elapsed_ms,
             occurred_at,
+            lineup: lineup ?? null,
           }),
         ),
       });

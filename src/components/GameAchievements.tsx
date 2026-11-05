@@ -1,30 +1,33 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useMemo, useState } from 'react';
 import { Award } from 'lucide-react';
-import { ACHIEVEMENTS, earnedAchievements, streakAchievementGames } from '../lib/achievements';
+import { ACHIEVEMENTS, earnedAchievements, streakAchievementPlayers, lunchBreakPlayers } from '../lib/achievements';
 import { gameHighlights } from '../lib/records';
 import { playerName } from '../lib/types';
 import type { Game, Rivalry, Side } from '../lib/types';
 import { AchievementIcon } from './AchievementIcon';
 import { Dialog } from './Dialog';
 
-const StreakContext=createContext<ReadonlyMap<string,Side[]>>(new Map());
+const StreakContext=createContext<ReturnType<typeof streakAchievementPlayers>>(new Map());
+const LunchContext=createContext<ReturnType<typeof lunchBreakPlayers>>(new Map());
 export function GameAchievementProvider({games,rivalries,children}:{games:Game[];rivalries:Rivalry[];children:ReactNode}){
-  const streaks=useMemo(()=>streakAchievementGames(games,rivalries),[games,rivalries]);
-  return <StreakContext.Provider value={streaks}>{children}</StreakContext.Provider>;
+  const streaks=useMemo(()=>streakAchievementPlayers(games,rivalries),[games,rivalries]);
+  const lunches=useMemo(()=>lunchBreakPlayers(games,rivalries),[games,rivalries]);
+  return <StreakContext.Provider value={streaks}><LunchContext.Provider value={lunches}>{children}</LunchContext.Provider></StreakContext.Provider>;
 }
-export function gameAwards(game:Game,rivalry:Rivalry,streakSides:Side[]=[]){
+export function gameAwards(game:Game,rivalry:Rivalry,streakSides:Side[]=[],streakPeople:{side:Side;name:string}[]=[]){
   if(!game.ended_at)return [];
   const highlights=gameHighlights(game);
   return (['a','b'] as const).flatMap(side=>{
-    const ids=earnedAchievements(game,side,highlights);
+    const ids=earnedAchievements(game,side,highlights,rivalry);
     if(streakSides.includes(side))ids.push('streak');
-    return ids.map(id=>({side,name:playerName(rivalry,side),badge:ACHIEVEMENTS.find(b=>b.id===id)!}));
+    return ids.map(id=>({side,name:id==='streak'&&streakPeople.some(p=>p.side===side)?streakPeople.filter(p=>p.side===side).map(p=>p.name).join(' and '):playerName(rivalry,side),badge:ACHIEVEMENTS.find(b=>b.id===id)!}));
   });
 }
 export function useGameAwards(game:Game,rivalry:Rivalry){
   const streaks=useContext(StreakContext);
-  return useMemo(()=>gameAwards(game,rivalry,streaks.get(game.id)),[game,rivalry,streaks]);
+  const lunches=useContext(LunchContext);
+  return useMemo(()=>[...gameAwards(game,rivalry,[...new Set(streaks.get(game.id)?.map(p=>p.side))],streaks.get(game.id)),...(['a','b'] as const).flatMap(side=>{const people=lunches.get(game.id)?.filter(p=>p.side===side)??[];return people.length?[{side,name:people.map(p=>p.name).join(' and '),badge:ACHIEVEMENTS.find(b=>b.id==='lunchBreak')!}]:[];})],[game,rivalry,streaks,lunches]);
 }
 export function GameAchievementMarker({game,rivalry,fallback=null}:{game:Game;rivalry:Rivalry;fallback?:ReactNode}){
   const awards=useGameAwards(game,rivalry);

@@ -21,10 +21,10 @@ export function Achievements({name,earned,history={},players=[]}:{name:string;ea
   useEffect(()=>{if(open && !selected) lastTile.current?.focus();},[open,selected]);
   const badge=ACHIEVEMENTS.find(b=>b.id===selected);
   const game=badge ? earned[badge.id] : undefined;
-  const ordered=[...ACHIEVEMENTS.filter(item=>earned[item.id]),...ACHIEVEMENTS.filter(item=>!earned[item.id])];
+  const ordered=ACHIEVEMENTS;
   const earningGames=badge ? (history[badge.id] ?? (game ? [game] : [])) : [];
   const earnCount=(id:AchievementId)=>history[id]?.length ?? (earned[id] ? 1 : 0);
-  const others=badge ? players.filter(p=>p.key!==name.trim().toLowerCase() && p.achievements[badge.id]).sort((a,b)=>a.name.localeCompare(b.name)) : [];
+  const others=badge ? players.filter(p=>p.name.trim().toLowerCase()!==name.trim().toLowerCase() && p.achievements[badge.id]).sort((a,b)=>a.name.localeCompare(b.name)) : [];
   useLayoutEffect(()=>{
     const list=historyList.current;
     if(!list)return;

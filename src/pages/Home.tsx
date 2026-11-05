@@ -1,6 +1,7 @@
+import { allPlayers, orderRivalries } from '../lib/participants';
 import { AchievementFeed } from "../components/AchievementFeed";
 import { GameAchievementMarker } from "../components/GameAchievements";
-import { useProfile, profileFirst, isProfileRivalry } from "../lib/profile";
+import { useProfile } from "../lib/profile";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -21,66 +22,24 @@ import { RivalryCollection } from "../components/RivalryCollection";
 import { useDesign } from "../components/SiteDesign";
 import { Dialog } from "../components/Dialog";
 export function NewRivalry({ onClose }: { onClose: () => void }) {
-  const store = useStore(),
-    navigate = useNavigate(),
-    [a, setA] = useState(""),
-    [b, setB] = useState(""),
-    [error, setError] = useState("");
-  return (
-    <Dialog title="New rivalry" onClose={onClose} dismissible={!store.busy}>
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          try {
-            const r = await store.createRivalry(a, b);
-            navigate(`/rivalry/${r.id}`);
-            onClose();
-          } catch (e) {
-            setError(
-              e instanceof Error ? e.message : "Could not create rivalry.",
-            );
-          }
-        }}
-      >
-        <div className="form-grid">
-          <label>
-            <span className="text-a">Black side</span>
-            <input
-              disabled={store.busy}
-              autoFocus
-              required
-              maxLength={40}
-              value={a}
-              onChange={(e) => setA(e.target.value)}
-              placeholder="First player"
-              autoComplete="off"
-            />
-          </label>
-          <label>
-            <span className="text-b">White side</span>
-            <input
-              disabled={store.busy}
-              required
-              maxLength={40}
-              value={b}
-              onChange={(e) => setB(e.target.value)}
-              placeholder="Second player"
-              autoComplete="off"
-            />
-          </label>
-        </div>
-        {error && (
-          <p role="alert" className="form-error">
-            {error}
-          </p>
-        )}
-        <button className="button primary full" disabled={store.busy}>
-          {store.busy ? "Creating…" : "Create rivalry"}
-          <ArrowUpRight size={18} />
-        </button>
-      </form>
-    </Dialog>
-  );
+  const store=useStore(),navigate=useNavigate();
+  const [a,setA]=useState<string[]>([]),[b,setB]=useState<string[]>([]),[error,setError]=useState('');
+  const [adding,setAdding]=useState(false),[newName,setNewName]=useState('');
+  const players=allPlayers(store.rivalries,store.players);
+  return <Dialog title="New rivalry" onClose={onClose} dismissible={!store.busy}>
+    <form onSubmit={async e=>{e.preventDefault();setError('');try{if(adding){await store.createPlayer(newName);setAdding(false);setNewName('');return;}const r=await store.createTeamRivalry(a,b);navigate(`/rivalry/${r.id}`);onClose();}catch(e){setError(e instanceof Error?e.message:'Could not create rivalry.');}}}>
+      <div className="roster-picker">{(['a','b'] as const).map(side=>{
+        const selected=side==='a'?a:b,other=side==='a'?b:a,set=side==='a'?setA:setB;
+        return <fieldset key={side}><legend>{side==='a'?'Black side':'White side'} <small>{selected.length}/2</small></legend>
+          {players.map(p=><label key={p.id} className="roster-option"><input type="checkbox" checked={selected.includes(p.id)} disabled={store.busy||other.includes(p.id)||(selected.length===2&&!selected.includes(p.id))} onChange={()=>set(selected.includes(p.id)?selected.filter(id=>id!==p.id):[...selected,p.id])}/><span>{p.name}</span></label>)}
+        </fieldset>;
+      })}</div>
+      <div className="roster-shortcut"><p className="helper">One or two players per side.</p>{!adding&&<button type="button" className="roster-add-player" disabled={store.busy} onClick={()=>{setError('');setNewName('');setAdding(true);}}><Plus size={15}/>Add player</button>}</div>
+      {adding&&<div className="roster-new-player"><label>Player name<input autoFocus required maxLength={40} autoComplete="off" value={newName} disabled={store.busy} onChange={e=>setNewName(e.target.value)}/></label><button type="button" className="text-button" disabled={store.busy} onClick={()=>{setAdding(false);setError('');}}>Cancel</button></div>}
+      {error&&<p role="alert" className="form-error">{error}</p>}
+      <button className="button primary full" disabled={store.busy||(!adding&&(!a.length||!b.length))}>{store.busy?'Saving…':adding?'Save player':'Create rivalry'}<ArrowUpRight size={18}/></button>
+    </form>
+  </Dialog>;
 }
 export function GameCard({
   game,
@@ -182,7 +141,7 @@ export function Home() {
       </div>
       <section>
         {rivalries.length ? (
-          <RivalryCollection rivalries={profileFirst(rivalries,r=>isProfileRivalry(r,profile))} games={games} layout={design.homeLayout}/>
+          <RivalryCollection rivalries={orderRivalries(rivalries,games,profile)} games={games} layout={design.homeLayout}/>
         ) : (
           <div className="empty-state">
             <Swords size={40} />

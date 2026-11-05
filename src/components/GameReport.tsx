@@ -7,6 +7,7 @@ import {
   orderedGoals,
 } from "../lib/stats";
 import { playerName } from "../lib/types";
+import { goalPlayer, sidePlayers } from "../lib/participants";
 import type { Game, Goal, Rivalry } from "../lib/types";
 export { MomentumChart as Momentum } from "./MomentumChart";
 export { RungStats } from "./GameRungStats";
@@ -26,7 +27,14 @@ export function Timeline({
   const s = { a: 0, b: 0 };
   const entries = orderedGoals(game.goals).map((goal) => {
     s[creditedSide(goal)]++;
-    return { goal, a: s.a, b: s.b };
+    const actor = sidePlayers(rivalry, goal.actor_side).find(p => p.id === goalPlayer(goal, rivalry))?.name
+      ?? playerName(rivalry, goal.actor_side);
+    const scorer = goal.flags.includes('own_goal') ? playerName(rivalry, creditedSide(goal)) : actor;
+    const label = playerName(rivalry, creditedSide(goal));
+    const namedScorer = !goal.flags.includes('own_goal') && goalPlayer(goal, rivalry)
+      && sidePlayers(rivalry, goal.actor_side).length > 1;
+    const scorerStart = namedScorer ? label.toLowerCase().indexOf(actor.toLowerCase()) : -1;
+    return { goal, actor, scorer, label, scorerStart, a: s.a, b: s.b };
   });
   if (compact) entries.reverse();
   return (
@@ -43,12 +51,14 @@ export function Timeline({
         <div className="empty-inline">No goals yet.</div>
       ) : (
         <ol className="timeline">
-          {entries.map(({ goal, a, b }) => (
+          {entries.map(({ goal, actor, scorer, label, scorerStart, a, b }) => (
             <li key={goal.id}>
               <time>{clock(goal.elapsed_ms)}</time>
               <GoalBall flags={goal.flags}/>
               <div className="timeline-description">
-                <div className="timeline-player"><strong>{playerName(rivalry, creditedSide(goal))}</strong>
+                <div className="timeline-player"><strong className={scorerStart >= 0 ? 'timeline-team-name' : undefined} title={scorerStart >= 0 ? `${actor} scored` : label}>
+                  {scorerStart >= 0 ? <>{label.slice(0, scorerStart)}<b className="timeline-individual-scorer">{label.slice(scorerStart, scorerStart + actor.length)}</b>{label.slice(scorerStart + actor.length)}</> : label}
+                </strong>
                 <div className="goal-tags">
                   {!!goal.flags.length && <span className={`goal-pill goal-pill-${goalKind(goal.flags)}`}>
                     {goal.flags.includes('own_goal') ? <Undo2 size={11}/> : goal.flags.includes('dunk') ? <Zap size={11}/> : <CornerUpRight size={11}/>}
@@ -57,7 +67,7 @@ export function Timeline({
                 </div></div>
                 <span className="timeline-detail">
                   {goal.flags.includes("own_goal")
-                    ? `${playerName(rivalry, goal.actor_side)} own goal · `
+                    ? `${actor} own goal · `
                     : ""}
                   {goal.rung} rung
                 </span>
@@ -69,7 +79,7 @@ export function Timeline({
               </strong>
               {(onEdit || onRemove) && <GoalActions
                 time={clock(goal.elapsed_ms)}
-                description={`${playerName(rivalry, creditedSide(goal))} · ${goal.rung} rung${goal.flags.includes('own_goal') ? ` · own goal by ${playerName(rivalry, goal.actor_side)}` : goal.flags.length ? ` · ${goal.flags.join(' + ')}` : ''}`}
+                description={`${scorer} · ${goal.rung} rung${goal.flags.includes('own_goal') ? ` · own goal by ${actor}` : goal.flags.length ? ` · ${goal.flags.join(' + ')}` : ''}`}
                 onEdit={onEdit ? () => onEdit(goal) : undefined}
                 onRemove={onRemove ? () => onRemove(goal) : undefined}
               />}

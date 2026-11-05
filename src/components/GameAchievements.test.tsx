@@ -47,3 +47,13 @@ it('includes the fifth-win achievement from the shared game history and updates 
  view.rerender(renderTags(games.slice(1)));
  expect(screen.queryByRole('button',{name:'Josh: On a roll. Achievement details'})).toBeNull();
 });
+
+it('names only the teammate whose personal streak reaches five',()=>{
+ const solo={...rivalry,player_b:'Andrew'};
+ const team={...rivalry,id:'team',player_a:'Josh and Brooks',player_b:'Andrew'};
+ const singles=Array.from({length:4},(_,i)=>({...game,id:`solo${i}`,ended_at:`2026-11-03T18:${10+i}:00Z`}));
+ const fifth={...game,id:'team-win',rivalry_id:'team',ended_at:'2026-11-03T18:20:00Z'};
+ render(<MemoryRouter><GameAchievementProvider games={[...singles,fifth]} rivalries={[solo,team]}><GameHighlightTags game={fifth} rivalry={team}/></GameAchievementProvider></MemoryRouter>);
+ expect(screen.getByRole('button',{name:'Josh: On a roll. Achievement details'})).toBeTruthy();
+ expect(screen.queryByRole('button',{name:'Josh and Brooks: On a roll. Achievement details'})).toBeNull();
+});

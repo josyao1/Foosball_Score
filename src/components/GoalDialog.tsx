@@ -1,3 +1,4 @@
+import { goalPlayer, sidePlayers } from '../lib/participants';
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CornerUpRight, Zap, Undo2, Check } from "lucide-react";
 import { Dialog } from "./Dialog";
@@ -91,6 +92,8 @@ export function GoalDialog({
           : [...g.flags.filter((f) => f !== "own_goal"), flag],
     }));
   }
+  const actorId=goalPlayer(draft,rivalry);
+  const actor=sidePlayers(rivalry,draft.actor_side).find(p=>p.id===actorId)?.name;
   return (
     <Dialog title={editing ? "Edit goal" : "Add goal"} onClose={() => { dismiss(); onClose(); }} onDismiss={dismiss} dismissible={!pending}>
       <form
@@ -142,10 +145,11 @@ export function GoalDialog({
           </div>
         ) : (
           <p className="muted">
-            {playerName(rivalry, draft.actor_side)}’s{" "}
+            {actor ?? playerName(rivalry, draft.actor_side)}’s{" "}
             <strong>{draft.rung}</strong> rung · timestamp locked in
           </p>
         )}
+        {editing && sidePlayers(rivalry,draft.actor_side).length>1 && <p className="helper">{actor ? `Attributed to ${actor}` : "Historical team goal · shared credit"}</p>}
         <p className="field-title">Anything special?</p>
         <div className="flag-options">
           {(
@@ -193,7 +197,7 @@ export function GoalDialog({
         </div>
         <p className="helper">
           {own
-            ? `${playerName(rivalry, draft.actor_side)} made the own goal. ${playerName(rivalry, credited)} gets the point.`
+            ? `${actor ?? playerName(rivalry, draft.actor_side)} made the own goal. ${playerName(rivalry, credited)} gets the point.`
             : "Leave all off for a regular goal. Dunk and bank can be combined."}
         </p>
         {!editing && !pending && (

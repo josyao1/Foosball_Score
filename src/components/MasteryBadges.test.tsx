@@ -43,13 +43,13 @@ it('earns platinum at its threshold and links all four tiers to their crossing g
   expect(within(panel).getByRole('link',{name:/Platinum/}).getAttribute('href')).toBe('/game/platinum');
 });
 
-it('earns purple Amethyst after Platinum at twice its requirement in every category',()=>{
+it('earns purple Amethyst after Platinum at four times its requirement in every category',()=>{
  const progress=emptyMastery();
  const game={id:'before',rivalry_id:'r',started_at:'2026-11-03T12:00:00Z',ended_at:'2026-11-03T12:05:00Z',revision:1,goals:[]} as Game;
  const almost=Object.fromEntries(MASTERY.map(b=>[b.id,b.thresholds[4]-1])) as Record<MasteryId,number>;
  advanceMastery(progress,almost,game);
  for(const badge of MASTERY){
-  expect(badge.thresholds[4]).toBe(badge.thresholds[3]*2);
+  expect(badge.thresholds[4]).toBe(badge.thresholds[3]*4);
   expect(progress[badge.id].earned).toHaveLength(4);
  }
  advanceMastery(progress,Object.fromEntries(MASTERY.map(b=>[b.id,1])) as Record<MasteryId,number>,{...game,id:'amethyst'});

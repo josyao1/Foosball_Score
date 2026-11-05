@@ -1,5 +1,6 @@
+import { allPlayers, sidePlayers, matchesProfile } from './participants';
 import { useSyncExternalStore } from 'react';
-import type { Rivalry } from './types';
+import type { Rivalry, Player } from './types';
 export const PROFILE_KEY='tabletalk.profile.v1';
 const PROFILE_EVENT='tabletalk-profile-change';
 let fallback:string|null=null;
@@ -24,14 +25,10 @@ export function selectProfile(name:string|null){
   window.dispatchEvent(new Event(PROFILE_EVENT));
   return persisted;
 }
-export function profileChoices(rivalries:Rivalry[]){
-  const names=new Map<string,string>();
-  for(const rivalry of rivalries)for(const name of [rivalry.player_a,rivalry.player_b]){
-    const key=profileKey(name);if(key&&!names.has(key))names.set(key,name.trim());
-  }
-  return [...names].map(([key,name])=>({key,name})).sort((a,b)=>a.name.localeCompare(b.name));
+export function profileChoices(rivalries:Rivalry[],registry:Player[]=[]){
+  return allPlayers(rivalries,registry).map(p=>({key:p.id,name:p.name})).sort((a,b)=>a.name.localeCompare(b.name));
 }
 export function profileFirst<T>(items:T[],matches:(item:T)=>boolean):T[]{
   return [...items.filter(matches),...items.filter(item=>!matches(item))];
 }
-export function isProfileRivalry(rivalry:Rivalry,key:string|null){return !!key&&[rivalry.player_a,rivalry.player_b].some(name=>profileKey(name)===key);}
+export function isProfileRivalry(rivalry:Rivalry,key:string|null){return [...sidePlayers(rivalry,'a'),...sidePlayers(rivalry,'b')].some(p=>matchesProfile(p,key));}

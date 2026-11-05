@@ -26,6 +26,11 @@ export function AchievementIcon({id}:{id:AchievementId}) {
     tightrope:<><path d="M5 37q19-5 38 0M24 17v10l-6 9m6-9 7 8M12 22l12-3 12 3M5 34v7m38-7v7"/><circle cx="24" cy="10" r="4"/></>,
     circus:<><path d="M7 25L24 12l17 13M10 25v16h28V25M5 41h38M24 12V5l8 3-8 3M18 41V29h12v12M17 18l3 7m11-7-3 7"/><circle cx="9" cy="10" r="2"/><circle cx="39" cy="9" r="2"/></>,
     marathon:<><path d="M13 7h22M13 41h22M16 7v8c0 5 16 13 16 18v8M32 7v8c0 5-16 13-16 18v8M18 34h12M20 14h8"/><path d="M6 16v16m36-16v16"/></>,
+    groupProject:<>{[15,33].map(x=><g key={x}><circle cx={x} cy="12" r="4"/><path d={`M${x-4} 19h8v12h-3v9h-2v-9h-3z`}/></g>)}<path d="M6 25h36M21 7h6"/></>,
+    seatWarmer:<><path d="M17 10v18h17V18M17 22h17M20 28v10m11-10v10M8 18a17 17 0 0 1 30-8m0-6v6h-6M40 30a17 17 0 0 1-30 8m0 6v-6h6"/></>,
+    sixtySeven:<><path d="M20 12c-9-2-12 7-12 15s13 11 13 2-13-9-13-1M28 12h13L30 38"/></>,
+    fourTwenty:<><path d="M24 41V26M24 32C17 33 11 31 7 27l11 1C10 24 7 18 6 12c8 3 12 8 15 14C18 17 20 9 24 5c4 4 6 12 3 21 3-6 7-11 15-14-1 6-4 12-12 16l11-1c-4 4-10 6-17 5z"/></>,
+    lunchBreak:<><path d="M9 18h30v23H9zM17 18v-6h14v6M9 26h30M21 24h6v4h-6z"/><circle cx="34" cy="12" r="8"/><path d="M34 7v5l4 2"/></>,
   }[id];
   return <svg className="achievement-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{art}</svg>;
 }

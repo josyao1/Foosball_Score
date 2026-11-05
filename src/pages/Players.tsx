@@ -1,7 +1,8 @@
+import { NewPlayer } from '../components/NewPlayer';
 import { useProfile, profileFirst } from "../lib/profile";
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Search, Users } from 'lucide-react';
+import { ArrowUpRight, Plus, Users } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { FINISH_LABELS, FINISH_TYPES, playerPassports, RUNG_LABELS } from '../lib/players';
 import type { FinishType, PlayerPassport } from '../lib/players';
@@ -65,14 +66,15 @@ function Passport({ player: p, players }: { player: PlayerPassport; players:Play
 }
 
 export function Players() {
-  const {games,rivalries} = useStore();
+  const {games,rivalries,players} = useStore();
   const profile=useProfile();
-  const people = useMemo(()=>playerPassports(games,rivalries),[games,rivalries]);
-  const [query,setQuery] = useState('');
-  const visible = profileFirst(people.filter(p=>p.name.toLowerCase().includes(query.trim().toLowerCase())),p=>p.key===profile);
+  const people = useMemo(()=>playerPassports(games,rivalries,players),[games,rivalries,players]);
+  const [creating,setCreating] = useState(false);
+  const visible = profileFirst([...people].sort((a,b)=>(Date.parse(b.recent.at(-1)?.game.started_at??'')||0)-(Date.parse(a.recent.at(-1)?.game.started_at??'')||0)||a.name.localeCompare(b.name)),p=>p.key===profile||p.name.trim().toLowerCase()===profile);
   return <section className="players-page">
-    <header className="players-heading"><div><h1>Players</h1><p>Your table, by player.</p></div><label className="players-search"><Search size={16} aria-hidden="true"/><input type="search" aria-label="Find a player" placeholder="Find a player" value={query} onChange={e=>setQuery(e.target.value)}/></label></header>
-    <p className="players-note">Finished games across all rivalries. Own goals count against their scorer; team names stay separate.</p>
-    {visible.length ? <PlayerCarousel entries={visible.map(p=>({id:p.key,content:<Passport player={p} players={people}/>}))}/> : <div className="empty-state"><Users size={30}/><h2>{people.length ? 'No matching players' : 'No players yet'}</h2><p>{people.length ? 'Try another name.' : 'Create a rivalry and your players will appear here.'}</p>{!people.length && <Link className="button primary" to="/">Go to rivalries</Link>}</div>}
+    <header className="players-heading"><div><h1>Players</h1><p>Your table, by player.</p></div><button className="button primary" onClick={()=>setCreating(true)}><Plus size={18}/>New player</button></header>
+    <p className="players-note">Your singles and team games, together.</p>
+    {visible.length ? <PlayerCarousel entries={visible.map(p=>({id:p.key,content:<Passport player={p} players={people}/>}))}/> : <div className="empty-state"><Users size={30}/><h2>No players yet</h2><p>Add your friends, then choose sides in a rivalry.</p></div>}
+    {creating && <NewPlayer onClose={()=>setCreating(false)}/>}
   </section>;
 }

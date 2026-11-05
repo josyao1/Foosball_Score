@@ -10,7 +10,7 @@ vi.mock('../lib/store',()=>({useStore:()=>({...fixture,cloud:true,loading:false,
 const rivalry: Rivalry={id:'r',player_a:'Josh',player_b:'Brooks',created_at:'2026-01-01'};
 const game: Game={id:'g',rivalry_id:'r',revision:1,started_at:'2026-11-03T18:00:00Z',ended_at:'2026-11-03T18:10:00Z',goals:Array.from({length:10},(_,i)=>({id:`g${i}`,actor_side:'a',rung:'goalie',flags:[],elapsed_ms:(i+1)*10000,occurred_at:'2026-11-03T18:00:00Z'}))};
 afterEach(()=>{cleanup();vi.restoreAllMocks();fixture.games=[];fixture.rivalries=[];});
-it('renders style, result and best-game links and filters names without altering records',()=>{
+it('renders style, result and best-game links without a search box',()=>{
   fixture.games=[game]; fixture.rivalries=[rivalry];
   const {container}=render(<MemoryRouter><Players/></MemoryRouter>);
   const passport=screen.getByRole('article',{name:'Josh passport'});
@@ -21,10 +21,8 @@ it('renders style, result and best-game links and filters names without altering
   expect(passport.querySelector('.passport-finishes .passport-specialty')?.textContent).toBe('Not set yet');
   expect(within(passport).queryByText('Most played rivalry')).toBeNull();
   expect(container.querySelector('a a, a button')).toBeNull();
-  fireEvent.change(screen.getByRole('searchbox'),{target:{value:' jOsH '}});
-  expect(screen.getAllByRole('article')).toHaveLength(1);
-  fireEvent.change(screen.getByRole('searchbox'),{target:{value:'unknown'}});
-  expect(screen.getByText('No matching players')).toBeTruthy();
+  expect(screen.queryByRole('searchbox')).toBeNull();
+  expect(screen.getByRole('button',{name:'New player'})).toBeTruthy();
 });
 it('handles empty and unplayed profiles without made-up favorites or percentages',()=>{
   const view=render(<MemoryRouter><Players/></MemoryRouter>);

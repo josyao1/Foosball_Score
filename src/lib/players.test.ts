@@ -3,13 +3,14 @@ import { playerPassports } from './players';
 import type { Game, Rivalry } from './types';
 const r: Rivalry = {id:'r',player_a:'Josh',player_b:'Brooks',created_at:'2026-01-01'};
 const game = (seq: string, id='g', rivalry_id='r', day=1): Game => ({ id,rivalry_id,revision:1,started_at:`2026-10-${String(day).padStart(2,'0')}T18:00:00Z`,ended_at:`2026-10-${String(day).padStart(2,'0')}T19:00:00Z`,goals:[...seq].map((s,i)=>({id:`${id}-${i}`,actor_side:s as 'a'|'b',rung:'attacker',flags:[],elapsed_ms:(i+1)*1000,occurred_at:'2026-10-01T18:00:00Z'})) });
-it('combines names and side swaps across rivalries without splitting team labels', () => {
+it('combines names and side swaps across rivalries and includes confirmed legacy team members', () => {
   const other = {...r,id:'other',player_a:'Andrew',player_b:' jOSH '};
   const team = {...r,id:'team',player_a:'Josh and Brooks',player_b:'Andrew'};
   const people = playerPassports([game('aaaaaaaaaa'),game('bbbbbbbbbb','other','other'),game('aaaaaaaaaa','team','team')],[r,other,team]);
   const josh = people.find(p=>p.key==='josh')!;
-  expect(josh).toMatchObject({played:2,wins:2,goals:20,bestStreak:2});
-  expect(people.find(p=>p.key==='josh and brooks')).toMatchObject({played:1,wins:1,goals:10});
+  expect(josh).toMatchObject({played:3,wins:3,goals:25,bestStreak:3});
+  expect(people.find(p=>p.key==='josh and brooks')).toBeUndefined();
+  expect(people.find(p=>p.key==='brooks')).toMatchObject({played:2,wins:1,goals:5});
 });
 it('counts own goals against their actor in signatures, excluding them from rung stats', () => {
   const g=game('aaaab');
@@ -61,7 +62,7 @@ it('earns cumulative tiers in completion order with the exact crossing game',()=
   expect(p.mastery.goals.count).toBe(250);
   expect(p.mastery.goals.earned.map(g=>g.id)).toEqual(['win-5','win-10','win-25']);
   expect(p.mastery.wins.earned.map(g=>g.id)).toEqual(['win-5','win-15']);
-  expect(p.mastery.attacker.earned.map(g=>g.id)).toEqual(['win-1','win-3','win-5','win-10','win-20']);
+  expect(p.mastery.attacker.earned.map(g=>g.id)).toEqual(['win-1','win-3','win-5','win-10']);
 });
 it('counts combos toward both skills, excludes own goals, and requires all four rungs within one game',()=>{
   const g=game('aaaaa');
@@ -83,4 +84,23 @@ it('awards match-point recovery only for valid wins after facing match point, on
   expect(p.mastery.recovery.count).toBe(1);
   expect(p.mastery.recovery.earned[0].id).toBe('g');
   expect(playerPassports([saved],[r]).find(p=>p.key==='brooks')!.mastery.recovery.count).toBe(0);
+});
+
+it('uses only 1v1 games for personal bests, including for the solo opponent of a team',()=>{
+ const team={...r,id:'team',player_a:'Josh and Brooks',player_b:'Andrew'};
+ const solo={...r,id:'solo',player_b:'Andrew'};
+ const singles=game('bbbaaaaaaaaaa','single','solo');
+ singles.goals.forEach(g=>{g.elapsed_ms*=10000;});
+ const teamWin=game('bbbbbaaaaaaaaaa','team-win','team');
+ const soloAgainstTeam=game('aaaaabbbbbbbbbb','solo-against-team','team');
+ const expected=playerPassports([singles],[solo]);
+ const actual=playerPassports([singles,teamWin,soloAgainstTeam],[solo,team]);
+ for(const id of ['josh','andrew']){
+  const before=expected.find(p=>p.key===id)!,after=actual.find(p=>p.key===id)!;
+  expect([after.bestRun,after.bestComeback,after.quickestWin]).toEqual([before.bestRun,before.bestComeback,before.quickestWin]);
+  expect(after.played).toBe(3);
+ }
+ const brooks=actual.find(p=>p.key==='brooks')!;
+ expect([brooks.bestRun,brooks.bestComeback,brooks.quickestWin]).toEqual([null,null,null]);
+ expect(brooks.wins).toBe(1);
 });

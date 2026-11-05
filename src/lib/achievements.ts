@@ -1,3 +1,4 @@
+import { sidePlayers, hasDistinctSides, goalPlayer } from './participants';
 import { gameHighlights } from './records';
 import { creditedSide, isWinningScore, score } from './stats';
 import { otherSide } from './types';
@@ -27,12 +28,17 @@ export const ACHIEVEMENTS = [
   {id:'tightrope',name:'Walking the tightrope',requirement:'Win without the score ever being more than 2 goals apart.',color:'#507d8e'},
   {id:'marathon',name:'Marathon',requirement:'Win a game lasting at least 10 minutes, measured through the final goal.',color:'#84704c'},
   {id:'circus',name:'Circus',requirement:'Record 3 special goals in a row.',color:'#98649c'},
+  {id:'groupProject',name:'Group project',requirement:'Win a team game where both teammates personally score at least 4 goals.',color:'#687e9a'},
+  {id:'seatWarmer',name:'Seat warmer',requirement:'Score within 10 seconds of swapping positions.',color:'#b57948'},
+  {id:'sixtySeven',name:'67',requirement:'Score a goal at 1:07 on the game clock.',color:'#8c6aa0'},
+  {id:'fourTwenty',name:'420',requirement:'Score a goal at 4:20 on the game clock.',color:'#63834e'},
+  {id:'lunchBreak',name:'Lunch break',requirement:'Win 4 games within 30 minutes, from the first game’s start to the fourth win’s finish. Losses in between are allowed.',color:'#a67c4b'},
 ] as const;
 export type AchievementId=typeof ACHIEVEMENTS[number]['id'];
 export type AchievementHistory=Partial<Record<AchievementId,Game[]>>;
 export type PlayerAchievements=Partial<Record<AchievementId,Game>>;
 
-export function earnedAchievements(game:Game,side:Side,h=gameHighlights(game)):AchievementId[] {
+export function earnedAchievements(game:Game,side:Side,h=gameHighlights(game),rivalry?:Rivalry):AchievementId[] {
   if (!game.ended_at) return [];
   const earned=new Set<AchievementId>();
   const opponent=otherSide(side);
@@ -58,6 +64,12 @@ export function earnedAchievements(game:Game,side:Side,h=gameHighlights(game)):A
     if (scored && !isWinningScore(before) && isWinningScore({...before,[opponent]:before[opponent]+1})) saved++;
     if (goal.actor_side===side && ownGoal) own++;
     if (goal.actor_side===side && !ownGoal) {
+      if(Math.floor(goal.elapsed_ms/1000)===67)earned.add('sixtySeven');
+      if(Math.floor(goal.elapsed_ms/1000)===260)earned.add('fourTwenty');
+      const swapped=goal.lineup?.[side].swapped_at_ms;
+      if(rivalry && sidePlayers(rivalry,side).length===2 && goalPlayer(goal,rivalry)
+        && swapped!==undefined && Number.isSafeInteger(swapped) && swapped>=0
+        && goal.elapsed_ms>=swapped && goal.elapsed_ms-swapped<=10000)earned.add('seatWarmer');
       if (opponentRun>=4) brokeRun=true;
       recentRungs=[...recentRungs,goal.rung].slice(-4);
       if (new Set(recentRungs).size===4) earned.add('around');
@@ -72,6 +84,10 @@ export function earnedAchievements(game:Game,side:Side,h=gameHighlights(game)):A
   if (specialTypes.size===4) earned.add('fullHouse');
   if (h.goals.length>=10 && h.goals.slice(1,10).every((goal,i)=>creditedSide(goal)!==creditedSide(h.goals[i]))) earned.add('trading');
   if (validWin) {
+    if(rivalry){
+      const members=sidePlayers(rivalry,side);
+      if(members.length===2 && members.every(p=>h.goals.filter(g=>g.actor_side===side && !g.flags.includes('own_goal') && goalPlayer(g,rivalry)===p.id).length>=4))earned.add('groupProject');
+    }
     const last=h.goals.at(-1)!;
     const final=h.scores.at(-1)!;
     if (saved>=3) earned.add('escape');
@@ -96,21 +112,45 @@ export function earnedAchievements(game:Game,side:Side,h=gameHighlights(game)):A
 }
 
 /** Mark the fifth win of each streak using the same participant identities as passports. */
-export function streakAchievementGames(games:Game[],rivalries:Rivalry[]):ReadonlyMap<string,Side[]> {
+export function streakAchievementPlayers(games:Game[],rivalries:Rivalry[]):ReadonlyMap<string,{side:Side;name:string}[]> {
   const byId=new Map(rivalries.map(r=>[r.id,r]));
   const streaks=new Map<string,number>();
-  const earned=new Map<string,Side[]>();
-  const key=(name:string)=>name.trim().toLowerCase();
+  const earned=new Map<string,{side:Side;name:string}[]>();
   const completed=games.filter(g=>g.ended_at).sort((a,b)=>Date.parse(a.ended_at!)-Date.parse(b.ended_at!) || a.id.localeCompare(b.id));
   for(const game of completed){
     const r=byId.get(game.rivalry_id);
-    if(!r || !key(r.player_a) || !key(r.player_b) || key(r.player_a)===key(r.player_b))continue;
+    if(!r || !hasDistinctSides(r))continue;
     const final=score(game.goals);
-    for(const side of ['a','b'] as const){
-      const identity=key(side==='a' ? r.player_a : r.player_b);
+    for(const side of ['a','b'] as const)for(const member of sidePlayers(r,side)){
+      const identity=member.id;
       const count=final[side]>final[otherSide(side)] ? (streaks.get(identity) ?? 0)+1 : 0;
       streaks.set(identity,count);
-      if(count===5)earned.set(game.id,[...(earned.get(game.id) ?? []),side]);
+      if(count===5)earned.set(game.id,[...(earned.get(game.id) ?? []),{side,name:member.name}]);
+    }
+  }
+  return earned;
+}
+
+export function streakAchievementGames(games:Game[],rivalries:Rivalry[]):ReadonlyMap<string,Side[]> {
+ return new Map([...streakAchievementPlayers(games,rivalries)].map(([id,people])=>[id,[...new Set(people.map(p=>p.side))]]));
+}
+
+/** Each qualifying fourth win; identities follow players across team and side changes. */
+export function lunchBreakPlayers(games:Game[],rivalries:Rivalry[]):ReadonlyMap<string,{id:string;side:Side;name:string}[]> {
+  const byId=new Map(rivalries.map(r=>[r.id,r]));
+  const wins=new Map<string,Game[]>();
+  const earned=new Map<string,{id:string;side:Side;name:string}[]>();
+  const completed=games.filter(g=>g.ended_at).sort((a,b)=>Date.parse(a.ended_at!)-Date.parse(b.ended_at!) || a.id.localeCompare(b.id));
+  for(const game of completed){
+    const r=byId.get(game.rivalry_id),end=Date.parse(game.ended_at!),start=Date.parse(game.started_at);
+    if(!r || !hasDistinctSides(r) || !Number.isFinite(end) || !Number.isFinite(start) || start>end)continue;
+    const final=score(game.goals);
+    if(final.a===final.b)continue;
+    const side:Side=final.a>final.b?'a':'b';
+    for(const p of sidePlayers(r,side)){
+      const recent=[...(wins.get(p.id)??[]),game].filter(g=>Date.parse(g.started_at)>=end-30*60000);
+      wins.set(p.id,recent);
+      if(recent.length>=4)earned.set(game.id,[...(earned.get(game.id)??[]),{id:p.id,side,name:p.name}]);
     }
   }
   return earned;

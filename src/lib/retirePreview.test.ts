@@ -31,5 +31,5 @@ it('keeps working when browser storage is blocked', () => {
   expect(retireRecordPreview).not.toThrow();
 });
 it('starts an unconfigured local table empty instead of generating sample games', async () => {
-  expect(await new LocalRepository(localStorage).load()).toEqual({ rivalries: [], games: [] });
+  expect(await new LocalRepository(localStorage).load()).toEqual({ rivalries: [], games: [], players: [] });
 });

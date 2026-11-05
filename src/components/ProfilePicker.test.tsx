@@ -27,11 +27,11 @@ it('persists a selection, prioritizes its passport, and allows clearing the devi
  expect(localStorage.getItem(PROFILE_KEY)).toBeNull();
  expect(screen.getByRole('button',{name:'Select profile'})).toBeTruthy();
 });
-it('prioritizes matching rivalries without reordering others or splitting team names',()=>{
+it('prioritizes matching rivalries including team memberships',()=>{
  selectProfile('JOSH');
  render(<MemoryRouter><App/></MemoryRouter>);
  expect(screen.getAllByRole('article')[0].getAttribute('aria-label')).toBe(' Josh  vs Brooks');
- expect(profileFirst(rivalries,r=>isProfileRivalry(r,'josh')).map(r=>r.id)).toEqual(['jb','ab','team']);
+ expect(profileFirst(rivalries,r=>isProfileRivalry(r,'josh')).map(r=>r.id)).toEqual(['jb','team','ab']);
  expect(rivalries.map(r=>r.id)).toEqual(['ab','jb','team']);
 });
 it('updates other tabs and handles unavailable storage without crashing',()=>{

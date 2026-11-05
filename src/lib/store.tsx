@@ -1,3 +1,4 @@
+import { defaultLineup } from './participants';
 import {
   createContext,
   useCallback,
@@ -89,6 +90,8 @@ function useDataStore() {
     error,
     cloud: cloudConfigured,
     refresh,
+    createPlayer:(name:string)=>mutate(r=>r.createPlayer(name),(d,p)=>({...d,players:[...(d.players??[]),p]})),
+    createTeamRivalry:(a:string[],b:string[])=>mutate(r=>r.createTeamRivalry(a,b),(d,r)=>({...d,rivalries:[...d.rivalries,r]})),
     createRivalry: (a: string, b: string) =>
       mutate(
         (r) => r.createRivalry(a, b),
@@ -96,7 +99,10 @@ function useDataStore() {
       ),
     saveGame: (g: Game) =>
       mutate(
-        (r) => r.saveGame(g),
+        (r) => {
+          const rivalry=data.rivalries.find(r=>r.id===g.rivalry_id);
+          return r.saveGame(g.revision===0&&rivalry&&!g.lineup?{...g,lineup:defaultLineup(rivalry)}:g);
+        },
         (d, s) => ({
           ...d,
           games: [...d.games.filter((x) => x.id !== s.id), s],
@@ -108,7 +114,7 @@ function useDataStore() {
         (d) => ({ ...d, games: d.games.filter((x) => x.id !== g.id) }),
       ),
     deleteGame:(g:Game)=>mutate(r=>r.deleteGame(g),d=>({...d,games:d.games.filter(x=>x.id!==g.id)})),
-    deleteRivalry:(id:string,expectedGames:Record<string,number>)=>mutate(r=>r.deleteRivalry(id,expectedGames),d=>({rivalries:d.rivalries.filter(r=>r.id!==id),games:d.games.filter(g=>g.rivalry_id!==id)})),
+    deleteRivalry:(id:string,expectedGames:Record<string,number>)=>mutate(r=>r.deleteRivalry(id,expectedGames),d=>({...d,rivalries:d.rivalries.filter(r=>r.id!==id),games:d.games.filter(g=>g.rivalry_id!==id)})),
     clearDemo: () =>
       mutate(
         async (r) => {

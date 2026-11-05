@@ -473,3 +473,6 @@ html[data-design] dialog.profile-dialog { margin:auto;inset:0;position:fixed;wid
 .profile-sparkle { color:#a77b23;animation:profile-sparkle 2.8s ease-in-out infinite; }
 @keyframes profile-sparkle { 0%,100% { opacity:.7;transform:scale(.92); } 50% { opacity:1;transform:scale(1.12); } }
 @media(prefers-reduced-motion:reduce) { .profile-sparkle { animation:none; } }
+
+html[data-design] .timeline-player > .timeline-team-name { font-weight: 400; color: var(--muted); }
+html[data-design] .timeline-individual-scorer { font-weight: 800; color: var(--text); }

@@ -116,14 +116,14 @@ the share of close scores, and both holding match point retain natural bounds.
 ### Players
 
 The fourth tab shows Clay player passports across all rivalries. Trimmed,
-case-insensitive names share a passport; doubles labels remain separate. Only
+case-insensitive names are unique in a permanent player registry. Teams reference one or two player IDs per side; they do not create extra passports. Only
 finished games contribute. Favorite rungs exclude own goals. Signature finishes compare dunk, bank,
 dunk + bank, and own goals made by that player, displaying ties. Percentages
 use all their recorded goals (including regular and own goals) as the denominator.
 Recent form links the last five completed games, oldest to newest. Personal bests
 link the source games for each player's longest run, biggest winning comeback,
 and quickest valid win. Runs include opponent own goals. Also shown: win rate,
-record, goals scored, playing time, best win streak, and most-played rivalry.
+record, goals scored, playing time, and best win streak.
 
 Players also have IXL mastery badges with bronze, silver, gold, platinum, and amethyst tiers. All ten badges stay in the main grid, including unearned badges. Only one detail panel opens per passport, below its tile row. Expand
 any badge for its exact requirements and the game that earned each tier. Goals,
@@ -134,18 +134,17 @@ opponent match point. Badge progress is derived from finished games, so edits an
 removed games are reflected automatically. On phone widths, swipe between
 passports or use the arrows; desktop retains the grid.
 
-An Achievements button below mastery opens twenty-two illustrated one-off badges.
+An Achievements button below mastery opens twenty-three illustrated badges in a fixed catalogue order.
 Unearned badges stay grey and reveal requirements when selected; earned badges
-link to the first earning game. Win achievements require a valid finish, while
+link to every earning game. Win achievements require a valid finish, while
 own goals only award the appropriate actor/gift achievements. Match-point saves
 count separate scoring events; Speedrun is strictly under four minutes through
-the last goal, and Instant reply allows up to three seconds. No additional
-stored data or schema is required.
+the last goal, and Instant reply allows up to three seconds. Achievements are calculated from the game history.
 
 The header's Select profile control remembers a participant on this browser with
 localStorage (no expiration, no login). Matching rivalries and that passport are
-shown first; other entries retain their order and remain visible. Names use the
-same trimmed, case-insensitive identity as passports; team labels remain separate.
+shown first, including team memberships; recency of play orders the remainder.
+Preferences use player IDs; previous individual-name selections still resolve.
 Users can switch or clear the preference. Other tabs on the same origin update;
 private browsing, browser data clearing, and storage restrictions can prevent
 long-term persistence. Localhost and production have separate browser storage.
@@ -166,3 +165,19 @@ Achievement collections show a compact repeat count for badges earned in multipl
 games, with every earning game linked in the detail view and gold borders on
 unlocked badges. Counts are per qualifying finished game; On a roll is earned on
 the fifth win of each new streak. First unlocks remain separate for the home feed.
+
+### Individual-player migration (2026-11-04)
+
+Existing installations: apply `supabase/individual-players.sql` once. Fresh installations: run `supabase/schema.sql`, then this upgrade. Do not rerun the base schema over an upgraded installation. The upgrade creates only `foos_*` objects and preserves rivalry labels, IDs and every goal. `supabase/individual-players-check.sql` is a rollback-only SQL test harness, not seed data.
+
+Players can be created before rivalries. Choose one or two registered players on each side (1v1, 2v1 or 2v2). A player cannot occupy both sides; roster identity ignores side and teammate order. Deleting a rivalry does not delete its players.
+
+The confirmed historical “josh and brooks” side maps to Josh and Brooks. Unattributed historical scoring stats contribute half to each; counts are accumulated then floored, including each rung and special-goal category. Full results, playing time and team achievements accrue to both. Existing event logs are not rewritten with invented scorers.
+
+New games assign goalie/defender to one teammate and middle/attacker to the other. The compact position row supports swaps; each goal stores the complete position snapshot used at its tap. Edits use that snapshot. Existing live team games require position setup before new scoring; their earlier unassigned goals remain historical half-credit. The save RPC uses revision checks, and the old RPC preserves snapshots from older clients.
+
+All-four-rung mastery requires that individual to actually score from each rung within the game. Other scoring mastery uses personal counts; wins and match-point recovery are shared. Amethyst is four times Platinum: 2,000 goals; 240 wins/dunks/banks; 400 goals per rung; 40 all-rung games/recoveries.
+
+Security review: public editing is intentional for this friends-only app. Supabase flags the restricted `SECURITY DEFINER` save/create RPCs as publicly executable, consistent with the pre-existing access model; these validate rosters, timestamps, attribution and game revisions. Both new tables have RLS and explicit policies. No unrelated database objects are changed.
+
+Apply `supabase/swap-timing.sql` after the individual-player upgrade to enable Seat warmer swap timing. Existing goal assignments remain unchanged.

@@ -1,0 +1,9 @@
+# Individual players and teams
+
+Approved conversation: permanent profiles, one/two players per side, keep rivalry names and game logs. Historical Josh + Brooks goals split evenly per statistic, accumulate fractions before rounding down. Wins/losses and achievements fully shared. Future goals belong to the player on the scoring rung; goalie/defender = defense, middle/attacker = attack. Swap affects subsequent goals only. All-four-rung mastery requires actual individual attribution, never inferred from historical team totals.
+
+Approach: explicit foos_players and foos_rivalry_members, additive game/goal attribution columns and versioned save API. Preserve existing IDs, timestamps, scores, labels. Do not infer arbitrary names by splitting words; only the confirmed Josh and Brooks legacy label is mapped to two people. Unmapped singles get their own identity. Local demo uses equivalent normalization. Existing API remains compatible.
+
+Player passports, preference sorting, Scorigami, streaks and achievement feed use shared membership helpers. Scoring counts fractional legacy contributions internally, flooring cumulative displayed counts and mastery progress. Team best runs/comebacks remain shared game performances; all-rung mastery is per individual. Achievements remain team-shared as requested. Individual streak achievements follow each player's participation history.
+
+UI: fixed achievement catalogue order, no player search, new-player action, checkbox side rosters, compact team position row with swap, attributed scorer visible in goal editor. Preserve mobile swipe cards and Clay theme. Selected profile uses permanent ID (legacy solo name preferences resolve), own rivalries first then latest game. Amethyst is 4x Platinum. No browser automation. Validate with unit/component tests, build and transactional SQL checks. No automatic production frontend rollout in this task; localhost review first.
