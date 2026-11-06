@@ -1,6 +1,6 @@
 import { NewPlayer } from '../components/NewPlayer';
 import { useProfile, profileFirst } from "../lib/profile";
-import { useId, useMemo, useState } from 'react';
+import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Award, Plus, Users } from 'lucide-react';
 import { useStore } from '../lib/store';
@@ -25,6 +25,27 @@ type PassportTab = 'overview'|'scoring'|'badges';
 function Passport({ player: p, players, tab, setTab }: { player: PlayerPassport; players:PlayerPassport[]; tab:PassportTab; setTab:(tab:PassportTab)=>void }) {
   const stamps=MASTERY.map(b=>({...b,level:p.mastery[b.id].earned.length})).filter(b=>b.level>0).sort((a,b)=>b.level-a.level).slice(0,3);
   const tabId = useId();
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const scrollBeforeSwitch = useRef<{x:number;y:number;list:HTMLElement|null;left:number;top:number}|null>(null);
+  function selectPage(next:PassportTab) {
+    if(next===tab)return;
+    const list=tabsRef.current?.closest<HTMLElement>('.player-carousel-list')??null;
+    scrollBeforeSwitch.current={x:window.scrollX,y:window.scrollY,list,left:list?.scrollLeft??0,top:list?.scrollTop??0};
+    setTab(next);
+  }
+  useLayoutEffect(()=>{
+    const previous=scrollBeforeSwitch.current;
+    if(!previous)return;
+    scrollBeforeSwitch.current=null;
+    // Resolve the new panel's layout before correcting browser anchoring/re-snapping.
+    tabsRef.current?.getBoundingClientRect();
+    if(previous.list){
+      if(previous.list.scrollLeft!==previous.left)previous.list.scrollLeft=previous.left;
+      if(previous.list.scrollTop!==previous.top)previous.list.scrollTop=previous.top;
+    }
+    if(window.scrollY!==previous.y||window.scrollX!==previous.x)
+      window.scrollTo({left:previous.x,top:previous.y,behavior:'instant'});
+  },[tab]);
   const badgeCount = Object.values(p.mastery).filter(b=>b.earned.length>0).length + Object.keys(p.achievements).length;
   const bests = [
     {label:'Biggest run',record:p.bestRun,value:`${p.bestRun?.value} straight`},
@@ -42,14 +63,14 @@ function Passport({ player: p, players, tab, setTab }: { player: PlayerPassport;
       <div><dt>Goals scored</dt><dd>{p.goals}</dd></div>
       <div><dt>At the table</dt><dd>{playingTimeLabel(p.playingMs)}</dd></div>
     </dl>
-    <div className="passport-tabs" role="tablist" aria-label={`${p.name} passport pages`} onKeyDown={e=>{
+    <div ref={tabsRef} className="passport-tabs" role="tablist" aria-label={`${p.name} passport pages`} onKeyDown={e=>{
       const keys=['overview','scoring','badges'] as const;
       if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
       e.preventDefault();e.stopPropagation();
       const next=e.key==='Home'?keys[0]:e.key==='End'?keys[2]:keys[(keys.indexOf(tab)+(e.key==='ArrowRight'?1:2))%3];
-      setTab(next);e.currentTarget.querySelector<HTMLButtonElement>(`[data-page="${next}"]`)?.focus();
+      selectPage(next);e.currentTarget.querySelector<HTMLButtonElement>(`[data-page="${next}"]`)?.focus({preventScroll:true});
     }}>
-      {(['overview','scoring','badges'] as const).map(page=><button key={page} type="button" role="tab" data-page={page} id={`${tabId}-${page}`} aria-controls={`${tabId}-panel-${page}`} aria-selected={tab===page} tabIndex={tab===page?0:-1} onClick={()=>setTab(page)}>
+      {(['overview','scoring','badges'] as const).map(page=><button key={page} type="button" role="tab" data-page={page} id={`${tabId}-${page}`} aria-controls={`${tabId}-panel-${page}`} aria-selected={tab===page} tabIndex={tab===page?0:-1} onClick={()=>selectPage(page)}>
         {page==='overview'?'Overview':page==='scoring'?'Scoring':'Badges'}{page==='badges'&&<span title="Earned mastery badges and achievements">{badgeCount}</span>}
       </button>)}
     </div>
@@ -63,7 +84,7 @@ function Passport({ player: p, players, tab, setTab }: { player: PlayerPassport;
       <section className="passport-rungs"><h3>Favorite rung</h3><p className="passport-specialty">{p.favoriteRungs.length ? <>{p.favoriteRungs.map(rung=>RUNG_LABELS[rung]).join(' / ')} <small className="passport-overview-share" title="Share of goals scored, excluding own goals">{share(p.rungs[p.favoriteRungs[0]],p.goals)}%{p.favoriteRungs.length>1?' each':''}</small></> : 'Not set yet'}</p></section>
       <section className="passport-finishes"><h3>Signature finish</h3><p className="passport-specialty"><span className="passport-signature-balls" aria-hidden="true">{p.signatureTypes.map(type=><GoalBall key={type} flags={flags[type]} size={22}/>)}</span>{p.signatureTypes.length ? <>{p.signatureTypes.map(type=>FINISH_LABELS[type]).join(' / ')} <small className="passport-overview-share" title="Share of recorded goals, including own goals">{share(p.types[p.signatureTypes[0]],p.goals+p.types.own_goal)}%{p.signatureTypes.length>1?' each':''}</small></> : 'Not set yet'}</p></section>
     </div>
-    {stamps.length>0&&<div className="passport-stamps" aria-label="Mastery highlights">{stamps.map(b=><button key={b.id} type="button" className={`medal-${b.level}`} title={`${TIERS[b.level-1]} · ${b.label}`} aria-label={`${TIERS[b.level-1]} ${b.label}. View badges`} onClick={()=>{setTab('badges');document.getElementById(`${tabId}-badges`)?.focus();}}><Award size={16} aria-hidden="true"/><span>{b.label.replace(' proficiency','').replace('All four rungs mastered','All four rungs')}</span></button>)}</div>}
+    {stamps.length>0&&<div className="passport-stamps" aria-label="Mastery highlights">{stamps.map(b=><button key={b.id} type="button" className={`medal-${b.level}`} title={`${TIERS[b.level-1]} · ${b.label}`} aria-label={`${TIERS[b.level-1]} ${b.label}. View badges`} onClick={()=>{selectPage('badges');document.getElementById(`${tabId}-badges`)?.focus({preventScroll:true});}}><Award size={16} aria-hidden="true"/><span>{b.label.replace(' proficiency','').replace('All four rungs mastered','All four rungs')}</span></button>)}</div>}
     <section className="passport-bests" aria-label="Personal bests"><div className="passport-bests-heading"><h3>Personal bests</h3><span>Best win streak <strong>{p.bestStreak}</strong></span></div>
       <dl>{bests.map(({label,record,value})=><div key={label}><dt>{label}</dt><dd>{record ? <Link to={`/game/${record.game.id}`} aria-label={`${p.name}: ${label}, ${value}. View game`}>{value}<ArrowUpRight size={13}/></Link> : '—'}</dd></div>)}</dl>
     </section>

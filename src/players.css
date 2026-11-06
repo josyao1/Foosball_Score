@@ -124,7 +124,7 @@ html[data-design] .players-search input:focus-visible { outline:none; }
 .player-carousel-list:focus-visible { outline:2px solid var(--text);outline-offset:2px; }
 @media(max-width:760px) {
   .player-carousel .player-carousel-list { grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:calc(100% - 20px);gap:12px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline:2px;padding:2px 2px 12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;align-items:start; }
-  .player-carousel-list > li { scroll-snap-align:start; }
+  .player-carousel-list > li { scroll-snap-align:none start; }
   .player-carousel .player-carousel-single { grid-auto-columns:100%; }
   .player-carousel-controls { display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;color:var(--muted);font-size:11px; }
   .player-carousel-navigation { display:flex;align-items:center;gap:5px;flex-shrink:0; }

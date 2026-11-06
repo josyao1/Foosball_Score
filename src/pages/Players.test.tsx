@@ -100,3 +100,28 @@ it('shows earned colored mastery highlights on Overview and opens the shared bad
  for(const card of screen.getAllByRole('article'))expect(within(card).getByRole('region',{name:'IXL mastery badges'})).toBeTruthy();
  expect(document.activeElement).toBe(within(passport).getByRole('tab',{name:/Badges/}));
 });
+
+it('keeps the viewport and selected player in place when a tab change causes a browser scroll adjustment',()=>{
+ fixture.games=[game];fixture.rivalries=[rivalry];
+ render(<MemoryRouter><Players/></MemoryRouter>);
+ const passport=screen.getByRole('article',{name:'Josh passport'});
+ const list=screen.getByRole('list',{name:'Players'});
+ list.scrollLeft=320;
+ // Model a browser layout adjustment between the click and the committed panel.
+ vi.spyOn(window,'scrollY','get').mockReturnValueOnce(600).mockReturnValue(0);
+ vi.spyOn(window,'scrollX','get').mockReturnValue(0);
+ const scroll=vi.spyOn(window,'scrollTo').mockImplementation(()=>{});
+ fireEvent.click(within(passport).getByRole('tab',{name:/Badges/}));
+ expect(scroll).toHaveBeenCalledWith({left:0,top:600,behavior:'instant'});
+ expect(list.scrollLeft).toBe(320);
+ expect(within(passport).getByRole('region',{name:'IXL mastery badges'})).toBeTruthy();
+});
+it('moves keyboard focus between tabs without requesting a scroll',()=>{
+ fixture.games=[game];fixture.rivalries=[rivalry];
+ render(<MemoryRouter><Players/></MemoryRouter>);
+ const passport=screen.getByRole('article',{name:'Josh passport'});
+ const scoring=within(passport).getByRole('tab',{name:'Scoring'});
+ const focus=vi.spyOn(scoring,'focus');
+ fireEvent.keyDown(within(passport).getByRole('tab',{name:'Overview'}),{key:'ArrowRight'});
+ expect(focus).toHaveBeenCalledWith({preventScroll:true});
+});
