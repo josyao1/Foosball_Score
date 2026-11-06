@@ -15,8 +15,9 @@ it('opens score counts, latest game and empty squares; filters across rivalries'
  const {container}=render(<MemoryRouter><Scorigami/></MemoryRouter>);
  fireEvent.click(screen.getByRole('button',{name:'10–8: 2 games'}));
  expect(screen.getByRole('heading',{name:'10–8'})).toBeTruthy();
+ fireEvent.click(screen.getByRole('tab',{name:'First / latest'}));
  expect(within(screen.getByRole('dialog')).getByRole('link',{name:/Andrew 8, Alex 10/}).getAttribute('href')).toBe('/game/new');
- expect(within(screen.getByRole('dialog')).getByText('100% of finished games')).toBeTruthy();
+ expect(within(screen.getByRole('dialog')).getByText('2 games · 100% of finishes')).toBeTruthy();
  fireEvent.change(screen.getByLabelText('Rivalry'),{target:{value:'r'}});
  expect(screen.getByRole('button',{name:'10–8: 1 game'})).toBeTruthy();
  expect(screen.queryByRole('link',{name:/Andrew/})).toBeNull();
@@ -84,7 +85,8 @@ it('opens and dismisses a small score popup with latest game, count and focus re
  const cell=screen.getByRole('button',{name:'10–8: 1 game'});
  fireEvent.click(cell);
  const popup=screen.getByRole('dialog',{name:'10–8 score details'});
- expect(within(popup).getByText('1 game')).toBeTruthy();
+ expect(within(popup).getByText('1 game · 100% of finishes')).toBeTruthy();
+ fireEvent.click(within(popup).getByRole('tab',{name:'First / latest'}));
  expect(within(popup).getByRole('link',{name:/Josh 10, Brooks 8/}).getAttribute('href')).toBe('/game/latest');
  fireEvent.keyDown(document,{key:'Escape'});
  expect(screen.queryByRole('dialog')).toBeNull();
@@ -102,6 +104,7 @@ it('shows only the earliest and latest games with date, Pacific time and game du
  render(<MemoryRouter><Scorigami/></MemoryRouter>);
  fireEvent.click(screen.getByRole('button',{name:'10–8: 6 games'}));
  const popup=screen.getByRole('dialog');
+ fireEvent.click(within(popup).getByRole('tab',{name:'First / latest'}));
  const links=within(popup).getAllByRole('link');
  expect(links.map(link=>link.getAttribute('href'))).toEqual(['/game/match-5','/game/match-0']);
  expect(within(popup).getByText('First game')).toBeTruthy();
@@ -115,6 +118,7 @@ it('shows a single occurrence once as the first and latest game',()=>{
  render(<MemoryRouter><Scorigami/></MemoryRouter>);
  fireEvent.click(screen.getByRole('button',{name:'10–6: 1 game'}));
  const popup=screen.getByRole('dialog');
+ fireEvent.click(within(popup).getByRole('tab',{name:'First / latest'}));
  expect(within(popup).getByText('First & latest game')).toBeTruthy();
  expect(within(popup).getAllByRole('link')).toHaveLength(1);
 });
@@ -158,4 +162,18 @@ it('shows win percentages only for participants in the selected score and rivalr
  expect(within(filtered).getByText('100%')).toBeTruthy();
  expect(within(filtered).getByText('0%')).toBeTruthy();
  expect(within(filtered).queryByText('Josh')).toBeNull();
+});
+
+it('keeps players and game details separate with keyboard tabs and resets for another score',()=>{
+ fixture.games=[game('a',10,8),game('b',10,6)];
+ render(<MemoryRouter><Scorigami/></MemoryRouter>);
+ fireEvent.click(screen.getByRole('button',{name:'10–8: 1 game'}));
+ expect(screen.getByRole('tab',{name:'Players'}).getAttribute('aria-selected')).toBe('true');
+ expect(within(screen.getByRole('dialog')).queryByRole('link')).toBeNull();
+ fireEvent.keyDown(screen.getByRole('tab',{name:'Players'}),{key:'ArrowRight'});
+ expect(screen.getByRole('tab',{name:'First / latest'}).getAttribute('aria-selected')).toBe('true');
+ expect(screen.queryByRole('region',{name:'Player win rates at this score'})).toBeNull();
+ expect(within(screen.getByRole('dialog')).getAllByRole('link')).toHaveLength(1);
+ fireEvent.click(screen.getByRole('button',{name:'10–6: 1 game'}));
+ expect(screen.getByRole('tab',{name:'Players'}).getAttribute('aria-selected')).toBe('true');
 });

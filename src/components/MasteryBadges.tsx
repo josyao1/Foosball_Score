@@ -12,7 +12,7 @@ export function MasteryBadges({progress}:{progress:PlayerMastery}) {
   const rows=Array.from({length:Math.ceil(MASTERY.length/2)},(_,i)=>MASTERY.slice(i*2,i*2+2));
   return <section className="passport-mastery" aria-label="IXL mastery badges">
     <div className="mastery-heading"><h3>IXL mastery</h3><span>{earned} / {MASTERY.length} badges</span></div>
-    <div className="mastery-grid">{rows.map((row)=>{
+    <div className={`mastery-grid${selected ? ' has-selection' : ''}`}>{rows.map((row)=>{
       const active=row.find(b=>b.id===selected);
       return <Fragment key={row[0].id}>
         {row.map(badge=>{

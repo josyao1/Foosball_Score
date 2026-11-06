@@ -25,6 +25,7 @@ function MatchLink({ game, rivalry }: { game: Game; rivalry?: Rivalry }) {
 export function Scorigami() {
   const { games, rivalries } = useStore();
   const [scope, setScope] = useState('');
+  const [detailTab, setDetailTab] = useState<'players' | 'games'>('players');
   const [selection, setSelection] = useState<readonly [number, number]>([10, 0]);
   const [overtimePage, setOvertimePage] = useState(0);
   const [revealKey, setRevealKey] = useState<string | null>(null);
@@ -49,7 +50,7 @@ export function Scorigami() {
   const regularCount = data.completed.filter(g => { const s = score(g.goals); return Math.max(s.a, s.b) === 10; }).length;
   const overtimeCount = data.completed.length - regularCount;
   const select = (high: number, low: number, anchor: HTMLButtonElement) => {
-    setSelection([high, low]); setPopupAnchor(anchor);
+    setSelection([high, low]); setDetailTab('players'); setPopupAnchor(anchor);
   };
   const revealCommon = () => {
     if (!data.common) return;
@@ -62,7 +63,7 @@ export function Scorigami() {
     const anchor = charts.current?.querySelector<HTMLButtonElement>(`button[data-score="${revealKey}"]`);
     if (anchor) {
       const [high, low] = revealKey.split('-').map(Number);
-      setSelection([high, low]); setPopupAnchor(anchor);
+      setSelection([high, low]); setDetailTab('players'); setPopupAnchor(anchor);
     }
     setRevealKey(null);
   }, [revealKey, page]);
@@ -111,9 +112,32 @@ export function Scorigami() {
     </div>
     {!data.completed.length && <p className="sc-empty">Finish a game and its final score will appear here.</p>}
     <p className="sc-caption">Bar height = game count. Tap a score for details. Standard finishes only.</p>
-    {popupAnchor && <ScorePopover anchor={popupAnchor} score={`${selectedHigh}–${selectedLow}`} count={count} onClose={closePopup}>
-      {count ? <><p className="sc-frequency">{Math.round(count / data.completed.length * 100)}% of finished games</p><section className="sc-player-rates" aria-label="Player win rates at this score"><h3>Win rate at this score</h3><ul>{players.map(player => <li key={player.name.toLowerCase()}><span>{player.name}</span><span><strong>{player.percentage}%</strong><small>{player.wins}W · {player.played - player.wins}L</small></span></li>)}</ul></section><span className="sc-popover-latest">{count === 1 ? 'First & latest game' : 'Latest game'}</span><MatchLink game={matches[0]} rivalry={rivalryMap.get(matches[0].rivalry_id)}/>
-        {count > 1 && first && <><span className="sc-popover-latest">First game</span><MatchLink game={first} rivalry={rivalryMap.get(first.rivalry_id)}/></>}
+    {popupAnchor && <ScorePopover anchor={popupAnchor} score={`${selectedHigh}–${selectedLow}`} count={count} share={data.completed.length ? Math.round(count / data.completed.length * 100) : 0} onClose={closePopup}>
+      {count ? <>
+        <div className="sc-detail-tabs" role="tablist" aria-label="Score details" onKeyDown={e=>{
+          if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
+          e.preventDefault();
+          const next=e.key==='Home'?'players':e.key==='End'?'games':detailTab==='players'?'games':'players';
+          setDetailTab(next);
+          e.currentTarget.querySelector<HTMLButtonElement>(`#sc-tab-${next}`)?.focus();
+        }}>
+          <button type="button" role="tab" id="sc-tab-players" aria-controls="sc-panel-players" aria-selected={detailTab==='players'} tabIndex={detailTab==='players'?0:-1} onClick={()=>setDetailTab('players')}>Players</button>
+          <button type="button" role="tab" id="sc-tab-games" aria-controls="sc-panel-games" aria-selected={detailTab==='games'} tabIndex={detailTab==='games'?0:-1} onClick={()=>setDetailTab('games')}>First / latest</button>
+        </div>
+        <div id={`sc-panel-${detailTab}`} role="tabpanel" aria-labelledby={`sc-tab-${detailTab}`} tabIndex={0} className="sc-detail-content">
+          {detailTab==='players' ? <section className="sc-player-rates" aria-label="Player win rates at this score">
+            <div className="sc-rate-labels"><span>Player</span><span>Win rate</span><span>W–L</span></div>
+            <ul>{players.map(player=><li key={player.name.toLowerCase()}>
+              <span className="sc-rate-name">{player.name}</span>
+              <span className="sc-rate-value"><span className="sc-rate-track" aria-hidden="true"><span style={{width:`${player.percentage}%`}}/></span><strong>{player.percentage}%</strong></span>
+              <small>{player.wins}–{player.played-player.wins}</small>
+            </li>)}</ul>
+          </section> : <div className="sc-ticket-games">
+            <span className="sc-popover-latest">{count === 1 ? 'First & latest game' : 'Latest game'}</span>
+            <MatchLink game={matches[0]} rivalry={rivalryMap.get(matches[0].rivalry_id)}/>
+            {count > 1 && first && <><span className="sc-popover-latest">First game</span><MatchLink game={first} rivalry={rivalryMap.get(first.rivalry_id)}/></>}
+          </div>}
+        </div>
       </> : <p className="sc-empty">This score hasn't happened yet.</p>}
     </ScorePopover>}
     <p className="sc-credit">Inspired by <a href="https://nflscorigami.com/" target="_blank" rel="noreferrer">NFL Scorigami</a>.</p>

@@ -7,7 +7,7 @@ import { advanceMastery, emptyMastery, MASTERY } from '../lib/mastery';
 import type { MasteryId } from '../lib/mastery';
 import type { Game } from '../lib/types';
 afterEach(cleanup);
-it('shows all ten badges together and opens a single detail panel beneath an intact pair',()=>{
+it('keeps the full-width panel and compacts the other badges until it closes',()=>{
   render(<MemoryRouter><MasteryBadges progress={emptyMastery()}/></MemoryRouter>);
   expect(screen.getAllByRole('button')).toHaveLength(10);
   expect(screen.getAllByText(/Not earned/)).toHaveLength(10);
@@ -15,8 +15,11 @@ it('shows all ten badges together and opens a single detail panel beneath an int
   const goals=screen.getByRole('button',{name:/Goal scorer/});
   const wins=screen.getByRole('button',{name:/Winning proficiency/});
   fireEvent.click(goals);
-  expect(goals.nextElementSibling).toBe(wins);
-  expect(wins.nextElementSibling).toBe(screen.getByRole('region',{name:/Goal scorer/}));
+  const grid=goals.closest('.mastery-grid');
+  const panel=screen.getByRole('region',{name:/Goal scorer/});
+  expect(panel.parentElement).toBe(grid);
+  expect(wins.nextElementSibling).toBe(panel);
+  expect(grid?.classList.contains('has-selection')).toBe(true);
   fireEvent.click(wins);
   expect(goals.getAttribute('aria-expanded')).toBe('false');
   expect(wins.getAttribute('aria-expanded')).toBe('true');
@@ -24,6 +27,7 @@ it('shows all ten badges together and opens a single detail panel beneath an int
   expect(screen.getByRole('region',{name:/Winning proficiency/})).toBeTruthy();
   fireEvent.click(wins);
   expect(wins.getAttribute('aria-expanded')).toBe('false');
+  expect(grid?.classList.contains('has-selection')).toBe(false);
   expect(screen.getAllByRole('region')).toHaveLength(1); // the mastery section only
 });
 it('earns platinum at its threshold and links all four tiers to their crossing games',()=>{

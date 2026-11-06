@@ -209,10 +209,52 @@ html[data-design] .achievement-others h3 { font:500 12px var(--body-font);color:
 .team-position-row strong{display:block;font-size:14px;overflow-wrap:anywhere}
 .team-position-row small{display:block;font-size:11px;margin-top:3px;color:var(--muted)}
 .position-swap{display:flex;align-items:center;justify-content:center;gap:6px;min-width:44px;min-height:44px;padding:7px;background:transparent;color:inherit;border:1px solid var(--line);border-radius:10px;font-size:12px}
-@media(max-width:480px){.team-position-row{gap:8px}.team-position-row>div{gap:8px}.position-swap span{display:none}.team-position-row strong{font-size:13px}.players-heading>.button{font-size:13px;padding:10px 12px}.roster-picker{gap:8px}.roster-picker fieldset{padding:8px}}
+@media(max-width:480px){.team-position-row{gap:8px}.team-position-row>div{gap:8px}.position-swap span{display:inline}.team-position-row strong{font-size:13px}.players-heading>.button{font-size:13px;padding:10px 12px}.roster-picker{gap:8px}.roster-picker fieldset{padding:8px}}
 .roster-shortcut{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0}
 .roster-shortcut .helper{margin:0;min-width:0}
 .roster-add-player{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex-shrink:0;min-height:44px;padding:7px 10px;background:var(--panel-light);border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;color:var(--text)}
 .roster-new-player{display:flex;align-items:flex-end;gap:12px;margin:12px 0 18px}
 .roster-new-player label{flex:1;min-width:0;margin:0}.roster-new-player input{width:100%;font-size:16px}
 .roster-new-player>.text-button{min-height:44px;margin-bottom:2px}
+
+/* Passport pages keep the identity and totals visible while details stay focused. */
+.passport-tabs { display: flex; gap: 20px; margin: 0 22px; border-bottom: 1px solid var(--line); }
+.passport-tabs > button { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; padding: 8px 0; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--muted); font: inherit; font-size: 12px; cursor: pointer; }
+.passport-tabs > button[aria-selected="true"] { border-bottom-color: var(--text); color: var(--text); font-weight: 650; }
+.passport-tabs > button > span { font-size: 10px; padding: 2px 5px; border-radius: 4px; background: var(--panel-light); font-variant-numeric: tabular-nums; }
+.passport-page { min-width: 0; }
+.passport-overview-style { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; margin: 0 22px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.passport-overview-style > section { min-width: 0; }
+.passport-overview-style > section + section { border-left: 1px solid var(--line); padding-left: 14px; }
+.passport-overview-style .passport-specialty { font-size: 16px; margin: 5px 0 0; }
+.passport-page-overview .passport-form { margin: 0 22px; padding: 14px 0; }
+.passport-page-overview .passport-form > div { display: flex; flex-direction: column; gap: 3px; }
+.passport-page-overview .passport-bests { padding-top: 16px; }
+.passport-page-badges { padding-top: 18px; }
+.player-carousel .passport-grid { align-items: start; }
+@container passport (max-width:350px) {
+  .passport-tabs { margin-inline: 14px; gap: 16px; }
+  .passport-overview-style { margin-inline: 14px; gap: 10px; }
+  .passport-overview-style > section + section { padding-left: 10px; }
+  .passport-overview-style .passport-specialty { font-size: 14px; }
+  .passport-page-overview .passport-form { margin-inline: 14px; }
+}
+
+.passport-signature-balls { display: inline-flex; flex-wrap: wrap; gap: 3px; vertical-align: middle; margin-right: 6px; }
+.passport-signature-balls:empty { display: none; }
+.passport-stamps { display: flex; gap: 6px; padding: 14px 22px 0; }
+.passport-stamps button { display: flex; align-items: center; justify-content: center; flex: 1; min-width: 0; gap: 5px; padding: 7px 5px; min-height: 40px; border: 1px solid color-mix(in srgb,currentColor 25%,transparent); border-radius: 5px; font: inherit; font-size: 10px; cursor: pointer; }
+.passport-stamps button svg { flex-shrink: 0; }
+.passport-stamps button > span { overflow-wrap: anywhere; }
+@container passport (max-width:350px) { .passport-stamps { padding-inline: 14px; gap: 4px; } .passport-stamps button { gap: 3px; font-size: 9px; } }
+@media(min-width:761px) { .player-carousel .passport-grid { align-items: stretch; } }
+
+.passport-overview-share { display: inline-block; color: var(--muted); font-size: 11px; font-weight: 400; white-space: nowrap; vertical-align: baseline; margin-left: 3px; font-variant-numeric: tabular-nums; }
+
+/* Make room for the full-width tier panel by compacting the other badges. */
+.mastery-grid.has-selection { gap: 6px; }
+.mastery-grid.has-selection .mastery-badge[aria-expanded="false"] { min-height: 44px; padding: 6px 8px; gap: 6px; align-self: center; }
+.mastery-grid.has-selection .mastery-badge[aria-expanded="false"] > svg { width: 18px; height: 18px; }
+.mastery-grid.has-selection .mastery-badge[aria-expanded="false"] small { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.team-positions .position-swap { background: var(--panel-light); border-color: var(--text); font-weight: 650; padding-inline: 10px; flex-shrink: 0; }

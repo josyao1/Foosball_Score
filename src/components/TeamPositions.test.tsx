@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import {it,expect,vi,afterEach} from 'vitest';
-import {render,screen,fireEvent,cleanup,waitFor} from '@testing-library/react';
+import {render,screen,fireEvent,cleanup,waitFor,within} from '@testing-library/react';
+import {RungControls} from './RungControls';
 import {TeamPositions} from './TeamPositions';
 import {defaultLineup,goalPlayer} from '../lib/participants';
 import type {Game,Rivalry} from '../lib/types';
@@ -21,4 +22,19 @@ it('offers setup for an existing live team game and keeps failures visible',asyn
  render(<TeamPositions game={{id:'g',rivalry_id:'r',started_at:new Date().toISOString(),ended_at:null,revision:1,goals:[]}} rivalry={r} busy={false} onSave={onSave}/>);
  fireEvent.click(screen.getByRole('button',{name:'Use these positions'}));
  await waitFor(()=>expect(screen.getByRole('alert').textContent).toContain('changed'));
+});
+
+it('labels team rungs with the current assigned player and updates after a swap',()=>{
+ const lineup=defaultLineup(r),onGoal=vi.fn();
+ const {rerender}=render(<RungControls rivalry={r} lineup={lineup} layout="paired" disabled={false} onGoal={onGoal}/>);
+ const goalie=screen.getByRole('button',{name:'Josh and Brooks goalie goal'});
+ const attacker=screen.getByRole('button',{name:'Josh and Brooks attacker goal'});
+ expect(within(goalie).getByText('Josh')).toBeTruthy();
+ expect(within(attacker).getByText('Brooks')).toBeTruthy();
+ expect(within(screen.getByRole('button',{name:'Andrew goalie goal'})).queryByText('Andrew')).toBeNull();
+ rerender(<RungControls rivalry={r} lineup={{...lineup,a:{defense:'brooks',attack:'josh'}}} layout="paired" disabled={false} onGoal={onGoal}/>);
+ expect(within(goalie).getByText('Brooks')).toBeTruthy();
+ expect(within(attacker).getByText('Josh')).toBeTruthy();
+ fireEvent.click(attacker);
+ expect(onGoal).toHaveBeenCalledWith('a','attacker');
 });

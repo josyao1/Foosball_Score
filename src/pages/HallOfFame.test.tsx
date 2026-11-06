@@ -32,8 +32,15 @@ it('ranks posters, uses real momentum, and keeps replay, details and formula act
   fireEvent.click(within(posters[0]).getByRole('button', { name: /Classic score/ }));
   const dialog = screen.getByRole('dialog', { name: 'Classic score' });
   expect(within(dialog).getByText('Winning comeback')).toBeTruthy();
-  expect(within(dialog).getByText(/5-goal deficit recovered/)).toBeTruthy();
-  expect(dialog.querySelectorAll('dt')).toHaveLength(8);
+  const comeback=within(dialog).getByRole('button',{name:/Winning comeback/});
+  expect(comeback.getAttribute('aria-expanded')).toBe('false');
+  fireEvent.click(comeback);
+  expect(comeback.getAttribute('aria-expanded')).toBe('true');
+  expect(within(dialog).getByText(/5-goal deficit recovered/).hidden).toBe(false);
+  fireEvent.click(within(dialog).getByRole('button',{name:/Close finish/}));
+  expect(comeback.getAttribute('aria-expanded')).toBe('false');
+  expect(within(dialog).getByText(/5-goal deficit recovered/).hidden).toBe(true);
+  expect(dialog.querySelectorAll('.hall-factor')).toHaveLength(8);
   expect(within(dialog).getByText('Close finish')).toBeTruthy();
   fireEvent.click(within(dialog).getByRole('button', { name: 'Close dialog' }));
   expect(screen.queryByRole('dialog')).toBeNull();

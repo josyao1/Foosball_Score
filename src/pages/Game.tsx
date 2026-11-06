@@ -153,7 +153,6 @@ export function GamePage() {
           <span className="clock-rule">First to 10 · win by 2</span>
         </div>
         {live && <ScreenAwake key={game.id}/>}
-        {live && <TeamPositions game={game} rivalry={r} busy={store.busy} onSave={store.saveGame}/>}
         <div aria-live="polite" aria-atomic="true">
           <GameScoreboard
             rivalry={r}
@@ -170,8 +169,9 @@ export function GamePage() {
         )}
         {live && (
           <>
+            <TeamPositions game={game} rivalry={r} busy={store.busy} onSave={store.saveGame}/>
             <div className="scoring-hint">Tap the rung that hit the ball.</div>
-            <RungControls rivalry={r} layout={design.scorerLayout} disabled={store.busy||(!game.lineup&&(['a','b'] as const).some(s=>sidePlayers(r,s).length===2))} onGoal={beginGoal}/>
+            <RungControls rivalry={r} lineup={game.lineup} layout={design.scorerLayout} disabled={store.busy||(!game.lineup&&(['a','b'] as const).some(s=>sidePlayers(r,s).length===2))} onGoal={beginGoal}/>
             {won && (
               <div className="winning-notice" role="status">
                 <Trophy size={16} />

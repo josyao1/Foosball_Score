@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { ArrowUpRight, Play, Trophy } from 'lucide-react';
+import { useId, useMemo, useState } from 'react';
+import { ArrowUpRight, ChevronDown, Play, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Dialog } from '../components/Dialog';
 import { useStore } from '../lib/store';
@@ -18,14 +18,14 @@ export function PosterMomentum({ entry }: { entry: RankedClassic }) {
   const path = 'M12 90 ' + goals.map((g, i) => `H${x(g.elapsed_ms)} V${y(scores[i + 1].a - scores[i + 1].b)}`).join(' ');
   const end = scores.at(-1)!;
   return <figure className="hall-momentum">
-    <figcaption><span><i className="hall-side black"/>{entry.rivalry.player_a} above</span><span><i className="hall-side white"/>{entry.rivalry.player_b} below</span></figcaption>
+    <figcaption><span><i className="hall-side black"/><span className="hall-full-legend">{entry.rivalry.player_a} above</span><span className="hall-mobile-legend">Black ↑</span></span><span><i className="hall-side white"/><span className="hall-full-legend">{entry.rivalry.player_b} below</span><span className="hall-mobile-legend">White ↓</span></span></figcaption>
     <svg viewBox="0 0 640 180" role="img" aria-label={`Score lead over ${clock(totalMs)}; ${entry.rivalry.player_a} above the tied line, ${entry.rivalry.player_b} below. ${entry.rating.highlights.leadChanges} lead changes.`}>
       <path className="hall-trace-fill" d={`${path} V90 H12 Z`}/>
       <path className="hall-tie-line" d="M12 90H628"/>
       <path className="hall-trace" d={path}/>
       <circle cx={x(totalMs)} cy={y(end.a - end.b)} r="4" className="hall-trace-end"/>
     </svg>
-    <div className="hall-axis"><span>0:00</span><span>Final goal · {clock(totalMs)}</span></div>
+    <div className="hall-axis"><span>0:00</span><span><span className="hall-axis-label">Final goal · </span>{clock(totalMs)}</span></div>
   </figure>;
 }
 
@@ -55,12 +55,30 @@ function MatchPoster({ entry, rank, onRating }: { entry: RankedClassic; rank: nu
 }
 
 function RatingBreakdown({ entry, onClose }: { entry: RankedClassic; onClose: () => void }) {
-  return <Dialog title="Classic score" onClose={onClose} closeOnBackdrop>
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const id = useId();
+  return <Dialog className="hall-rating-dialog" title="Classic score" onClose={onClose} closeOnBackdrop>
     <div className="hall-breakdown">
-      <p className="hall-breakdown-total"><strong>{ratingLabel(entry.rating.total)}</strong> / 100</p>
-      <p>{entry.rivalry.player_a} vs {entry.rivalry.player_b} · {gameDate(entry.game.started_at)}</p>
-      <dl>{entry.rating.factors.map(factor => <div key={factor.label}><dt>{factor.label}<strong>{ratingLabel(factor.points)} <small>/ {factor.max}</small></strong></dt><dd>{factor.detail}</dd></div>)}</dl>
-      <p className="hall-method-note">100 is a benchmark, not a ceiling. Exceptional categories can exceed their listed points. Same formula for every rivalry. First to 10, win by 2; games must finish at their first winning score. Length stops at the final goal. Values are rounded for display; rankings use the unrounded total, then the earlier game.</p>
+      <div className="hall-receipt-summary">
+        <p className="hall-breakdown-total"><strong>{ratingLabel(entry.rating.total)}</strong><span>/ 100</span></p>
+        <p className="hall-receipt-match">{entry.rivalry.player_a} vs {entry.rivalry.player_b}<span>{gameDate(entry.game.started_at)}</span></p>
+      </div>
+      <div className="hall-factor-list">
+        {entry.rating.factors.map((factor,i)=>{
+          const open=expanded===factor.label, bonus=Math.max(0,factor.points-factor.max);
+          return <div className={`hall-factor${bonus>0?' hall-factor-bonus':''}`} key={factor.label}>
+            <button type="button" aria-expanded={open} aria-controls={`${id}-factor-${i}`} onClick={()=>setExpanded(open?null:factor.label)}>
+              <span className="hall-factor-label">{factor.label}</span>
+              <span className="hall-factor-track" aria-hidden="true"><span style={{width:`${Math.min(100,Math.max(0,factor.points/factor.max*100))}%`}}/></span>
+              <span className="hall-factor-score"><strong>{ratingLabel(factor.points)}</strong><small> / {factor.max}</small></span>
+              <span className="hall-factor-extra">{bonus>0&&<span aria-label={`${ratingLabel(bonus)} bonus points`}>+{ratingLabel(bonus)}</span>}</span>
+              <ChevronDown size={13} className={open?'is-open':''} aria-hidden="true"/>
+            </button>
+            <div id={`${id}-factor-${i}`} hidden={!open} className="hall-factor-detail">{factor.detail}</div>
+          </div>;
+        })}
+      </div>
+      <details className="hall-method-note"><summary>How the score works</summary><p>100 is a benchmark, not a ceiling. Gold marks bonus points above a category’s benchmark. Same formula for every rivalry. First to 10, win by 2; games must finish at their first winning score. Length stops at the final goal. Values are rounded for display; rankings use the unrounded total, then the earlier game.</p></details>
     </div>
   </Dialog>;
 }

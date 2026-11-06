@@ -17,7 +17,7 @@ it('renders style, result and best-game links without a search box',()=>{
   expect(passport.querySelector('.passport-winrate strong')?.textContent).toBe('100%');
   expect(within(passport).getByRole('link',{name:/Won 10–0 against Brooks/}).getAttribute('href')).toBe('/game/g');
   expect(within(passport).getByRole('link',{name:/Quickest win, 1:40/}).getAttribute('href')).toBe('/game/g');
-  expect(passport.querySelector('.passport-rungs .passport-specialty')?.textContent).toBe('Goalie');
+  expect(passport.querySelector('.passport-rungs .passport-specialty')?.textContent).toBe('Goalie 100%');
   expect(passport.querySelector('.passport-finishes .passport-specialty')?.textContent).toBe('Not set yet');
   expect(within(passport).queryByText('Most played rivalry')).toBeNull();
   expect(container.querySelector('a a, a button')).toBeNull();
@@ -50,6 +50,7 @@ it('shows own-goal frequency against all actor goals without showing regular as 
   fixture.games=[{...game,goals:game.goals.map((g,i)=>({...g,flags:i===0 ? ['own_goal'] : []}))}];
   render(<MemoryRouter><Players/></MemoryRouter>);
   const passport=screen.getByRole('article',{name:'Josh passport'});
+  fireEvent.click(within(passport).getByRole('tab',{name:'Scoring'}));
   const finishes=within(passport).getByRole('region',{name:'Goal type profile'});
   expect(within(finishes).queryByText('Regular')).toBeNull();
   expect(within(finishes).getByText('10%')).toBeTruthy();
@@ -60,9 +61,42 @@ it('links an earned mastery tier to the game that earned it and exposes its requ
   fixture.rivalries=[rivalry];fixture.games=[game];
   render(<MemoryRouter><Players/></MemoryRouter>);
   const passport=screen.getByRole('article',{name:'Josh passport'});
+  fireEvent.click(within(passport).getByRole('tab',{name:/Badges/}));
   fireEvent.click(within(passport).getByRole('button',{name:/Goalie proficiency/}));
   const badge=within(passport).getByRole('region',{name:/Goalie proficiency/});
   expect(within(badge).getByText('10 goalie goals')).toBeTruthy();
   expect(within(badge).getByRole('link',{name:/Goalie proficiency: Bronze/}).getAttribute('href')).toBe('/game/g');
   expect(within(badge).getByText('15 to go')).toBeTruthy();
+});
+
+it('defaults to a short overview and switches every passport together by keyboard and tap',()=>{
+ fixture.games=[game];fixture.rivalries=[rivalry];
+ render(<MemoryRouter><Players/></MemoryRouter>);
+ const josh=within(screen.getByRole('article',{name:'Josh passport'}));
+ const brooks=within(screen.getByRole('article',{name:'Brooks passport'}));
+ expect(josh.getByRole('tab',{name:'Overview'}).getAttribute('aria-selected')).toBe('true');
+ expect(josh.queryByRole('region',{name:'IXL mastery badges'})).toBeNull();
+ expect(josh.queryByRole('region',{name:'Rung profile'})).toBeNull();
+ fireEvent.keyDown(josh.getByRole('tab',{name:'Overview'}),{key:'ArrowRight'});
+ expect(josh.getByRole('region',{name:'Rung profile'})).toBeTruthy();
+ expect(josh.queryByRole('region',{name:'Personal bests'})).toBeNull();
+ expect(brooks.getByRole('region',{name:'Rung profile'})).toBeTruthy();
+ expect(brooks.queryByRole('region',{name:'Personal bests'})).toBeNull();
+ fireEvent.click(josh.getByRole('tab',{name:/Badges/}));
+ expect(josh.getByRole('region',{name:'IXL mastery badges'})).toBeTruthy();
+ expect(josh.queryByRole('region',{name:'Rung profile'})).toBeNull();
+ expect(screen.getByRole('article',{name:'Josh passport'}).querySelector('.passport-winrate strong')?.textContent).toBe('100%');
+ fireEvent.keyDown(josh.getByRole('tab',{name:/Badges/}),{key:'Home'});
+ expect(josh.getByRole('region',{name:'Recent form'})).toBeTruthy();
+});
+
+it('shows earned colored mastery highlights on Overview and opens the shared badges page',()=>{
+ fixture.games=[game];fixture.rivalries=[rivalry];
+ render(<MemoryRouter><Players/></MemoryRouter>);
+ const passport=screen.getByRole('article',{name:'Josh passport'});
+ const stamp=within(passport).getByRole('button',{name:'Bronze Goalie proficiency. View badges'});
+ expect(stamp.className).toBe('medal-1');
+ fireEvent.click(stamp);
+ for(const card of screen.getAllByRole('article'))expect(within(card).getByRole('region',{name:'IXL mastery badges'})).toBeTruthy();
+ expect(document.activeElement).toBe(within(passport).getByRole('tab',{name:/Badges/}));
 });
