@@ -1,7 +1,7 @@
 import type { Rivalry, Side } from '../lib/types';
 import '../game-scoreboards.css';
 
-type Props = { rivalry: Rivalry; scores: Record<Side, number>; designId: string; live: boolean };
+type Props = { rivalry: Rivalry; scores: Record<Side, number>; designId: string; live: boolean; pulse?: {id: string; side: Side} };
 const SIDES: Side[] = ['a', 'b'];
 
 function Kit({ side }: { side: Side }) {
@@ -12,11 +12,16 @@ function Person({ side }: { side: Side }) {
 }
 
 /** Score presentations intentionally use different document structures, not palette swaps. */
-export function GameScoreboard({ rivalry, scores, designId, live }: Props) {
+export function GameScoreboard({ rivalry, scores, designId, live, pulse }: Props) {
   const name = (side: Side) => side === 'a' ? rivalry.player_a : rivalry.player_b;
   const status = live ? 'Current score' : 'Final score';
   const label = `${status}: ${rivalry.player_a}, black, ${scores.a}; ${rivalry.player_b}, white, ${scores.b}`;
-  const number = (side: Side, padded = false) => <strong className="gs-number">{padded ? String(scores[side]).padStart(2, '0') : scores[side]}</strong>;
+  const number = (side: Side, padded = false) => {
+    const confirmed = pulse?.side === side;
+    return <strong key={confirmed ? pulse.id : side} className={`gs-number${confirmed ? ' goal-confirmed' : ''}`}>
+      {padded ? String(scores[side]).padStart(2, '0') : scores[side]}
+    </strong>;
+  };
   let content;
   switch (designId) {
     case 'paper':

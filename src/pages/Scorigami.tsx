@@ -1,3 +1,4 @@
+import { TabUnderline } from "../components/TabUnderline";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
@@ -112,9 +113,9 @@ export function Scorigami() {
     </div>
     {!data.completed.length && <p className="sc-empty">Finish a game and its final score will appear here.</p>}
     <p className="sc-caption">Bar height = game count. Tap a score for details. Standard finishes only.</p>
-    {popupAnchor && <ScorePopover anchor={popupAnchor} score={`${selectedHigh}–${selectedLow}`} count={count} share={data.completed.length ? Math.round(count / data.completed.length * 100) : 0} onClose={closePopup}>
+    {popupAnchor && <ScorePopover key={selectedKey} anchor={popupAnchor} score={`${selectedHigh}–${selectedLow}`} count={count} share={data.completed.length ? Math.round(count / data.completed.length * 100) : 0} onClose={closePopup}>
       {count ? <>
-        <div className="sc-detail-tabs" role="tablist" aria-label="Score details" onKeyDown={e=>{
+        <div className="sc-detail-tabs tab-underline-row" role="tablist" aria-label="Score details" onKeyDown={e=>{
           if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
           e.preventDefault();
           const next=e.key==='Home'?'players':e.key==='End'?'games':detailTab==='players'?'games':'players';
@@ -123,6 +124,7 @@ export function Scorigami() {
         }}>
           <button type="button" role="tab" id="sc-tab-players" aria-controls="sc-panel-players" aria-selected={detailTab==='players'} tabIndex={detailTab==='players'?0:-1} onClick={()=>setDetailTab('players')}>Players</button>
           <button type="button" role="tab" id="sc-tab-games" aria-controls="sc-panel-games" aria-selected={detailTab==='games'} tabIndex={detailTab==='games'?0:-1} onClick={()=>setDetailTab('games')}>First / latest</button>
+          <TabUnderline selection={detailTab} />
         </div>
         <div id={`sc-panel-${detailTab}`} role="tabpanel" aria-labelledby={`sc-tab-${detailTab}`} tabIndex={0} className="sc-detail-content">
           {detailTab==='players' ? <section className="sc-player-rates" aria-label="Player win rates at this score">

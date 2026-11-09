@@ -20,6 +20,7 @@ import { useStore } from "../lib/store";
 import { changeGoal, removeGoal } from "../lib/mutations";
 import {
   clock,
+  creditedSide,
   dateLabel,
   duration,
   isWinningScore,
@@ -54,6 +55,7 @@ export function GamePage() {
     [removing, setRemoving] = useState<Goal | null>(null),
     [winningGame,setWinningGame] = useState<Game|null>(null),
     [dismissedWin,setDismissedWin] = useState<string|null>(null);
+  const [confirmation, setConfirmation] = useState<{gameId: string; goal: Goal} | null>(null);
   const game = store.games.find((g) => g.id === id),
     r = store.rivalries.find((r) => r.id === game?.rivalry_id);
   useEffect(() => {
@@ -108,8 +110,12 @@ export function GamePage() {
     });
   }
   async function saveGoal(goal: Goal) {
-    await store.saveGame(changeGoal(game!, openingRevision, goal, editing));
+    const updated = changeGoal(game!, openingRevision, goal, editing);
+    await store.saveGame(updated);
+    if (!editing) setConfirmation({gameId: updated.id, goal});
   }
+  const confirmedGoal = live && confirmation?.gameId === game.id && last?.id === confirmation.goal.id
+    ? confirmation.goal : undefined;
   function openConfirm(kind: "finish" | "discard" | "undo" | "delete") {
     setConfirmationGame(game!);
     setConfirm(kind);
@@ -159,6 +165,7 @@ export function GamePage() {
             scores={s}
             designId={design.id}
             live={live}
+            pulse={confirmedGoal && {id: confirmedGoal.id, side: creditedSide(confirmedGoal)}}
           />
         </div>
         {!live && (
@@ -206,6 +213,7 @@ export function GamePage() {
             game={game}
             rivalry={r}
             compact
+            confirmedId={confirmedGoal?.id}
             onEdit={(g) => {
               setOpeningRevision(game.revision);
               setEditing(true);

@@ -5,9 +5,9 @@ import { useProfile } from "../lib/profile";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  ArrowUpRight,
   Plus,
   Swords,
+  Check,
   Activity,
   Target,
   Timer,
@@ -22,25 +22,83 @@ import { RivalryCollection } from "../components/RivalryCollection";
 import { useDesign } from "../components/SiteDesign";
 import { Dialog } from "../components/Dialog";
 export function NewRivalry({ onClose }: { onClose: () => void }) {
-  const store=useStore(),navigate=useNavigate();
-  const [a,setA]=useState<string[]>([]),[b,setB]=useState<string[]>([]),[error,setError]=useState('');
-  const [adding,setAdding]=useState(false),[newName,setNewName]=useState('');
-  const players=allPlayers(store.rivalries,store.players);
-  return <Dialog title="New rivalry" onClose={onClose} dismissible={!store.busy}>
-    <form onSubmit={async e=>{e.preventDefault();setError('');try{if(adding){await store.createPlayer(newName);setAdding(false);setNewName('');return;}const r=await store.createTeamRivalry(a,b);navigate(`/rivalry/${r.id}`);onClose();}catch(e){setError(e instanceof Error?e.message:'Could not create rivalry.');}}}>
-      <div className="roster-picker">{(['a','b'] as const).map(side=>{
-        const selected=side==='a'?a:b,other=side==='a'?b:a,set=side==='a'?setA:setB;
-        return <fieldset key={side}><legend>{side==='a'?'Black side':'White side'} <small>{selected.length}/2</small></legend>
-          {players.map(p=><label key={p.id} className="roster-option"><input type="checkbox" checked={selected.includes(p.id)} disabled={store.busy||other.includes(p.id)||(selected.length===2&&!selected.includes(p.id))} onChange={()=>set(selected.includes(p.id)?selected.filter(id=>id!==p.id):[...selected,p.id])}/><span>{p.name}</span></label>)}
-        </fieldset>;
-      })}</div>
-      <div className="roster-shortcut"><p className="helper">One or two players per side.</p>{!adding&&<button type="button" className="roster-add-player" disabled={store.busy} onClick={()=>{setError('');setNewName('');setAdding(true);}}><Plus size={15}/>Add player</button>}</div>
-      {adding&&<div className="roster-new-player"><label>Player name<input autoFocus required maxLength={40} autoComplete="off" value={newName} disabled={store.busy} onChange={e=>setNewName(e.target.value)}/></label><button type="button" className="text-button" disabled={store.busy} onClick={()=>{setAdding(false);setError('');}}>Cancel</button></div>}
-      {error&&<p role="alert" className="form-error">{error}</p>}
-      <button className="button primary full" disabled={store.busy||(!adding&&(!a.length||!b.length))}>{store.busy?'Saving…':adding?'Save player':'Create rivalry'}<ArrowUpRight size={18}/></button>
+  const store = useStore();
+  const navigate = useNavigate();
+  const [rosters, setRosters] = useState<{Black: string[]; White: string[]}>({Black: [], White: []});
+  const [error, setError] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [newName, setNewName] = useState('');
+  const players = allPlayers(store.rivalries, store.players);
+  const sides = ['Black', 'White'] as const;
+
+  function togglePlayer(side: typeof sides[number], id: string) {
+    setRosters(previous => {
+      const members = previous[side];
+      const next = members.includes(id) ? members.filter(member => member !== id) : [...members, id];
+      return {...previous, [side]: next};
+    });
+  }
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setError('');
+    try {
+      if (adding) {
+        await store.createPlayer(newName);
+        setAdding(false);
+        setNewName('');
+        return;
+      }
+      const rivalry = await store.createTeamRivalry(rosters.Black, rosters.White);
+      navigate(`/rivalry/${rivalry.id}`);
+      onClose();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not create rivalry.');
+    }
+  }
+
+  return <Dialog className="roster-dialog" title="New rivalry" onClose={onClose} dismissible={!store.busy}>
+    <form onSubmit={submit}>
+      {players.length > 0 ? <div className="roster-scroll">
+        <table className="roster-table" aria-label="Choose players for each side">
+          <thead><tr><th scope="col">Player</th>{sides.map(side =>
+            <th scope="col" key={side}>{side} <small>{rosters[side].length}/2</small></th>
+          )}</tr></thead>
+          <tbody>{players.map(player => <tr key={player.id}>
+            <th scope="row">{player.name}</th>
+            {sides.map(side => {
+              const checked = rosters[side].includes(player.id);
+              const other = side === 'Black' ? rosters.White : rosters.Black;
+              return <td key={side}>
+                <label className="roster-choice" data-side={side}>
+                  <input type="checkbox" aria-label={`${player.name} on ${side}`} checked={checked}
+                    disabled={store.busy || other.includes(player.id) || (!checked && rosters[side].length >= 2)}
+                    onChange={() => togglePlayer(side, player.id)} />
+                  <span aria-hidden="true">{checked ? <Check size={14}/> : <Plus size={12}/>}</span>
+                </label>
+              </td>;
+            })}
+          </tr>)}</tbody>
+        </table>
+      </div> : <p className="roster-empty">Add players to choose sides.</p>}
+      {adding && <label className="roster-new-player">Player name
+        <input autoFocus required maxLength={40} autoComplete="off" value={newName} disabled={store.busy}
+          onChange={event => setNewName(event.target.value)} />
+      </label>}
+      {error && <p role="alert" className="form-error">{error}</p>}
+      <div className="roster-footer">
+        {adding ? <button type="button" className="text-button" disabled={store.busy}
+          onClick={() => {setAdding(false); setError('');}}>Cancel</button> :
+          <button type="button" className="text-button" disabled={store.busy}
+            onClick={() => {setError(''); setNewName(''); setAdding(true);}}><Plus size={15}/>Add player</button>}
+        <button className="button primary" disabled={store.busy || (!adding && (!rosters.Black.length || !rosters.White.length))}>
+          {store.busy ? 'Saving…' : adding ? 'Save player' : 'Create rivalry'}
+        </button>
+      </div>
     </form>
   </Dialog>;
 }
+
 export function GameCard({
   game,
   rivalry,

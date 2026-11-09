@@ -20,3 +20,11 @@
 /* Forest: two person rows with an aligned score column. */
 .gs-person-rows{display:flex;flex-direction:column}.gs-person-rows article{display:grid;grid-template-columns:32px minmax(0,1fr) minmax(45px,auto);align-items:center;gap:16px;padding:18px 0;border-bottom:1px solid var(--gs-line)}.gs-person-rows article:first-child{border-top:1px solid var(--gs-line)}.gs-person-rows article>div{display:flex;flex-direction:column;gap:8px;align-items:flex-start}.gs-person{width:32px;height:40px;stroke:#8f9692;stroke-width:1.25}.gs-person-a{fill:var(--gs-black)}.gs-person-b{fill:var(--gs-white)}.gs-person-rows .gs-number{text-align:right;font-size:clamp(42px,9vw,68px)}.gs-person-rows .gs-name{font-weight:500}
 @media(max-width:420px){.game-scoreboard{margin:18px auto}.game-scoreboard .gs-name{font-size:14px}.gs-club-pair{gap:12px}.gs-club-pair article{padding:0 8px}.gs-arcade-panels{gap:8px}.gs-digital-panel{padding:9px 7px}.gs-digital-label>span:last-child{display:none}.gs-digital-panel .gs-name{font-size:12px}.gs-medallions{gap:16px}.gs-medallion{padding:8px;border-width:4px}.gs-broadcast-player{padding:12px 5px}.gs-broadcast-player>strong{font-size:12px}.gs-broadcast-score{gap:4px}.gs-broadcast-strip{grid-template-columns:minmax(0,1fr) 86px minmax(0,1fr)}.gs-ticket-body>div{padding:0 12px}.gs-ticket-body .gs-name{font-size:15px}.gs-ledger tbody th{font-size:16px}.gs-ledger th,.gs-ledger td{padding:13px 4px}.gs-person-rows article{gap:12px;grid-template-columns:28px minmax(0,1fr) minmax(40px,auto)}.gs-person{width:28px}.gs-pitch-names{gap:16px}.gs-pitch-names strong{font-size:14px}}
+
+@media (prefers-reduced-motion: no-preference) {
+  .game-scoreboard .goal-confirmed { display: inline-block; animation: score-confirm 300ms ease-out; }
+  .goal-feed-confirmed { animation: goal-feed-enter 180ms ease-out; }
+  html[data-design] .rung-button:enabled:active { transform: scale(.97); transition-duration: 0s; }
+}
+@keyframes score-confirm { 0%, 100% { transform: scale(1); } 35% { transform: scale(1.10); } }
+@keyframes goal-feed-enter { from { opacity: .15; transform: translateY(-3px); } to { opacity: 1; transform: none; } }

@@ -12,3 +12,10 @@ html[data-design] .scorer-layout-paired .rung-button.has-assignee > b { position
   .scorer-layout-paired .rung-button.has-assignee .rung-illustration i { width: 4px; }
   .rung-assignee { font-size: 11px; }
 }
+
+.rung-assignee-stack { display: grid; }
+.rung-assignee-stack > strong { grid-area: 1 / 1; }
+.rung-assignee-stack > [aria-hidden="true"] { opacity: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .rung-assignee-stack > strong { transition: opacity 180ms ease-in-out; }
+}

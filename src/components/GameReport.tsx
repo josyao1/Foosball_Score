@@ -17,12 +17,14 @@ export function Timeline({
   onEdit,
   onRemove,
   compact = false,
+  confirmedId,
 }: {
   game: Game;
   rivalry: Rivalry;
   onEdit?: (g: Goal) => void;
   onRemove?: (g: Goal) => void;
   compact?: boolean;
+  confirmedId?: string;
 }) {
   const s = { a: 0, b: 0 };
   const entries = orderedGoals(game.goals).map((goal) => {
@@ -52,7 +54,7 @@ export function Timeline({
       ) : (
         <ol className="timeline">
           {entries.map(({ goal, actor, scorer, label, scorerStart, a, b }) => (
-            <li key={goal.id}>
+            <li key={goal.id} className={goal.id === confirmedId ? "goal-feed-confirmed" : undefined}>
               <time>{clock(goal.elapsed_ms)}</time>
               <GoalBall flags={goal.flags}/>
               <div className="timeline-description">

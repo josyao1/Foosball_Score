@@ -93,7 +93,7 @@ html[data-design] dialog.hall-rating-dialog { width: min(520px, calc(100% - 32px
 .hall-method-note summary { min-height: 36px; align-content: center; cursor: pointer; }
 .hall-method-note p { margin: 0 0 6px; }
 @media(max-width:600px) {
-  html[data-design] dialog.hall-rating-dialog { position: fixed; inset: auto 0 max(8px, env(safe-area-inset-bottom)); margin: 0 auto; width: calc(100% - 16px); max-height: calc(100dvh - 24px); padding: 16px; border-radius: 20px 20px 12px 12px; }
+  html[data-design] dialog.hall-rating-dialog { padding: 16px; }
   .hall-receipt-summary { gap: 12px; }
   .hall-breakdown-total strong { font-size: 36px; }
   .hall-factor > button { grid-template-columns: minmax(0,1fr) 40px 63px 32px 12px; gap: 6px; font-size: 11px; }

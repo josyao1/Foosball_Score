@@ -1,3 +1,4 @@
+import { TabUnderline } from "../components/TabUnderline";
 import { NewPlayer } from '../components/NewPlayer';
 import { useProfile, profileFirst } from "../lib/profile";
 import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -63,7 +64,7 @@ function Passport({ player: p, players, tab, setTab }: { player: PlayerPassport;
       <div><dt>Goals scored</dt><dd>{p.goals}</dd></div>
       <div><dt>At the table</dt><dd>{playingTimeLabel(p.playingMs)}</dd></div>
     </dl>
-    <div ref={tabsRef} className="passport-tabs" role="tablist" aria-label={`${p.name} passport pages`} onKeyDown={e=>{
+    <div ref={tabsRef} className="passport-tabs tab-underline-row" role="tablist" aria-label={`${p.name} passport pages`} onKeyDown={e=>{
       const keys=['overview','scoring','badges'] as const;
       if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
       e.preventDefault();e.stopPropagation();
@@ -73,6 +74,7 @@ function Passport({ player: p, players, tab, setTab }: { player: PlayerPassport;
       {(['overview','scoring','badges'] as const).map(page=><button key={page} type="button" role="tab" data-page={page} id={`${tabId}-${page}`} aria-controls={`${tabId}-panel-${page}`} aria-selected={tab===page} tabIndex={tab===page?0:-1} onClick={()=>selectPage(page)}>
         {page==='overview'?'Overview':page==='scoring'?'Scoring':'Badges'}{page==='badges'&&<span title="Earned mastery badges and achievements">{badgeCount}</span>}
       </button>)}
+      <TabUnderline selection={tab} />
     </div>
     <div className={`passport-page passport-page-${tab}`} role="tabpanel" id={`${tabId}-panel-${tab}`} aria-labelledby={`${tabId}-${tab}`} tabIndex={0}>
       {tab==='overview'&&<>

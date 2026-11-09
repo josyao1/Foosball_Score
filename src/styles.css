@@ -1372,6 +1372,9 @@ nav a {
   top: 12px;
 }
 dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
   background: #1b2d37;
   color: var(--text);
   border: 1px solid #49616f;
@@ -1986,13 +1989,8 @@ input::placeholder {
     font-size: 12px;
   }
   dialog {
-    margin: auto auto 0;
-    border-radius: 22px 22px 0 0;
-    width: 100%;
-    max-width: 520px;
-    max-height: calc(100dvh - 20px);
-    padding: 24px 22px max(24px, env(safe-area-inset-bottom));
-    border-bottom: 0;
+    padding: 18px;
+    max-height: calc(100dvh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   }
   .dialog-head h2 {
     font-size: 24px;
@@ -2282,3 +2280,11 @@ html[data-design] .screen-awake-warning .text-button { color: var(--error-text);
   .overview-strip { gap: 8px; }
   .overview-strip strong { font-size: 14px; }
 }
+
+.goal-dialog .goal-preview { margin-bottom: 6px; padding: 10px 12px; }
+.goal-rung-summary { margin: 0 0 12px; font-size: 13px; color: var(--muted); }
+.goal-rung-summary::first-letter { text-transform: uppercase; }
+.goal-dialog .flag-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-block: 12px; }
+.goal-dialog .flag-option { min-height: 44px; padding: 6px 4px; gap: 4px; justify-content: center; text-align: center; }
+.goal-dialog .flag-option svg { flex-shrink: 0; }
+.goal-dialog .flag-option strong { font-size: 12px; }

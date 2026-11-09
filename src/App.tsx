@@ -1,3 +1,4 @@
+import { TabUnderline } from "./components/TabUnderline";
 import { useEffect, useState } from "react";
 import { Link, Route, Routes, useLocation, useMatch } from "react-router-dom";
 import { ArrowUpRight, RefreshCw, Wifi, AlertCircle } from "lucide-react";
@@ -20,6 +21,7 @@ function ScrollToTop() {
   return null;
 }
 export function App() {
+  const { pathname } = useLocation();
   const isScorigami = !!useMatch("/scorigami");
   const isHallOfFame = !!useMatch("/hall-of-fame");
   const isPlayers = !!useMatch("/players");
@@ -41,11 +43,12 @@ export function App() {
             </span>
           </Link>
           <span className="ixl-league" aria-label="IXL League"><svg viewBox="0 0 116 38" aria-hidden="true"><path d="M1 1h15v36H1zM22 1h16l10 11L58 1h16L56 19l18 18H58L48 26 38 37H22l18-18zM79 1h15v25h18v11H79z" fill="currentColor"/></svg><span>League</span></span>
-          <nav aria-label="Main navigation">
+          <nav className="tab-underline-row" aria-label="Main navigation">
             <Link to="/" aria-current={!isScorigami && !isHallOfFame && !isPlayers ? "page" : undefined}>Rivalries</Link>
             <Link to="/scorigami" aria-current={isScorigami ? "page" : undefined}>Scorigami</Link>
             <Link to="/hall-of-fame" aria-current={isHallOfFame ? "page" : undefined}>Hall of Fame</Link>
             <Link to="/players" aria-current={isPlayers ? "page" : undefined}>Players</Link>
+            <TabUnderline selection={pathname} />
           </nav>
           <ProfilePicker rivalries={store.rivalries} players={store.players}/>
         </div>

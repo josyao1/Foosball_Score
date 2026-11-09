@@ -34,8 +34,8 @@ it('creates, resumes, scores, finishes early, corrects, removes, and deletes a r
   openApp();
   fireEvent.click(await screen.findByRole('button', { name: 'New rivalry' }));
   let dialog = await screen.findByRole('dialog');
-  fireEvent.click(within(within(dialog).getByRole('group',{name:/Black side/})).getByRole('checkbox',{name:'Ada'}));
-  fireEvent.click(within(within(dialog).getByRole('group',{name:/White side/})).getByRole('checkbox',{name:'Bea'}));
+  fireEvent.click(within(dialog).getByRole('checkbox',{name:'Ada on Black'}));
+  fireEvent.click(within(dialog).getByRole('checkbox',{name:'Bea on White'}));
   await confirm('Create rivalry');
   fireEvent.click(await screen.findByRole('button', { name: 'Start a game' }));
   await screen.findByRole('heading', { name: 'Live game' });
@@ -162,8 +162,8 @@ it('keeps rivalry creation open and its names fixed while saving', async () => {
   openApp();
   fireEvent.click(await screen.findByRole('button', { name: 'New rivalry' }));
   const dialog = await screen.findByRole('dialog');
-  fireEvent.click(within(within(dialog).getByRole('group',{name:/Black side/})).getByRole('checkbox',{name:'Ada'}));
-  fireEvent.click(within(within(dialog).getByRole('group',{name:/White side/})).getByRole('checkbox',{name:'Bea'}));
+  fireEvent.click(within(dialog).getByRole('checkbox',{name:'Ada on Black'}));
+  fireEvent.click(within(dialog).getByRole('checkbox',{name:'Bea on White'}));
   fireEvent.click(within(dialog).getByRole('button', { name: 'Create rivalry' }));
   expect((within(dialog).getByRole('button', { name: 'Close dialog' }) as HTMLButtonElement).disabled).toBe(true);
   expect(within(dialog).getAllByRole('checkbox').every(el=>(el as HTMLInputElement).disabled)).toBe(true);
@@ -212,10 +212,10 @@ it('prevents selecting the same player on both sides', async () => {
   seed({rivalries:[],games:[],players:[{id:'ada',name:'Ada',created_at:''},{id:'bea',name:'Bea',created_at:''}]});
   openApp();fireEvent.click(await screen.findByRole('button',{name:'New rivalry'}));
   const dialog=await screen.findByRole('dialog');
-  fireEvent.click(within(within(dialog).getByRole('group',{name:/Black side/})).getByRole('checkbox',{name:'Ada'}));
-  expect((within(within(dialog).getByRole('group',{name:/White side/})).getByRole('checkbox',{name:'Ada'}) as HTMLInputElement).disabled).toBe(true);
+  fireEvent.click(within(dialog).getByRole('checkbox',{name:'Ada on Black'}));
+  expect((within(dialog).getByRole('checkbox',{name:'Ada on White'}) as HTMLInputElement).disabled).toBe(true);
   expect((within(dialog).getByRole('button',{name:'Create rivalry'}) as HTMLButtonElement).disabled).toBe(true);
-  fireEvent.click(within(within(dialog).getByRole('group',{name:/White side/})).getByRole('checkbox',{name:'Bea'}));
+  fireEvent.click(within(dialog).getByRole('checkbox',{name:'Bea on White'}));
   await confirm('Create rivalry');expect(stored().rivalries).toHaveLength(1);
 });
 
@@ -458,14 +458,14 @@ it('adds a player inside rivalry creation without losing selected sides or leavi
  seed({rivalries:[],games:[],players:[{id:'ada',name:'Ada',created_at:''},{id:'bea',name:'Bea',created_at:''}]});
  openApp();fireEvent.click(await screen.findByRole('button',{name:'New rivalry'}));
  const dialog=await screen.findByRole('dialog');
- fireEvent.click(within(within(dialog).getByRole('group',{name:/Black side/})).getByRole('checkbox',{name:'Ada'}));
+ fireEvent.click(within(dialog).getByRole('checkbox',{name:'Ada on Black'}));
  fireEvent.click(within(dialog).getByRole('button',{name:'Add player'}));
  fireEvent.change(within(dialog).getByRole('textbox',{name:'Player name'}),{target:{value:'Cy'}});
  fireEvent.click(within(dialog).getByRole('button',{name:'Save player'}));
  await waitFor(()=>expect(within(dialog).queryByRole('textbox')).toBeNull());
- expect((within(within(dialog).getByRole('group',{name:/Black side/})).getByRole('checkbox',{name:'Ada'}) as HTMLInputElement).checked).toBe(true);
+ expect((within(dialog).getByRole('checkbox',{name:'Ada on Black'}) as HTMLInputElement).checked).toBe(true);
  expect(stored().rivalries).toHaveLength(0);
- fireEvent.click(within(within(dialog).getByRole('group',{name:/White side/})).getByRole('checkbox',{name:'Cy'}));
+ fireEvent.click(within(dialog).getByRole('checkbox',{name:'Cy on White'}));
  await confirm('Create rivalry');
  expect(stored().rivalries[0]).toMatchObject({player_a:'Ada',player_b:'Cy'});
 });

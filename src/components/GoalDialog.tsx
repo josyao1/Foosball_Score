@@ -94,8 +94,9 @@ export function GoalDialog({
   }
   const actorId=goalPlayer(draft,rivalry);
   const actor=sidePlayers(rivalry,draft.actor_side).find(p=>p.id===actorId)?.name;
+  const hitter = actor ?? playerName(rivalry, draft.actor_side);
   return (
-    <Dialog title={editing ? "Edit goal" : "Add goal"} onClose={() => { dismiss(); onClose(); }} onDismiss={dismiss} dismissible={!pending}>
+    <Dialog className="goal-dialog" title={editing ? "Edit goal" : "Add goal"} onClose={() => { dismiss(); onClose(); }} onDismiss={dismiss} dismissible={!pending}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -144,36 +145,31 @@ export function GoalDialog({
             </label>
           </div>
         ) : (
-          <p className="muted">
-            {actor ?? playerName(rivalry, draft.actor_side)}’s{" "}
-            <strong>{draft.rung}</strong> rung · timestamp locked in
+          <p className="goal-rung-summary">
+            {hitter !== playerName(rivalry, credited) && `${hitter} · `}{draft.rung} rung
           </p>
         )}
         {editing && sidePlayers(rivalry,draft.actor_side).length>1 && <p className="helper">{actor ? `Attributed to ${actor}` : "Historical team goal · shared credit"}</p>}
-        <p className="field-title">Anything special?</p>
-        <div className="flag-options">
+        <div className="flag-options" role="group" aria-label="Goal type">
           {(
             [
               {
                 flag: "dunk",
                 label: "Dunk",
-                description: "Smashed straight back",
                 Icon: Zap,
               },
               {
                 flag: "bank",
                 label: "Bank shot",
-                description: "Off the wall",
                 Icon: CornerUpRight,
               },
               {
                 flag: "own_goal",
                 label: "Own goal",
-                description: "Point to the opponent",
                 Icon: Undo2,
               },
             ] as const
-          ).map(({ flag, label, description, Icon }) => (
+          ).map(({ flag, label, Icon }) => (
             <button
               type="button"
               disabled={pending}
@@ -184,22 +180,11 @@ export function GoalDialog({
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") restartAutoSave(); }}
               onClick={() => toggle(flag)}
             >
-              <Icon size={20} />
-              <span>
-                <strong>{label}</strong>
-                <small>{description}</small>
-              </span>
-              <span className="checkbox">
-                {draft.flags.includes(flag) && <Check size={14} />}
-              </span>
+              {draft.flags.includes(flag) ? <Check size={16} /> : <Icon size={16} />}
+              <strong>{label}</strong>
             </button>
           ))}
         </div>
-        <p className="helper">
-          {own
-            ? `${actor ?? playerName(rivalry, draft.actor_side)} made the own goal. ${playerName(rivalry, credited)} gets the point.`
-            : "Leave all off for a regular goal. Dunk and bank can be combined."}
-        </p>
         {!editing && !pending && (
           <p className="goal-auto-save" role="status">
             {autoEnabled ? `${draft.flags.length ? "Goal" : "Regular goal"} saves in ${secondsLeft}…` : "Auto-save stopped. Confirm when ready."}

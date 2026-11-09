@@ -420,7 +420,6 @@ html[data-design] .timeline-score .timeline-score-unchanged{font-weight:400;colo
 /* Both primary destinations share the same header tab row. */
 .app-header nav { gap: 18px; min-width: 0; }
 .app-header nav a { border-bottom-color: transparent; white-space: nowrap; }
-html[data-design] .app-header nav a[aria-current="page"] { border-bottom-color: var(--text); }
 @media (min-width: 701px) and (max-width: 1000px) {
   html[data-design] .header-inner { gap: 22px; }
 }

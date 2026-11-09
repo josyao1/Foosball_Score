@@ -11,7 +11,9 @@ export function RungControls({rivalry,lineup,layout,disabled,onGoal}:{rivalry:Ri
   const people=sidePlayers(rivalry,side);
   const scorer=people.length===2 ? people.find(p=>p.id===positions[side][rung==='goalie'||rung==='defender'?'defense':'attack']) : null;
   const nameId=`${id}-${side}-${rung}`;
-  return <button key={`${side}-${rung}`} className={`rung-button side-${side}${scorer?' has-assignee':''}`} disabled={disabled} onClick={()=>onGoal(side,rung)} aria-label={`${playerName(rivalry,side)} ${rung} goal`} aria-describedby={scorer?nameId:undefined}><Rod rung={rung}/>{(label||scorer)&&<span className="rung-label">{label&&<span>{rung[0].toUpperCase()+rung.slice(1)}</span>}{scorer&&<strong className="rung-assignee" id={nameId}>{scorer.name}</strong>}</span>}<b>+</b></button>;
+  return <button key={`${side}-${rung}`} className={`rung-button side-${side}${scorer?' has-assignee':''}`} disabled={disabled} onClick={()=>onGoal(side,rung)} aria-label={`${playerName(rivalry,side)} ${rung} goal`} aria-describedby={scorer?nameId:undefined}><Rod rung={rung}/>{(label||scorer)&&<span className="rung-label">{label&&<span>{rung[0].toUpperCase()+rung.slice(1)}</span>}{scorer&&<span className="rung-assignee-stack">{people.map(person => <strong key={person.id}
+      className="rung-assignee" id={person.id === scorer.id ? nameId : undefined}
+      aria-hidden={person.id !== scorer.id}>{person.name}</strong>)}</span>}</span>}<b>+</b></button>;
  };
  if(layout==='rows')return <div className="rung-row-table"><div className="rung-table-head"><span className="text-a">{rivalry.player_a}</span><span>Rung</span><span className="text-b">{rivalry.player_b}</span></div>{rungs.map(rung=><div className="rung-table-row" key={rung}>{button('a',rung,false)}<span>{rung}</span>{button('b',rung,false)}</div>)}</div>;
  if(layout==='pitch')return <div className="rung-pitch"><div className="pitch-center-circle" aria-hidden="true"/>{rungs.map(rung=><div className="pitch-rung-row" key={rung}>{button('a',rung)}<span className="pitch-rung-line" aria-hidden="true"/>{button('b',rung)}</div>)}</div>;
