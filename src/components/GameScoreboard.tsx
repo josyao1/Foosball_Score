@@ -1,7 +1,15 @@
 import type { Rivalry, Side } from '../lib/types';
 import '../game-scoreboards.css';
 
-type Props = { rivalry: Rivalry; scores: Record<Side, number>; designId: string; live: boolean; pulse?: {id: string; side: Side} };
+type Props = {
+  rivalry: Rivalry;
+  scores: Record<Side, number>;
+  designId: string;
+  live: boolean;
+  pulse?: {id: string; side: Side};
+  rematchFrom?: Record<Side, number>;
+  achievementStrip?: React.ReactNode;
+};
 const SIDES: Side[] = ['a', 'b'];
 
 function Kit({ side }: { side: Side }) {
@@ -12,11 +20,17 @@ function Person({ side }: { side: Side }) {
 }
 
 /** Score presentations intentionally use different document structures, not palette swaps. */
-export function GameScoreboard({ rivalry, scores, designId, live, pulse }: Props) {
+export function GameScoreboard({ rivalry, scores, designId, live, pulse, rematchFrom, achievementStrip }: Props) {
   const name = (side: Side) => side === 'a' ? rivalry.player_a : rivalry.player_b;
   const status = live ? 'Current score' : 'Final score';
   const label = `${status}: ${rivalry.player_a}, black, ${scores.a}; ${rivalry.player_b}, white, ${scores.b}`;
   const number = (side: Side, padded = false) => {
+    if (rematchFrom && designId === 'clay') {
+      return <strong className="gs-number gs-rematch-number">
+        <span className="gs-rematch-old" aria-hidden="true">{rematchFrom[side]}</span>
+        <span className="gs-rematch-new">{scores[side]}</span>
+      </strong>;
+    }
     const confirmed = pulse?.side === side;
     return <strong key={confirmed ? pulse.id : side} className={`gs-number${confirmed ? ' goal-confirmed' : ''}`}>
       {padded ? String(scores[side]).padStart(2, '0') : scores[side]}
@@ -37,7 +51,7 @@ export function GameScoreboard({ rivalry, scores, designId, live, pulse }: Props
       content = <><div className="gs-arcade-panels">{SIDES.map(side => <article className={`gs-digital-panel gs-digital-${side}`} key={side}><div className="gs-digital-label"><Kit side={side}/><span>Goals</span></div><div className="gs-digital-display">{number(side, true)}</div><strong className="gs-name">{name(side)}</strong></article>)}</div><p className="gs-status"><span className={live ? 'gs-live-lamp' : 'gs-final-lamp'} aria-hidden="true"/>{status}</p></>;
       break;
     case 'clay':
-      content = <div className="gs-ticket"><header><span>{status}</span><span className="gs-ticket-mark" aria-hidden="true">▥</span></header><div className="gs-ticket-body">{SIDES.map(side => <div key={side}><Kit side={side}/>{number(side)}<strong className="gs-name">{name(side)}</strong></div>)}</div><footer><span>Black {scores.a}</span><span>White {scores.b}</span></footer></div>;
+      content = <div className="gs-ticket"><header><span>{status}</span><span className="gs-ticket-mark" aria-hidden="true">▥</span></header><div className="gs-ticket-body">{SIDES.map(side => <div key={side}><Kit side={side}/>{number(side)}<strong className="gs-name">{name(side)}</strong></div>)}</div><footer><span>Black {scores.a}</span><span>White {scores.b}</span></footer>{achievementStrip}</div>;
       break;
     case 'blueprint':
       content = <div className="gs-schematic"><div className="gs-schematic-title">{status}<span aria-hidden="true">┼</span></div><table><thead><tr><th scope="col">Position</th>{SIDES.map(side => <th scope="col" key={side}><Kit side={side}/></th>)}</tr></thead><tbody><tr><th scope="row">Player</th>{SIDES.map(side => <td key={side} className="gs-schematic-name">{name(side)}</td>)}</tr><tr><th scope="row">Goals</th>{SIDES.map(side => <td key={side}>{number(side)}</td>)}</tr></tbody></table></div>;

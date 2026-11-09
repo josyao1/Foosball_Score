@@ -255,8 +255,16 @@ html[data-design] :is(.rc-record-numbers > .rc-a, .rc-record-numbers > .rc-b, .r
     max-width: none;
     flex-direction: row;
     align-items: baseline;
-    flex-wrap: wrap;
-    gap: 5px 10px;
+    gap: 6px;
+    white-space: nowrap;
+    overflow-x: auto;
+  }
+  html[data-design="clay"] .game-card-date .game-card-duration {
+    display: inline;
+    margin: 0;
+  }
+  html[data-design="clay"] .game-card-date .game-card-duration::before {
+    content: " · ";
   }
   html[data-design="clay"] .game-card .mini-match {
     justify-content: space-between;

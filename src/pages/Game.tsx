@@ -32,6 +32,7 @@ import { playerName } from "../lib/types";
 import type { Game, Goal, Rung, Side } from "../lib/types";
 import { useDesign } from "../components/SiteDesign";
 import { RungControls } from "../components/RungControls";
+import { TicketAchievements } from "../components/TicketAchievements";
 import { GameScoreboard } from "../components/GameScoreboard";
 import { GoalDialog } from "../components/GoalDialog";
 import { ConfirmDialog } from "../components/Dialog";
@@ -56,8 +57,18 @@ export function GamePage() {
     [winningGame,setWinningGame] = useState<Game|null>(null),
     [dismissedWin,setDismissedWin] = useState<string|null>(null);
   const [confirmation, setConfirmation] = useState<{gameId: string; goal: Goal} | null>(null);
+  const [rematch, setRematch] = useState<{gameId: string; previous: Record<Side, number>} | null>(null);
+  const [lastLiveId, setLastLiveId] = useState<string | null>(null);
   const game = store.games.find((g) => g.id === id),
     r = store.rivalries.find((r) => r.id === game?.rivalry_id);
+  useEffect(() => {
+    if (id && game && !game.ended_at) setLastLiveId(id);
+  }, [id, game?.ended_at]);
+  useEffect(() => {
+    if (!rematch) return;
+    const timer = window.setTimeout(() => setRematch(null), 420);
+    return () => window.clearTimeout(timer);
+  }, [rematch]);
   useEffect(() => {
     if (recordKey || watchReplay) document.getElementById("momentum")?.scrollIntoView?.({ block: "start" });
   }, [id, recordKey, watchReplay]);
@@ -165,6 +176,8 @@ export function GamePage() {
             scores={s}
             designId={design.id}
             live={live}
+            rematchFrom={rematch?.gameId === game.id && live && !game.goals.length ? rematch.previous : undefined}
+            achievementStrip={!live && <TicketAchievements gameId={game.id} animate={lastLiveId === game.id} />}
             pulse={confirmedGoal && {id: confirmedGoal.id, side: creditedSide(confirmedGoal)}}
           />
         </div>
@@ -289,7 +302,11 @@ export function GamePage() {
           setDismissedWin(`${acknowledged.id}:${acknowledged.revision}`);
           setWinningGame(null);
         }}
-        onRematch={next => {setWinningGame(null);navigate(`/game/${next.id}`)}}
+        onRematch={next => {
+          if (!next.goals.length) setRematch({gameId: next.id, previous: s});
+          setWinningGame(null);
+          navigate(`/game/${next.id}`);
+        }}
       />}
       {draft && (
         <GoalDialog

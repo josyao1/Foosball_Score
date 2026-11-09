@@ -318,6 +318,9 @@ it('saves the result and immediately opens one fresh rematch', async()=>{
  expect(old.goals).toHaveLength(18);
  expect(next).toMatchObject({rivalry_id:'r',ended_at:null,revision:1,goals:[]});
  expect(Date.parse(next.started_at)).toBeGreaterThanOrEqual(Date.parse(old.ended_at!));
+ expect(Array.from(document.querySelectorAll('.gs-rematch-old')).map(node=>node.textContent)).toEqual(['10','8']);
+ expect(Array.from(document.querySelectorAll('.gs-rematch-new')).map(node=>node.textContent)).toEqual(['0','0']);
+ expect((screen.getByRole('button',{name:'Ada attacker goal'}) as HTMLButtonElement).disabled).toBe(false);
  expect((screen.getByRole('button',{name:'Finish game'}) as HTMLButtonElement).disabled).toBe(true);
 });
 it('preserves the saved result when rematch creation fails and retries without finishing twice', async()=>{
@@ -468,4 +471,50 @@ it('adds a player inside rivalry creation without losing selected sides or leavi
  fireEvent.click(within(dialog).getByRole('checkbox',{name:'Cy on White'}));
  await confirm('Create rivalry');
  expect(stored().rivalries[0]).toMatchObject({player_a:'Ada',player_b:'Cy'});
+});
+
+it.each([false, true])('offers to open a reversed team rivalry (created concurrently: %s)', async concurrent => {
+  const players = ['Ada','Bea','Cy'].map(name => ({id:name, name, created_at:''}));
+  const existing: Rivalry = {...rivalry, player_a:'Ada and Bea', player_b:'Cy',
+    members:{a:[players[0],players[1]], b:[players[2]]}};
+  seed({players, rivalries:concurrent ? [] : [existing], games:[]});
+  openApp();
+  fireEvent.click(await screen.findByRole('button',{name:'New rivalry'}));
+  const picker = within(await screen.findByRole('dialog'));
+  fireEvent.click(picker.getByRole('checkbox',{name:'Cy on Black'}));
+  fireEvent.click(picker.getByRole('checkbox',{name:'Bea on White'}));
+  fireEvent.click(picker.getByRole('checkbox',{name:'Ada on White'}));
+  if (concurrent) seed({players, rivalries:[existing], games:[]});
+  fireEvent.click(picker.getByRole('button',{name:'Create rivalry'}));
+  const alert = within(await screen.findByRole('dialog',{name:'Rivalry already exists'}));
+  expect(alert.getByRole('link',{name:'Open rivalry'}).getAttribute('href')).toBe('/rivalry/r');
+  fireEvent.click(alert.getByRole('button',{name:'Change players'}));
+  const retry = within(await screen.findByRole('dialog',{name:'New rivalry'}));
+  expect((retry.getByRole('checkbox',{name:'Cy on Black'}) as HTMLInputElement).checked).toBe(true);
+  fireEvent.click(retry.getByRole('button',{name:'Create rivalry'}));
+  fireEvent.click(within(await screen.findByRole('dialog')).getByRole('link',{name:'Open rivalry'}));
+  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
+  expect(stored().rivalries).toHaveLength(1);
+});
+
+it('shows an achievement count as of this finish, including when a later game earns it again', async () => {
+  const blanked = scoredGame(10,0);
+  const matches = [1,2,3].map(n=>({...blanked,id:'match'+n,ended_at:`2026-01-01T00:0${n}:00Z`}));
+  seed({rivalries:[rivalry],games:matches});
+  openApp('/game/match2');
+  const earns = await screen.findByRole('region',{name:'Achievements earned this game'});
+  const perfect = within(earns).getByText('Perfect paper').closest('li')!;
+  expect(within(perfect).getByText('×2')).toBeTruthy();
+  expect(earns.classList.contains('ticket-earns-new')).toBe(false);
+});
+
+it('stamps a first achievement on the live game’s saved result ticket', async () => {
+  seed({rivalries:[rivalry],games:[scoredGame(10,0)]});
+  openApp('/game/g');
+  fireEvent.click(within(await winningPopup()).getByRole('button',{name:'Finish game'}));
+  const earns = await screen.findByRole('region',{name:'Achievements earned this game'});
+  expect(earns.classList.contains('ticket-earns-new')).toBe(true);
+  const first = within(earns).getByText('Perfect paper').closest('li')!;
+  expect(first.classList.contains('first-earn')).toBe(true);
+  expect(within(first).queryByText(/×/)).toBeNull();
 });

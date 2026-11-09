@@ -5,6 +5,8 @@ import { Dialog } from "./Dialog";
 import { clock } from "../lib/stats";
 import { RUNGS, otherSide, playerName } from "../lib/types";
 import type { Goal, GoalFlag, Rivalry } from "../lib/types";
+const AUTO_SAVE_MS = 3000;
+
 export function GoalDialog({
   goal,
   rivalry,
@@ -71,11 +73,11 @@ export function GoalDialog({
   useEffect(() => {
     if (editing || !autoEnabled) return;
     autoAllowed.current = true;
-    const deadline = Date.now() + 3000;
+    const deadline = Date.now() + AUTO_SAVE_MS;
     const tick = window.setInterval(() => setSecondsLeft(Math.max(0, Math.ceil((deadline - Date.now()) / 1000))), 250);
     const timeout = window.setTimeout(() => {
       if (autoAllowed.current && !dismissed.current) void latestSave.current();
-    }, 3000);
+    }, AUTO_SAVE_MS);
     return () => { clearInterval(tick); clearTimeout(timeout); };
   }, [editing, autoEnabled, autoVersion]);
   const own = draft.flags.includes("own_goal"),
@@ -195,12 +197,15 @@ export function GoalDialog({
             {error}
           </p>
         )}
-        <button autoFocus className="button primary full" disabled={pending}>
+        <button autoFocus className="button primary full goal-save-button" disabled={pending}>
           {pending
             ? "Saving…"
             : editing
               ? "Save correction"
               : `Add goal for ${playerName(rivalry, credited)}`}
+          {autoEnabled && !editing && !pending && <span aria-hidden="true" className="goal-countdown-track">
+            <span key={autoVersion} style={{animationDuration: `${AUTO_SAVE_MS}ms`}} />
+          </span>}
         </button>
       </form>
     </Dialog>

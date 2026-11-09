@@ -1,4 +1,4 @@
-import { allPlayers, orderRivalries } from '../lib/participants';
+import { allPlayers, orderRivalries, rosterKey, sidePlayers } from '../lib/participants';
 import { AchievementFeed } from "../components/AchievementFeed";
 import { GameAchievementMarker } from "../components/GameAchievements";
 import { useProfile } from "../lib/profile";
@@ -30,8 +30,17 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
   const [newName, setNewName] = useState('');
   const players = allPlayers(store.rivalries, store.players);
   const sides = ['Black', 'White'] as const;
+  const [attempted, setAttempted] = useState(false);
+  const matchup = rosterKey(
+    players.filter(player => rosters.Black.includes(player.id)),
+    players.filter(player => rosters.White.includes(player.id)),
+  );
+  const existing = store.rivalries.find(rivalry =>
+    rosterKey(sidePlayers(rivalry, 'a'), sidePlayers(rivalry, 'b')) === matchup
+  );
 
   function togglePlayer(side: typeof sides[number], id: string) {
+    setAttempted(false);
     setRosters(previous => {
       const members = previous[side];
       const next = members.includes(id) ? members.filter(member => member !== id) : [...members, id];
@@ -49,12 +58,24 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
         setNewName('');
         return;
       }
+      setAttempted(true);
+      if (existing) return;
       const rivalry = await store.createTeamRivalry(rosters.Black, rosters.White);
       navigate(`/rivalry/${rivalry.id}`);
       onClose();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not create rivalry.');
     }
+  }
+
+  if (attempted && existing) {
+    return <Dialog key="duplicate" title="Rivalry already exists" onClose={onClose}>
+      <p>{existing.player_a} vs {existing.player_b}</p>
+      <div className="dialog-actions">
+        <button type="button" className="button secondary" onClick={() => {setAttempted(false); setError('');}}>Change players</button>
+        <Link className="button primary" to={`/rivalry/${existing.id}`} onClick={onClose}>Open rivalry</Link>
+      </div>
+    </Dialog>;
   }
 
   return <Dialog className="roster-dialog" title="New rivalry" onClose={onClose} dismissible={!store.busy}>

@@ -31,8 +31,12 @@ it('saves exactly once at three seconds with the original tap timestamp, includi
 it('restarts three seconds after each flag change, including switching it back off', async () => {
   const save = vi.fn().mockResolvedValue(undefined);
   render(<GoalDialog goal={goal} rivalry={rivalry} onSave={save} onClose={() => {}}/>);
+  const line = () => screen.getByRole('button',{name:'Add goal for Josh'}).querySelector('.goal-countdown-track > span');
+  const regularLine = line();
+  expect(regularLine).not.toBeNull();
   await tick(2999);
   fireEvent.click(screen.getByRole('button', { name: /Dunk/ }));
+  expect(line()).not.toBe(regularLine);
   await tick(2000);
   expect(save).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: /Dunk/ }));
