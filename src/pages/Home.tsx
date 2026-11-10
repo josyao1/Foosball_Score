@@ -220,7 +220,7 @@ export function Home() {
       </div>
       <section>
         {rivalries.length ? (
-          <RivalryCollection rivalries={orderRivalries(rivalries,games,profile)} games={games} layout={design.homeLayout}/>
+          <RivalryCollection rivalries={orderRivalries(rivalries,games,profile)} games={games} profile={profile} layout={design.homeLayout}/>
         ) : (
           <div className="empty-state">
             <Swords size={40} />

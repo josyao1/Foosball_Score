@@ -60,8 +60,8 @@ it('earns cumulative tiers in completion order with the exact crossing game',()=
   const games=Array.from({length:25},(_,i)=>game('aaaaaaaaaa',`win-${i+1}`,'r',i+1));
   const p=playerPassports([...games].reverse(),[r]).find(p=>p.key==='josh')!;
   expect(p.mastery.goals.count).toBe(250);
-  expect(p.mastery.goals.earned.map(g=>g.id)).toEqual(['win-5','win-10','win-25']);
-  expect(p.mastery.wins.earned.map(g=>g.id)).toEqual(['win-5','win-15']);
+  expect(p.mastery.goals.earned.map(g=>g.id)).toEqual(['win-1','win-10','win-25']);
+  expect(p.mastery.wins.earned.map(g=>g.id)).toEqual(['win-1','win-15']);
   expect(p.mastery.attacker.earned.map(g=>g.id)).toEqual(['win-1','win-3','win-5','win-10']);
 });
 it('counts combos toward both skills, excludes own goals, and requires all four rungs within one game',()=>{

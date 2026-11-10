@@ -1,8 +1,8 @@
 import type { Game } from './types';
 
 export const MASTERY = [
-  {id:'goals',label:'Goal scorer',unit:'goals scored',thresholds:[50,100,250,500,2000]},
-  {id:'wins',label:'Winning proficiency',unit:'wins',thresholds:[5,15,30,60,240]},
+  {id:'goals',label:'Goal scorer',unit:'goals scored',thresholds:[10,100,250,500,2000]},
+  {id:'wins',label:'Winning proficiency',unit:'wins',thresholds:[1,15,30,60,240]},
   {id:'dunks',label:'Dunk proficiency',unit:'dunk goals',thresholds:[5,15,30,60,240]},
   {id:'banks',label:'Bank proficiency',unit:'bank goals',thresholds:[5,15,30,60,240]},
   {id:'goalie',label:'Goalie proficiency',unit:'goalie goals',thresholds:[10,25,50,100,400]},

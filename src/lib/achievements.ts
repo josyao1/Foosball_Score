@@ -33,6 +33,8 @@ export const ACHIEVEMENTS = [
   {id:'sixtySeven',name:'67',requirement:'Score a goal at 1:07 on the game clock.',color:'#8c6aa0'},
   {id:'fourTwenty',name:'420',requirement:'Score a goal at 4:20 on the game clock.',color:'#63834e'},
   {id:'lunchBreak',name:'Lunch break',requirement:'Win 4 games within 30 minutes, from the first game’s start to the fourth win’s finish. Losses in between are allowed.',color:'#a67c4b'},
+  {id:'ethical',name:'Ethical game',requirement:'Win a game where every goal by either side is regular.',color:'#527856'},
+  {id:'hardCarry',name:'Hard carry',requirement:'Win with a teammate and personally score every point your team earns.',color:'#94653e'},
 ] as const;
 export type AchievementId=typeof ACHIEVEMENTS[number]['id'];
 export type AchievementHistory=Partial<Record<AchievementId,Game[]>>;
@@ -84,6 +86,7 @@ export function earnedAchievements(game:Game,side:Side,h=gameHighlights(game),ri
   if (specialTypes.size===4) earned.add('fullHouse');
   if (h.goals.length>=10 && h.goals.slice(1,10).every((goal,i)=>creditedSide(goal)!==creditedSide(h.goals[i]))) earned.add('trading');
   if (validWin) {
+    if (h.goals.every(goal => goal.flags.length === 0)) earned.add('ethical');
     if(rivalry){
       const members=sidePlayers(rivalry,side);
       if(members.length===2 && members.every(p=>h.goals.filter(g=>g.actor_side===side && !g.flags.includes('own_goal') && goalPlayer(g,rivalry)===p.id).length>=4))earned.add('groupProject');
@@ -109,6 +112,19 @@ export function earnedAchievements(game:Game,side:Side,h=gameHighlights(game),ri
     if (h.scores.every(s=>Math.abs(s.a-s.b)<=2)) earned.add('tightrope');
   }
   return [...earned];
+}
+
+/** Hard carry is personal, even though most team achievements are shared. */
+export function hardCarryWinner(game: Game, rivalry: Rivalry, highlights = gameHighlights(game)) {
+  const side = highlights.moments.quickest?.side;
+  if (!game.ended_at || !side) return;
+  const teammates = sidePlayers(rivalry, side);
+  if (teammates.length !== 2) return;
+  const points = highlights.goals.filter(goal => creditedSide(goal) === side);
+  const scorer = teammates.find(player => points.every(goal =>
+    goal.actor_side === side && goalPlayer(goal, rivalry) === player.id
+  ));
+  if (scorer) return {side, player: scorer};
 }
 
 /** Mark the fifth win of each streak using the same participant identities as passports. */

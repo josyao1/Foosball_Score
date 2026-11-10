@@ -3,6 +3,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { Scorigami } from './Scorigami';
+import { selectProfile } from '../lib/profile';
 import { App } from '../App';
 import type { Game } from '../lib/types';
 
@@ -176,4 +177,21 @@ it('keeps players and game details separate with keyboard tabs and resets for an
  expect(within(screen.getByRole('dialog')).getAllByRole('link')).toHaveLength(1);
  fireEvent.click(screen.getByRole('button',{name:'10–6: 1 game'}));
  expect(screen.getByRole('tab',{name:'Players'}).getAttribute('aria-selected')).toBe('true');
+});
+
+it('lists the selected player’s rivalries first and keeps the filter tied to its rivalry ID', () => {
+  selectProfile('Brooks');
+  try {
+    fixture.games = [game('mine',10,8), game('theirs',10,4,'other')];
+    render(<MemoryRouter><Scorigami/></MemoryRouter>);
+    const filter = screen.getByRole('combobox',{name:'Rivalry'});
+    expect(within(filter).getAllByRole('option').map(option=>option.textContent)).toEqual([
+      'All rivalries','Brooks vs Josh','Andrew vs Alex',
+    ]);
+    fireEvent.change(filter,{target:{value:'r'}});
+    expect(screen.getByRole('button',{name:'10–8: 1 game'})).toBeTruthy();
+  } finally {
+    cleanup();
+    selectProfile(null);
+  }
 });

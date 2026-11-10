@@ -4,19 +4,21 @@ import { CornerUpRight, Zap, Undo2, Check } from "lucide-react";
 import { Dialog } from "./Dialog";
 import { clock } from "../lib/stats";
 import { RUNGS, otherSide, playerName } from "../lib/types";
-import type { Goal, GoalFlag, Rivalry } from "../lib/types";
+import type { Goal, GoalFlag, Rivalry, Side } from "../lib/types";
 const AUTO_SAVE_MS = 3000;
 
 export function GoalDialog({
   goal,
   rivalry,
   editing = false,
+  currentScore,
   onSave,
   onClose,
 }: {
   goal: Goal;
   rivalry: Rivalry;
   editing?: boolean;
+  currentScore?: Record<Side, number>;
   onSave: (goal: Goal) => Promise<void>;
   onClose: () => void;
 }) {
@@ -105,6 +107,9 @@ export function GoalDialog({
           void save();
         }}
       >
+        {currentScore && <p className="table-dialog-score" aria-label="Current score">
+          {rivalry.player_a} <strong>{currentScore.a} – {currentScore.b}</strong> {rivalry.player_b}
+        </p>}
         <div className={`goal-preview side-${credited}`}>
           <span>
             {playerName(rivalry, credited)} <strong>+1</strong>
@@ -176,13 +181,14 @@ export function GoalDialog({
               type="button"
               disabled={pending}
               key={flag}
+              data-goal-type={flag}
               className={`flag-option ${draft.flags.includes(flag) ? "selected" : ""}`}
               aria-pressed={draft.flags.includes(flag)}
               onPointerDown={restartAutoSave}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") restartAutoSave(); }}
               onClick={() => toggle(flag)}
             >
-              {draft.flags.includes(flag) ? <Check size={16} /> : <Icon size={16} />}
+              {draft.flags.includes(flag) ? <Check size={18} /> : <Icon size={18} />}
               <strong>{label}</strong>
             </button>
           ))}

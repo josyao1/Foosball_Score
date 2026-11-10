@@ -30,6 +30,8 @@ export function AchievementIcon({id}:{id:AchievementId}) {
     seatWarmer:<><path d="M17 10v18h17V18M17 22h17M20 28v10m11-10v10M8 18a17 17 0 0 1 30-8m0-6v6h-6M40 30a17 17 0 0 1-30 8m0 6v-6h6"/></>,
     sixtySeven:<><path d="M20 12c-9-2-12 7-12 15s13 11 13 2-13-9-13-1M28 12h13L30 38"/></>,
     fourTwenty:<><path d="M24 41V26M24 32C17 33 11 31 7 27l11 1C10 24 7 18 6 12c8 3 12 8 15 14C18 17 20 9 24 5c4 4 6 12 3 21 3-6 7-11 15-14-1 6-4 12-12 16l11-1c-4 4-10 6-17 5z"/></>,
+    ethical:<><path d="M13 23v-8l11-5 11 5v8c0 8-7 14-11 16-4-2-11-8-11-16Z"/><path d="m18 24 4 4 8-9"/></>,
+    hardCarry:<><path d="M8 30h32M12 26v8m24-8v8M19 39l3-9m7 9-3-9M17 24l5-5h5l5 5"/><circle cx="24" cy="13" r="4"/><path d="m9 18 2-4 2 4m22 0 2-4 2 4"/></>,
     lunchBreak:<><path d="M9 18h30v23H9zM17 18v-6h14v6M9 26h30M21 24h6v4h-6z"/><circle cx="34" cy="12" r="8"/><path d="M34 7v5l4 2"/></>,
   }[id];
   return <svg className="achievement-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{art}</svg>;

@@ -1,3 +1,4 @@
+import { RivalryOptions } from "../components/RivalryOptions";
 import { useId, useMemo, useState } from 'react';
 import { ArrowUpRight, ChevronDown, Play, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -91,7 +92,7 @@ export function HallOfFame() {
   const [ratingId, setRatingId] = useState<string | null>(null);
   const selected = entries.find(entry => entry.game.id === ratingId);
   return <section className="hall-page">
-    <div className="hall-page-heading"><h1>Hall of Fame</h1><label className="hall-filter">Rivalry<select value={scope} onChange={e => { setScope(e.target.value); setRatingId(null); }}><option value="">All rivalries</option>{rivalries.map(r => <option key={r.id} value={r.id}>{r.player_a} vs {r.player_b}</option>)}</select></label></div>
+    <div className="hall-page-heading"><h1>Hall of Fame</h1><label className="hall-filter">Rivalry<select value={scope} onChange={e => { setScope(e.target.value); setRatingId(null); }}><RivalryOptions rivalries={rivalries} games={games}/></select></label></div>
     <p className="hall-intro">Top {topEntries.length} of {entries.length} ranked {entries.length === 1 ? 'game' : 'games'}. Tap a rating to see why.</p>
     {entries.length ? <div className="hall-gallery">{topEntries.map((entry, i) => <MatchPoster key={entry.game.id} entry={entry} rank={i + 1} onRating={() => setRatingId(entry.game.id)}/>)}</div> : <div className="empty-state"><Trophy size={32}/><h2>No ranked games yet</h2><p>Finish a first-to-10, win-by-two game at its first winning score to enter the rankings.</p><Link className="button primary" to="/">Go to rivalries</Link></div>}
     {selected && <RatingBreakdown entry={selected} onClose={() => setRatingId(null)}/>}

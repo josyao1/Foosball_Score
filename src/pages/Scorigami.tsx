@@ -1,3 +1,4 @@
+import { RivalryOptions } from "../components/RivalryOptions";
 import { TabUnderline } from "../components/TabUnderline";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
@@ -95,7 +96,7 @@ export function Scorigami() {
   const sectionCount = (n: number) => <span className="sc-section-count"><strong>{n}</strong> {n === 1 ? 'game' : 'games'}{data.completed.length > 0 && <span> · {Math.round(n / data.completed.length * 100)}%</span>}</span>;
 
   return <div className="scorigami-page">
-    <header className="sc-heading"><div><h1>Scorigami</h1><p>How your games finish.</p></div><label className="sc-filter">Rivalry<select value={scope} onChange={e => { setScope(e.target.value); setOvertimePage(0); setRevealKey(null); closePopup(); }}><option value="">All rivalries</option>{rivalries.map(r => <option key={r.id} value={r.id}>{r.player_a} vs {r.player_b}</option>)}</select></label></header>
+    <header className="sc-heading"><div><h1>Scorigami</h1><p>How your games finish.</p></div><label className="sc-filter">Rivalry<select value={scope} onChange={e => { setScope(e.target.value); setOvertimePage(0); setRevealKey(null); closePopup(); }}><RivalryOptions rivalries={rivalries} games={games}/></select></label></header>
     <div className="sc-summary"><span><strong>{data.buckets.size}</strong> different scores</span><span><strong>{data.completed.length}</strong> finished games</span>{data.common && <button type="button" onClick={revealCommon}>Most common <strong>{data.common.high}–{data.common.low}</strong><span>{data.common.games.length}×</span></button>}</div>
     <div ref={charts} className={`sc-distributions${overtimeCount ? ' sc-distributions--paired' : ''}`}>
       <section className="sc-distribution sc-regular" aria-labelledby="sc-regular-title">

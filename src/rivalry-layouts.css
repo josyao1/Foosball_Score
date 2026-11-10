@@ -231,3 +231,24 @@
 .rc-ticket-stub-heading > .rc-status > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rc-ticket-stub-heading .rc-live { flex-shrink: 0; }
 .rc-ticket-stub-heading > .rc-ticket-stats-link { flex-shrink: 0; white-space: nowrap; }
+
+.rc-ticket-resume { position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-right: auto; font-weight: 650; font-size: 13px; }
+.rc-directory { border-block: 1px solid var(--line); }
+.rc-ticket-carousel + .rc-directory { margin-top: 18px; }
+.rc-directory summary { display: flex; align-items: center; gap: 8px; padding: 10px 4px; min-height: 48px; cursor: pointer; font-weight: 600; list-style: none; }
+.rc-directory summary::-webkit-details-marker { display: none; }
+.rc-directory summary span { font-size: 12px; font-weight: 450; color: var(--muted); }
+.rc-directory summary svg { margin-left: auto; }
+.rc-directory[open] summary svg { transform: rotate(90deg); }
+.rc-directory-list { list-style: none; padding: 0; margin: 0; }
+.rc-directory[open] .rc-directory-list, .rc-directory-list li + li { border-top: 1px solid var(--line); }
+.rc-directory-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 100px 16px; align-items: center; gap: 12px; min-height: 48px; padding: 8px 4px; }
+.rc-directory-row:hover, .rc-directory summary:hover { background: var(--panel); }
+.rc-directory-match { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.rc-directory-match small, .rc-directory-date { color: var(--muted); font-weight: 450; }
+.rc-directory-date { text-align: right; font-size: 12px; }
+.rc-directory-row strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
+@media(max-width: 600px) {
+  .rc-directory-row { grid-template-columns: minmax(0, 1fr) auto 78px 12px; gap: 6px; }
+  .rc-directory-date { font-size: 10px; }
+}

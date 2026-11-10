@@ -2285,9 +2285,27 @@ html[data-design] .screen-awake-warning .text-button { color: var(--error-text);
 .goal-rung-summary { margin: 0 0 12px; font-size: 13px; color: var(--muted); }
 .goal-rung-summary::first-letter { text-transform: uppercase; }
 .goal-dialog .flag-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-block: 12px; }
-.goal-dialog .flag-option { min-height: 44px; padding: 6px 4px; gap: 4px; justify-content: center; text-align: center; }
-.goal-dialog .flag-option svg { flex-shrink: 0; }
-.goal-dialog .flag-option strong { font-size: 12px; }
+html[data-design] .goal-dialog .flag-option {
+  min-height: 54px;
+  min-width: 0;
+  padding: 8px 4px;
+  gap: 5px;
+  justify-content: center;
+  text-align: center;
+  color: var(--goal-ink);
+  background: color-mix(in srgb, var(--goal-tint) 45%, #fff8ed);
+  border-color: color-mix(in srgb, var(--goal-ink) 35%, var(--goal-tint));
+}
+html[data-design] .goal-dialog .flag-option[aria-pressed="true"] {
+  background: var(--goal-tint);
+  border-color: var(--goal-ink);
+  box-shadow: inset 0 0 0 1px var(--goal-ink);
+}
+.goal-dialog .flag-option svg { flex-shrink: 0; color: inherit; }
+.goal-dialog .flag-option strong { font-size: 13px; }
+@media (max-width: 380px) {
+  .goal-dialog .flag-option { flex-direction: column; }
+}
 
 .goal-save-button { position: relative; overflow: hidden; }
 .goal-countdown-track { position: absolute; inset: auto 8px 2px; height: 3px; pointer-events: none; }

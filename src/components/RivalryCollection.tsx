@@ -1,14 +1,15 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, ChevronLeft, ChevronRight, Radio } from "lucide-react";
+import { displayTeams, type DisplayTeams } from "../lib/participants";
 import { Avatar } from "./Scoreboard";
 import { rivalryStats, score } from "../lib/stats";
 import { gameDate, gameTime } from "../lib/time";
-import { playerName } from "../lib/types";
 import type { Game, Rivalry } from "../lib/types";
 import "../rivalry-layouts.css";
 
 type Entry = {
+  teams: DisplayTeams;
   rivalry: Rivalry;
   stats: ReturnType<typeof rivalryStats>;
   live: boolean;
@@ -45,11 +46,12 @@ function Record({ entry, label = true }: { entry: Entry; label?: boolean }) {
 
 function Status({ entry }: { entry: Entry }) {
   const { streak, completed } = entry.stats;
+  const streakTeam = entry.teams.find(team => team.side === streak.side);
   return (
     <span className="rc-status">
       {entry.live && <span className="rc-live"><Radio size={12} aria-hidden="true" />Live</span>}
-      <span>{streak.side
-        ? `${playerName(entry.rivalry, streak.side)} · ${streak.count}-win streak`
+      <span>{streakTeam
+        ? `${streakTeam.name} · ${streak.count}-win streak`
         : completed ? "Last game drawn" : entry.live ? "No completed games" : "No games yet"}</span>
     </span>
   );
@@ -117,7 +119,8 @@ function Versus({ entry }: { entry: Entry }) {
   );
 }
 
-function TicketGame({ game, rivalry }: { game: Game; rivalry: Rivalry }) {
+function TicketGame({ game, teams }: { game: Game; teams: DisplayTeams }) {
+  const [first, second] = teams;
   const result = score(game.goals);
   const date = gameDate(game.started_at);
   const time = gameTime(game.started_at);
@@ -126,11 +129,11 @@ function TicketGame({ game, rivalry }: { game: Game; rivalry: Rivalry }) {
       <Link
         className="rc-ticket-game"
         to={`/game/${game.id}`}
-        aria-label={`${date}, ${time}: ${rivalry.player_a} ${result.a}, ${rivalry.player_b} ${result.b}. ${game.ended_at ? "Final score" : "Live game"}`}
+        aria-label={`${date}, ${time}: ${first.name} ${result[first.side]}, ${second.name} ${result[second.side]}. ${game.ended_at ? "Final score" : "Live game"}`}
       >
         <time dateTime={game.started_at}><span>{date}</span><small>{time}</small></time>
         <span className="rc-ticket-game-result">
-          <span className="rc-ticket-game-score" aria-hidden="true"><span><i className="rc-ticket-kit rc-ticket-kit-black" />{result.a}</span><span className="rc-ticket-score-separator">–</span><span><i className="rc-ticket-kit rc-ticket-kit-white" />{result.b}</span></span>
+          <span className="rc-ticket-game-score" aria-hidden="true"><span><i className={`rc-ticket-kit rc-ticket-kit-${first.kit}`} />{result[first.side]}</span><span className="rc-ticket-score-separator">–</span><span><i className={`rc-ticket-kit rc-ticket-kit-${second.kit}`} />{result[second.side]}</span></span>
           <small>{game.ended_at ? "Final" : "Live"}</small>
         </span>
       </Link>
@@ -139,18 +142,23 @@ function TicketGame({ game, rivalry }: { game: Game; rivalry: Rivalry }) {
 }
 
 function Ticket({ entry }: { entry: Entry }) {
+  const matchup = entry.teams.map(team => team.name).join(" vs ");
   return (
-    <article className="rc-item rc-ticket" aria-label={`${entry.rivalry.player_a} vs ${entry.rivalry.player_b}`}>
+    <article className="rc-item rc-ticket" aria-label={matchup}>
       <div className="rc-ticket-main">
         <div className="rc-ticket-heading"><span>Head to head</span><span>Wins</span></div>
-        <div className="rc-ticket-player-line"><strong><i className="rc-ticket-kit rc-ticket-kit-black" role="img" aria-label="Black team" />{entry.rivalry.player_a}</strong><b>{entry.stats.wins.a}</b></div>
-        <div className="rc-ticket-player-line"><strong><i className="rc-ticket-kit rc-ticket-kit-white" role="img" aria-label="White team" />{entry.rivalry.player_b}</strong><b>{entry.stats.wins.b}</b></div>
+        {entry.teams.map(team => <div className="rc-ticket-player-line" key={team.side}>
+          <strong><i className={`rc-ticket-kit rc-ticket-kit-${team.kit}`} role="img" aria-label={team.side === 'a' ? 'Black team' : 'White team'}/>{team.name}</strong>
+          <b>{entry.stats.wins[team.side]}</b>
+        </div>)}
       </div>
       <div className="rc-ticket-stub">
-        <div className="rc-ticket-stub-heading">{entry.recent.length > 0 && <Status entry={entry} />}<Link className="rc-ticket-stats-link" draggable={false} to={`/rivalry/${entry.rivalry.id}`} aria-label={`View stats for ${entry.rivalry.player_a} vs ${entry.rivalry.player_b}`}>View stats <span aria-hidden="true">→</span></Link></div>
+        <div className="rc-ticket-stub-heading">{entry.live && entry.latest
+          ? <Link className="rc-ticket-resume" to={`/game/${entry.latest.id}`}><Radio size={14} aria-hidden="true"/>Resume game</Link>
+          : entry.recent.length > 0 && <Status entry={entry} />}<Link className="rc-ticket-stats-link" draggable={false} to={`/rivalry/${entry.rivalry.id}`} aria-label={`View stats for ${matchup}`}>View stats <span aria-hidden="true">→</span></Link></div>
         <section className="rc-ticket-recent" aria-label="Recent games">
           <h3>Recent games</h3>
-          {entry.recent.length ? <ul>{entry.recent.map(game => <TicketGame key={game.id} game={game} rivalry={entry.rivalry} />)}</ul> : <p>No games yet.</p>}
+          {entry.recent.length ? <ul>{entry.recent.map(game => <TicketGame key={game.id} game={game} teams={entry.teams} />)}</ul> : <p>No finished games yet.</p>}
         </section>
       </div>
     </article>
@@ -304,7 +312,42 @@ function RivalryTable({ entries }: { entries: Entry[] }) {
   );
 }
 
-export function RivalryCollection({ rivalries, games, layout }: { rivalries: Rivalry[]; games: Game[]; layout: string }) {
+function OtherRivalries({ entries, featured }: { entries: Entry[]; featured: boolean }) {
+  const rows = <ul className="rc-directory-list">
+    {entries.map(({ rivalry, stats, latest, live, teams: [first, second] }) => <li key={rivalry.id}>
+      <Link className="rc-directory-row" to={`/rivalry/${rivalry.id}`}>
+        <span className="rc-directory-match">{first.name} <small>vs</small> {second.name}</span>
+        <strong aria-label={`Head to head: ${stats.wins[first.side]} to ${stats.wins[second.side]}`}>{stats.wins[first.side]}–{stats.wins[second.side]}</strong>
+        <span className="rc-directory-date">{live ? 'Live' : latest ? gameDate(latest.started_at) : 'Unplayed'}</span>
+        <ChevronRight size={15} aria-hidden="true"/>
+      </Link>
+    </li>)}
+  </ul>;
+  if (!featured) return <section className="rc-directory" aria-label="All rivalries">{rows}</section>;
+  return <details className="rc-directory">
+    <summary>Other rivalries <span>{entries.length}</span><ChevronRight size={16} aria-hidden="true"/></summary>
+    {rows}
+  </details>;
+}
+
+function FeaturedRivalries({ entries, profile }: { entries: Entry[]; profile: string | null }) {
+  // Entries arrive in profile/recency order; stable ties preserve that ordering.
+  const featured = entries.filter(entry =>
+    entry.live || entry.teams[0].mine || entry.stats.completed >= 3
+  )
+    .sort((a, b) => Number(b.live) - Number(a.live)
+      || Number(b.teams[0].mine) - Number(a.teams[0].mine)
+      || b.stats.completed - a.stats.completed)
+    .slice(0, 3);
+  const selected = new Set(featured.map(entry => entry.rivalry.id));
+  const others = entries.filter(entry => !selected.has(entry.rivalry.id));
+  return <>
+    {featured.length > 0 && <TicketCollection key={profile} entries={featured}/>}
+    {others.length > 0 && <OtherRivalries entries={others} featured={featured.length > 0}/>}
+  </>;
+}
+
+export function RivalryCollection({ rivalries, games, layout, profile = null }: { rivalries: Rivalry[]; games: Game[]; layout: string; profile?: string | null }) {
   const grouped = new Map<string, Game[]>();
   for (const game of games) {
     const existing = grouped.get(game.rivalry_id);
@@ -316,10 +359,10 @@ export function RivalryCollection({ rivalries, games, layout }: { rivalries: Riv
     const liveGame = rivalryGames.find((game) => !game.ended_at);
     const ordered = [...rivalryGames].sort((a, b) => Date.parse(b.started_at) - Date.parse(a.started_at) || b.id.localeCompare(a.id));
     const latest = liveGame ?? ordered[0];
-    return { rivalry, stats: rivalryStats(rivalryGames), live: Boolean(liveGame), latest, recent: ordered.slice(0, 4) };
+    return { rivalry, teams: displayTeams(rivalry, profile), stats: rivalryStats(rivalryGames), live: Boolean(liveGame), latest, recent: ordered.filter(game => game.ended_at).slice(0, 2) };
   });
   if (!entries.length) return null;
-  if (layout === "tickets") return <TicketCollection entries={entries} />;
+  if (layout === "tickets") return <FeaturedRivalries entries={entries} profile={profile} />;
   if (layout === "table") return <RivalryTable entries={entries} />;
   const presentation = ["cards", "list", "forest", "pitch", "versus", "tickets", "matrix", "tiles", "broadcast"].includes(layout) ? layout : "cards";
   return (

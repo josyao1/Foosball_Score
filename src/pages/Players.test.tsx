@@ -3,6 +3,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { Players } from './Players';
+import { selectProfile } from '../lib/profile';
 import { App } from '../App';
 import type { Game, Rivalry } from '../lib/types';
 const fixture=vi.hoisted(()=>({games:[] as Game[],rivalries:[] as Rivalry[]}));
@@ -10,6 +11,19 @@ vi.mock('../lib/store',()=>({useStore:()=>({...fixture,cloud:true,loading:false,
 const rivalry: Rivalry={id:'r',player_a:'Josh',player_b:'Brooks',created_at:'2026-01-01'};
 const game: Game={id:'g',rivalry_id:'r',revision:1,started_at:'2026-11-03T18:00:00Z',ended_at:'2026-11-03T18:10:00Z',goals:Array.from({length:10},(_,i)=>({id:`g${i}`,actor_side:'a',rung:'goalie',flags:[],elapsed_ms:(i+1)*10000,occurred_at:'2026-11-03T18:00:00Z'}))};
 afterEach(()=>{cleanup();vi.restoreAllMocks();fixture.games=[];fixture.rivalries=[];});
+it('pins the selected player ahead of the wins ranking even when they have no wins',()=>{
+  fixture.rivalries=[rivalry,{...rivalry,id:'second',player_a:'Andrew'}];
+  fixture.games=[game,{...game,id:'g2'},{...game,id:'g3',rivalry_id:'second',started_at:'2026-11-04T18:00:00Z',ended_at:'2026-11-04T18:10:00Z'}];
+  selectProfile('Brooks');
+  try {
+    render(<MemoryRouter><Players/></MemoryRouter>);
+    expect(screen.getAllByRole('article').map(card=>within(card).getByRole('heading',{level:2}).textContent))
+      .toEqual(['Brooks','Josh','Andrew']);
+  } finally {
+    cleanup();
+    selectProfile(null);
+  }
+});
 it('renders style, result and best-game links without a search box',()=>{
   fixture.games=[game]; fixture.rivalries=[rivalry];
   const {container}=render(<MemoryRouter><Players/></MemoryRouter>);

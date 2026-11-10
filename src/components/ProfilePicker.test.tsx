@@ -30,7 +30,10 @@ it('persists a selection, prioritizes its passport, and allows clearing the devi
 it('prioritizes matching rivalries including team memberships',()=>{
  selectProfile('JOSH');
  render(<MemoryRouter><App/></MemoryRouter>);
- expect(screen.getAllByRole('article')[0].getAttribute('aria-label')).toBe(' Josh  vs Brooks');
+ const cards = within(screen.getByRole('region',{name:'Rivalry cards'})).getAllByRole('link');
+ expect(cards.map(card=>card.getAttribute('href'))).toEqual(['/rivalry/jb','/rivalry/team']);
+ fireEvent.click(screen.getByText('Other rivalries'));
+ expect(screen.getByRole('link',{name:/Andrew vs Brooks/}).getAttribute('href')).toBe('/rivalry/ab');
  expect(profileFirst(rivalries,r=>isProfileRivalry(r,'josh')).map(r=>r.id)).toEqual(['jb','team','ab']);
  expect(rivalries.map(r=>r.id)).toEqual(['ab','jb','team']);
 });

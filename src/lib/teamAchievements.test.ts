@@ -29,3 +29,29 @@ it('uses the goal swap snapshot, rejects missing/future times, and includes exac
  g.goals[0].elapsed_ms=19999;expect(earned(g)).not.toContain('seatWarmer');
  g.goals[0].elapsed_ms=30000;g.goals[0].flags=['own_goal'];expect(earned(g)).not.toContain('seatWarmer');
 });
+
+it('awards Ethical game to the winners only if both sides used only regular goals', () => {
+  const g = game();
+  g.goals.unshift({...g.goals[0], id:'opener', actor_side:'b', elapsed_ms:10});
+  expect(earned(g)).toContain('ethical');
+  expect(earnedAchievements(g,'b')).not.toContain('ethical');
+  expect(earned({...g,ended_at:null})).not.toContain('ethical');
+  for (const flag of ['bank','dunk','own_goal'] as const) {
+    g.goals[0].flags = [flag];
+    expect(earned(g)).not.toContain('ethical');
+  }
+});
+
+it('credits Hard carry only to the teammate personally responsible for every winning-side point', () => {
+  const g = game();
+  const earners = () => playerPassports([g],[r]).filter(p=>p.achievements.hardCarry).map(p=>p.name);
+  const swapped = {...lineup,a:{defense:lineup.a.attack,attack:lineup.a.defense}};
+  g.goals.slice(5).forEach(goal=>{goal.lineup=swapped;});
+  expect(earners()).toEqual(['Josh']);
+  g.goals[9].lineup=lineup;
+  expect(earners()).toEqual([]);
+  g.goals[9].lineup=null;
+  expect(earners()).toEqual([]);
+  g.goals[9].actor_side='b';g.goals[9].flags=['own_goal'];
+  expect(earners()).toEqual([]);
+});

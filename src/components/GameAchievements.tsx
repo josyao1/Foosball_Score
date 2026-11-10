@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useMemo, useState } from 'react';
 import { Award } from 'lucide-react';
-import { ACHIEVEMENTS, earnedAchievements, streakAchievementPlayers, lunchBreakPlayers } from '../lib/achievements';
+import { ACHIEVEMENTS, earnedAchievements, hardCarryWinner, streakAchievementPlayers, lunchBreakPlayers } from '../lib/achievements';
 import { gameHighlights } from '../lib/records';
 import { playerName } from '../lib/types';
 import type { Game, Rivalry, Side } from '../lib/types';
@@ -18,11 +18,14 @@ export function GameAchievementProvider({games,rivalries,children}:{games:Game[]
 export function gameAwards(game:Game,rivalry:Rivalry,streakSides:Side[]=[],streakPeople:{side:Side;name:string}[]=[]){
   if(!game.ended_at)return [];
   const highlights=gameHighlights(game);
-  return (['a','b'] as const).flatMap(side=>{
+  const carry = hardCarryWinner(game, rivalry, highlights);
+  const awards = (['a','b'] as const).flatMap(side=>{
     const ids=earnedAchievements(game,side,highlights,rivalry);
     if(streakSides.includes(side))ids.push('streak');
     return ids.map(id=>({side,name:id==='streak'&&streakPeople.some(p=>p.side===side)?streakPeople.filter(p=>p.side===side).map(p=>p.name).join(' and '):playerName(rivalry,side),badge:ACHIEVEMENTS.find(b=>b.id===id)!}));
   });
+  if (carry) awards.push({side: carry.side, name: carry.player.name, badge: ACHIEVEMENTS.find(badge => badge.id === 'hardCarry')!});
+  return awards;
 }
 export function useGameAwards(game:Game,rivalry:Rivalry){
   const streaks=useContext(StreakContext);

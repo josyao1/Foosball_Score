@@ -29,6 +29,11 @@ it('keeps the full-width panel and compacts the other badges until it closes',()
   expect(wins.getAttribute('aria-expanded')).toBe('false');
   expect(grid?.classList.contains('has-selection')).toBe(false);
   expect(screen.getAllByRole('region')).toHaveLength(1); // the mastery section only
+  expect(panel.isConnected).toBe(true);
+  expect(panel.hasAttribute('inert')).toBe(true);
+  fireEvent.click(wins);
+  expect(screen.getByRole('region',{name:/Winning proficiency/})).toBe(panel);
+  expect(panel.hasAttribute('inert')).toBe(false);
 });
 it('earns platinum at its threshold and links all four tiers to their crossing games',()=>{
   const progress=emptyMastery();

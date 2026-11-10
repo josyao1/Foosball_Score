@@ -40,10 +40,29 @@ export function goalCredit(g:Goal,r:Rivalry,playerId:string):number{
   return id ? (id===playerId ? 1:0) : sidePlayers(r,g.actor_side).some(p=>p.id===playerId) ? 1/sidePlayers(r,g.actor_side).length : 0;
 }
 export function matchesProfile(p:Player,profile:string|null){return !!profile&&(p.id===profile||key(p.name)===profile);}
+type DisplayTeam = { side: Side; name: string; kit: 'black' | 'white'; mine: boolean };
+export type DisplayTeams = [DisplayTeam, DisplayTeam];
+
+export function displayTeams(rivalry: Rivalry, profile: string | null): DisplayTeams {
+  function team(side: Side): DisplayTeam {
+    const members = sidePlayers(rivalry, side);
+    const selected = members.find(player => matchesProfile(player, profile));
+    const name = selected && members.length > 1
+      ? [selected, ...members.filter(player => player.id !== selected.id)].map(player => player.name).join(' and ')
+      : playerName(rivalry, side);
+    return {side, name, kit: side === 'a' ? 'black' : 'white', mine: Boolean(selected)};
+  }
+  const black = team('a'), white = team('b');
+  return white.mine ? [white, black] : [black, white];
+}
+
+export function rivalryMatchesProfile(rivalry: Rivalry, profile: string | null) {
+  return (['a', 'b'] as const).some(side => sidePlayers(rivalry, side).some(player => matchesProfile(player, profile)));
+}
 export function orderRivalries(rivalries:Rivalry[],games:Game[],profile:string|null){
   const latest=new Map<string,number>();
   for(const g of games)latest.set(g.rivalry_id,Math.max(latest.get(g.rivalry_id)??0,Date.parse(g.started_at)||0));
-  const mine=(r:Rivalry)=>[...sidePlayers(r,'a'),...sidePlayers(r,'b')].some(p=>matchesProfile(p,profile));
+  const mine=(r:Rivalry)=>rivalryMatchesProfile(r,profile);
   return [...rivalries].sort((a,b)=>Number(mine(b))-Number(mine(a))||(latest.get(b.id)??0)-(latest.get(a.id)??0)||(Date.parse(b.created_at)||0)-(Date.parse(a.created_at)||0)||a.id.localeCompare(b.id));
 }
 /** Upgrade local legacy records without changing any game or event. */

@@ -31,6 +31,7 @@ import {
 import { playerName } from "../lib/types";
 import type { Game, Goal, Rung, Side } from "../lib/types";
 import { useDesign } from "../components/SiteDesign";
+import { TableScorer } from "../components/TableScorer";
 import { RungControls } from "../components/RungControls";
 import { TicketAchievements } from "../components/TicketAchievements";
 import { GameScoreboard } from "../components/GameScoreboard";
@@ -56,6 +57,7 @@ export function GamePage() {
     [removing, setRemoving] = useState<Goal | null>(null),
     [winningGame,setWinningGame] = useState<Game|null>(null),
     [dismissedWin,setDismissedWin] = useState<string|null>(null);
+  const [tableDraft, setTableDraft] = useState(false);
   const [confirmation, setConfirmation] = useState<{gameId: string; goal: Goal} | null>(null);
   const [rematch, setRematch] = useState<{gameId: string; previous: Record<Side, number>} | null>(null);
   const [lastLiveId, setLastLiveId] = useState<string | null>(null);
@@ -104,7 +106,9 @@ export function GamePage() {
     w = winner(game),
     won = isWinningScore(s),
     last = orderedGoals(game.goals).at(-1);
-  function beginGoal(side: Side, rung: Rung) {
+  const scoringDisabled = store.busy || (!game.lineup && (['a','b'] as const).some(side => sidePlayers(r, side).length === 2));
+  function beginGoal(side: Side, rung: Rung, fromTable = false) {
+    setTableDraft(fromTable);
     const tapped = Date.now();
     setOpeningRevision(game!.revision);
     setEditing(false);
@@ -164,6 +168,8 @@ export function GamePage() {
         </span>
       </div>
       <section className={`live-score-panel scorer-layout-${design.scorerLayout} ${live ? "is-live" : ""}`}>
+        {live && <TableScorer key={game.id} game={game} rivalry={r} scores={s} disabled={scoringDisabled}
+          onGoal={(side, rung) => beginGoal(side, rung, true)}/>}
         <div className="game-clock">
           <Timer size={16} />
           <span>{clock(duration(game, now))}</span>
@@ -191,7 +197,7 @@ export function GamePage() {
           <>
             <TeamPositions game={game} rivalry={r} busy={store.busy} onSave={store.saveGame}/>
             <div className="scoring-hint">Tap the rung that hit the ball.</div>
-            <RungControls rivalry={r} lineup={game.lineup} layout={design.scorerLayout} disabled={store.busy||(!game.lineup&&(['a','b'] as const).some(s=>sidePlayers(r,s).length===2))} onGoal={beginGoal}/>
+            <RungControls rivalry={r} lineup={game.lineup} layout={design.scorerLayout} disabled={scoringDisabled} onGoal={beginGoal}/>
             {won && (
               <div className="winning-notice" role="status">
                 <Trophy size={16} />
@@ -314,6 +320,7 @@ export function GamePage() {
           goal={draft}
           rivalry={r}
           editing={editing}
+          currentScore={tableDraft && !editing ? s : undefined}
           onSave={saveGoal}
           onClose={() => setDraft(null)}
         />

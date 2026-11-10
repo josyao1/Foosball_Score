@@ -83,7 +83,7 @@ html[data-design] .players-search input:focus-visible { outline:none; }
 .passport-mastery { margin:0 22px;padding:18px 0;border-top:1px solid var(--line); }
 .mastery-heading { display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px; }
 .mastery-heading > span { font-size:11px;color:var(--muted); }
-.mastery-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start; }
+.mastery-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 8px;align-items:start; }
 .mastery-badge { display:flex;align-items:center;gap:7px;min-height:66px;padding:10px;min-width:0;width:100%;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--text);font:inherit;text-align:left;cursor:pointer; }
 .mastery-badge.tier-1 { background:#ead0b5;border-color:#b98960; }
 .mastery-badge.tier-2 { background:#e0e3e4;border-color:#9ca4a8; }
@@ -263,7 +263,9 @@ html[data-design] dialog.roster-dialog { width: min(420px, calc(100% - 32px)); p
 .passport-overview-share { display: inline-block; color: var(--muted); font-size: 11px; font-weight: 400; white-space: nowrap; vertical-align: baseline; margin-left: 3px; font-variant-numeric: tabular-nums; }
 
 /* Make room for the full-width tier panel by compacting the other badges. */
-.mastery-grid.has-selection { gap: 6px; }
+.mastery-grid.has-selection { column-gap: 6px; }
+.mastery-disclosure ~ .mastery-badge { margin-top: 8px; }
+.has-selection .mastery-disclosure ~ .mastery-badge { margin-top: 6px; }
 .mastery-grid.has-selection .mastery-badge[aria-expanded="false"] { min-height: 44px; padding: 6px 8px; gap: 6px; align-self: center; }
 .mastery-grid.has-selection .mastery-badge[aria-expanded="false"] > svg { width: 18px; height: 18px; }
 .mastery-grid.has-selection .mastery-badge[aria-expanded="false"] small { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -280,10 +282,10 @@ html[data-design] dialog.roster-dialog { width: min(420px, calc(100% - 32px)); p
   .position-name { transition: transform 180ms ease-in-out; }
 }
 
-.mastery-disclosure { grid-column: 1 / -1; display: grid; grid-template-rows: 1fr; min-width: 0; }
+.mastery-disclosure { grid-column: 1 / -1; display: grid; grid-template-rows: 0fr; min-width: 0; opacity: 0; }
+.mastery-disclosure[data-open="true"] { grid-template-rows: 1fr; opacity: 1; margin-top: 6px; }
 .mastery-disclosure-clip { min-height: 0; overflow: hidden; }
 @media (prefers-reduced-motion: no-preference) {
-  .mastery-disclosure { animation: mastery-unfold 200ms ease-out; }
-  .mastery-badge { transition: min-height 160ms ease-out, padding 160ms ease-out; }
+  .mastery-disclosure { transition: grid-template-rows 200ms ease-in-out, opacity 160ms ease-out, margin-top 200ms ease-in-out; }
+  .mastery-badge { transition: min-height 200ms ease-in-out, padding 200ms ease-in-out, margin-top 200ms ease-in-out; }
 }
-@keyframes mastery-unfold { from { grid-template-rows: 0fr; opacity: .4; } to { grid-template-rows: 1fr; opacity: 1; } }

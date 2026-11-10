@@ -1,13 +1,19 @@
 // @vitest-environment jsdom
 import { MemoryRouter } from "react-router-dom";
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { RivalryCollection } from "./RivalryCollection";
-import type { Rivalry } from "../lib/types";
+import type { Game, Rivalry } from "../lib/types";
 
 const rivalries: Rivalry[] = ["one", "two", "three"].map((id, index) => ({
   id, player_a: `Player ${index * 2 + 1}`, player_b: `Player ${index * 2 + 2}`, created_at: "2026-10-26T12:00:00Z",
 }));
+function finishedGames(rivalry: Rivalry, count: number): Game[] {
+  return Array.from({length: count}, (_, i) => ({
+    id: `${rivalry.id}-${i}`, rivalry_id: rivalry.id, revision: 1,
+    started_at: `2026-10-26T12:0${i}:00Z`, ended_at: `2026-10-26T12:0${i}:30Z`, goals: [],
+  }));
+}
 let reducedMotion = false;
 let narrow = true;
 
@@ -16,7 +22,7 @@ function mount(items = rivalries) {
     matches: query.includes("reduced-motion") ? reducedMotion : narrow,
     media: query, addEventListener: vi.fn(), removeEventListener: vi.fn(),
   })));
-  const result = render(<MemoryRouter><RivalryCollection rivalries={items} games={[]} layout="tickets" /></MemoryRouter>);
+  const result = render(<MemoryRouter><RivalryCollection rivalries={items} games={items.flatMap(item => finishedGames(item, 3))} layout="tickets" /></MemoryRouter>);
   const list = screen.getByRole("list", { name: "Rivalries" });
   Object.defineProperty(list, "clientWidth", { configurable: true, value: 340 });
   Object.defineProperty(list, "scrollWidth", { configurable: true, value: 980 });
@@ -87,4 +93,49 @@ it("adapts to desktop resize and avoids carousel controls for a single ticket", 
   mount(rivalries.slice(0, 1));
   expect(screen.queryByRole("button", { name: "Next rivalry" })).toBeNull();
   expect(screen.queryByText("Swipe left or right")).toBeNull();
+});
+
+it('features live, personal, then frequent matchups and lists the rest once', () => {
+  const items = [...rivalries, {...rivalries[0], id:'four', player_a:'Friend'},
+    {...rivalries[1], id:'five', player_a:'Guest'}];
+  const games = items.flatMap((item,i) => finishedGames(item, [1,4,5,1,1][i]));
+  games.push({...games[0], id:'live', rivalry_id:'five', ended_at:null});
+  render(<MemoryRouter><RivalryCollection rivalries={items} games={games} profile="player 1" layout="tickets"/></MemoryRouter>);
+  const tickets = screen.getAllByRole('article');
+  expect(tickets.map(card=>card.getAttribute('aria-label'))).toEqual(['Guest vs Player 4','Player 1 vs Player 2','Player 5 vs Player 6']);
+  expect(within(tickets[0]).getByRole('link',{name:'Resume game'}).getAttribute('href')).toBe('/game/live');
+  expect(within(within(tickets[2]).getByRole('region',{name:'Recent games'})).getAllByRole('link')).toHaveLength(2);
+  const details = screen.getByText('Other rivalries').closest('details')!;
+  expect(details.open).toBe(false);
+  fireEvent.click(details.querySelector('summary')!);
+  expect(within(details).getAllByRole('link').map(link=>link.getAttribute('href'))).toEqual(['/rivalry/two','/rivalry/four']);
+});
+
+it('keeps every matchup directly accessible when none qualifies for a ticket', () => {
+  render(<MemoryRouter><RivalryCollection rivalries={rivalries} games={[]} layout="tickets"/></MemoryRouter>);
+  expect(screen.queryByRole('article')).toBeNull();
+  expect(within(screen.getByRole('region',{name:'All rivalries'})).getAllByRole('link')).toHaveLength(3);
+});
+
+it('puts the profile and their team first with the corresponding kit, wins and game score', () => {
+  const [max, andrew, aiden] = ['Max', 'Andrew', 'Aiden'].map(name => ({id: 'id-' + name, name, created_at: ''}));
+  const team = {...rivalries[0], player_a: 'Max', player_b: 'Andrew and Aiden', members: {a: [max], b: [andrew, aiden]}};
+  const games = finishedGames(team, 1);
+  games[0].goals = [{id:'goal', actor_side:'b', rung:'middle', flags:[], elapsed_ms:1000, occurred_at:games[0].started_at}];
+  const page = (profile: string | null) => <MemoryRouter><RivalryCollection rivalries={[team]} games={games} layout="tickets" profile={profile}/></MemoryRouter>;
+  const view = render(page(aiden.id));
+  const ticket = screen.getByRole('article',{name:'Aiden and Andrew vs Max'});
+  const first = ticket.querySelector('.rc-ticket-player-line')!;
+  expect(first.textContent).toBe('Aiden and Andrew1');
+  expect(first.querySelector('[aria-label="White team"]')).toBeTruthy();
+  expect(within(ticket).getByRole('link',{name:/Aiden and Andrew 1, Max 0/})).toBeTruthy();
+  expect(within(ticket).getByText('Aiden and Andrew · 1-win streak')).toBeTruthy();
+  view.rerender(page(null));
+  expect(screen.getByRole('link',{name:/Max vs Andrew and Aiden/}).textContent).toContain('0–1');
+  // With three busier personal rivals, this same team moves into the directory.
+  const busier = [1,2,3].map(n=>({...team,id:'busy'+n,player_a:'Opponent '+n}));
+  view.rerender(<MemoryRouter><RivalryCollection rivalries={[team,...busier]} games={[...games,...busier.flatMap(item=>finishedGames(item,3))]} layout="tickets" profile={aiden.id}/></MemoryRouter>);
+  fireEvent.click(screen.getByText('Other rivalries'));
+  const row = screen.getByRole('link',{name:/Aiden and Andrew vs Max/});
+  expect(row.textContent).toContain('1–0');
 });

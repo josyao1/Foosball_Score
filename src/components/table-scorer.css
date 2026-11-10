@@ -1,0 +1,55 @@
+.live-score-panel.is-live { position: relative; }
+.table-launch, .table-tool {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 44px; padding: 5px 10px; border: 1px solid var(--line);
+  border-radius: 8px; color: var(--text); background: var(--panel); font: inherit;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.table-launch { display: flex; margin: 0 0 4px auto; }
+html[data-design] dialog.table-mode {
+  position: fixed; inset: 0; margin: 0; padding: 0; width: 100%; max-width: none;
+  height: 100dvh; max-height: none; border: 0; border-radius: 0; background: var(--bg);
+}
+.table-surface {
+  display: grid; grid-template-rows: minmax(64px,1fr) auto minmax(64px,1fr);
+  gap: 8px; height: 100%; width: 100%; overflow: auto; background: var(--bg);
+  padding: max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right))
+    max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));
+}
+.table-pads { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; }
+html[data-design] .table-pads .rung-button {
+  min-width: 0; min-height: 64px; padding: 8px 4px; display: flex; flex-flow: column nowrap;
+  justify-content: center; align-items: center; gap: 10px; text-align: center;
+  border: 1px solid var(--line); border-radius: 12px; touch-action: manipulation;
+}
+html[data-design] .table-pads .side-a { background: #252423; color: #fff9ee; }
+html[data-design] .table-pads .side-b { background: #fffaf1; color: #322b26; }
+html[data-design] .table-pads .rung-label {
+  flex: 0 1 auto; padding: 0; min-width: 0; overflow-wrap: anywhere;
+  font-size: clamp(13px, 2.5vw, 23px); line-height: 1.2; font-weight: 650;
+}
+.table-pads .rung-assignee { color: inherit; }
+.table-pads .rung-button > b { display: none; }
+html[data-design] .table-pads .rung-illustration { justify-content: center; width: 64px; max-width: 86%; color: inherit; }
+html[data-design] .table-pads .rung-illustration i, .table-pads .rung-illustration::before { background: currentColor; }
+.table-midfield { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 10px; }
+.table-score { display: flex; justify-content: center; gap: 16px; color: var(--text); }
+.table-team-score { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.table-team-score strong { font: 650 clamp(24px,4vw,40px)/1 Georgia,serif; font-variant-numeric: tabular-nums; }
+.table-team-name { font-size: 13px; overflow-wrap: anywhere; }
+.table-kit { flex: 0 0 9px; height: 9px; border: 1px solid #82766b; border-radius: 50%; }
+.table-kit.kit-a { background: black; }
+.table-kit.kit-b { background: white; }
+.table-tool:focus-visible, .table-launch:focus-visible, .table-pads button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+@media (orientation: portrait) {
+  .table-surface { gap: 6px; }
+  .table-pads { gap: 4px; }
+  .table-midfield { gap: 4px; }
+  .table-score { gap: 8px; }
+  .table-team-score { flex-wrap: wrap; justify-content: center; }
+  .table-team-name { font-size: 11px; }
+  .table-tool { flex-direction: column; gap: 2px; font-size: 10px; padding: 4px 6px; }
+}
+
+.table-dialog-score { text-align: center; margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+.table-dialog-score strong { color: var(--text); margin-inline: 6px; white-space: nowrap; }

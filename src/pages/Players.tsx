@@ -122,7 +122,11 @@ export function Players() {
   const people = useMemo(()=>playerPassports(games,rivalries,players),[games,rivalries,players]);
   const [creating,setCreating] = useState(false);
   const [tab,setTab] = useState<PassportTab>('overview');
-  const visible = profileFirst([...people].sort((a,b)=>(Date.parse(b.recent.at(-1)?.game.started_at??'')||0)-(Date.parse(a.recent.at(-1)?.game.started_at??'')||0)||a.name.localeCompare(b.name)),p=>p.key===profile||p.name.trim().toLowerCase()===profile);
+  const lastPlayed = (player: PlayerPassport) => Date.parse(player.recent.at(-1)?.game.started_at ?? '') || 0;
+  const ranked = [...people].sort((a, b) =>
+    b.wins - a.wins || lastPlayed(b) - lastPlayed(a) || a.name.localeCompare(b.name)
+  );
+  const visible = profileFirst(ranked, p => p.key === profile || p.name.trim().toLowerCase() === profile);
   return <section className="players-page">
     <header className="players-heading"><div><h1>Players</h1><p>Your table, by player.</p></div><button className="button primary" onClick={()=>setCreating(true)}><Plus size={18}/>New player</button></header>
     <p className="players-note">Your singles and team games, together.</p>

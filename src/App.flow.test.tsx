@@ -518,3 +518,32 @@ it('stamps a first achievement on the live game’s saved result ticket', async 
   expect(first.classList.contains('first-earn')).toBe(true);
   expect(within(first).queryByText(/×/)).toBeNull();
 });
+
+it('scores through the mirrored table controls and keeps the game score visible during confirmation', async () => {
+  seed({rivalries: [rivalry], games: [{...baseGame, goals: [goal]}]});
+  openApp('/game/g');
+  fireEvent.click(await screen.findByRole('button', {name: 'Full screen'}));
+  const table = within(await screen.findByRole('dialog', {name: 'Full screen scoring'}));
+  const near = within(table.getByRole('group', {name:'Near side: Ada'}));
+  const far = within(table.getByRole('group', {name:'Far side: Bea'}));
+  expect(near.getAllByRole('button').map(b=>b.getAttribute('aria-label'))).toEqual(
+    ['goalie','defender','middle','attacker'].map(rung=>`Ada ${rung} goal`)
+  );
+  expect(far.getAllByRole('button').map(b=>b.getAttribute('aria-label'))).toEqual(
+    ['attacker','middle','defender','goalie'].map(rung=>`Bea ${rung} goal`)
+  );
+  fireEvent.click(table.getByRole('button',{name:'Flip sides'}));
+  const flipped = within(table.getByRole('group',{name:'Near side: Bea'}));
+  fireEvent.click(flipped.getByRole('button',{name:'Bea defender goal'}));
+  const confirmation = within(screen.getByRole('dialog',{name:'Add goal'}));
+  expect(confirmation.getByLabelText('Current score').textContent).toContain('1 – 0');
+  fireEvent.click(confirmation.getByRole('button',{name:'Bank shot'}));
+  fireEvent.click(confirmation.getByRole('button',{name:'Add goal for Bea'}));
+  await waitFor(()=>expect(screen.queryByRole('dialog',{name:'Add goal'})).toBeNull());
+  expect(stored().games[0].goals).toHaveLength(2);
+  expect(stored().games[0].goals[1]).toMatchObject({actor_side:'b',rung:'defender',flags:['bank']});
+  expect(table.getByRole('status',{name:'Current score'}).textContent).toBe('Bea1Ada1');
+  fireEvent.click(table.getByRole('button',{name:'Exit full screen'}));
+  await waitFor(()=>expect(screen.queryByRole('dialog',{name:'Full screen scoring'})).toBeNull());
+  expect(screen.getByRole('button',{name:'Ada goalie goal'})).toBeTruthy();
+});
