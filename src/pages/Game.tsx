@@ -1,7 +1,7 @@
 import { TeamPositions } from '../components/TeamPositions';
 import { sidePlayers } from '../lib/participants';
-import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigationType, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Flag,
@@ -12,7 +12,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { WinningGameDialog } from "../components/WinningGameDialog";
-import { ScreenAwake } from "../components/ScreenAwake";
 import { GameHighlightTags } from "../components/Records";
 import { selectedMoment } from "../lib/records";
 import { gameTime } from "../lib/time";
@@ -40,6 +39,8 @@ import { ConfirmDialog } from "../components/Dialog";
 import { Momentum, RungStats, Timeline } from "../components/GameReport";
 export function GamePage() {
   const design=useDesign();
+  const location = useLocation();
+  const kickoff = useNavigationType() === "PUSH" && location.state?.kickoff === true;
   const [searchParams] = useSearchParams();
   const recordKey = searchParams.get("record");
   const watchReplay = searchParams.get("play") === "1";
@@ -63,6 +64,16 @@ export function GamePage() {
   const [lastLiveId, setLastLiveId] = useState<string | null>(null);
   const game = store.games.find((g) => g.id === id),
     r = store.rivalries.find((r) => r.id === game?.rivalry_id);
+  const panel = useRef<HTMLElement>(null);
+  const startedGame = kickoff && game && !game.ended_at ? game.id : null;
+  useEffect(() => {
+    if (!startedGame || !panel.current?.scrollIntoView) return;
+    const frame = requestAnimationFrame(() => panel.current?.scrollIntoView({
+      block: 'center',
+      behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+    }));
+    return () => cancelAnimationFrame(frame);
+  }, [startedGame]);
   useEffect(() => {
     if (id && game && !game.ended_at) setLastLiveId(id);
   }, [id, game?.ended_at]);
@@ -139,6 +150,12 @@ export function GamePage() {
     cs = score(cg.goals),
     clast = orderedGoals(cg.goals).at(-1);
 
+  const gameClock = (<div className="game-clock">
+          <Timer size={16} />
+          <span>{clock(duration(game, now))}</span>
+          <span className="clock-rule">First to 10 · win by 2</span>
+        </div>);
+
   return (
     <>
       <Link className="back-link" to={`/rivalry/${r.id}`}>
@@ -167,17 +184,15 @@ export function GamePage() {
           )}
         </span>
       </div>
-      <section className={`live-score-panel scorer-layout-${design.scorerLayout} ${live ? "is-live" : ""}`}>
-        {live && <TableScorer key={game.id} game={game} rivalry={r} scores={s} disabled={scoringDisabled}
-          onGoal={(side, rung) => beginGoal(side, rung, true)}/>}
-        <div className="game-clock">
-          <Timer size={16} />
-          <span>{clock(duration(game, now))}</span>
-          <span className="clock-rule">First to 10 · win by 2</span>
-        </div>
-        {live && <ScreenAwake key={game.id}/>}
+      <section ref={panel} className={`live-score-panel scorer-layout-${design.scorerLayout} ${live ? "is-live" : ""}`}>
+        {live ? <TableScorer key={game.id} game={game} rivalry={r} scores={s} disabled={scoringDisabled}
+          promptPaused={Boolean(draft || winningGame || confirm || removing)}
+          onGoal={(side, rung) => beginGoal(side, rung, true)}>{gameClock}</TableScorer> : gameClock}
         <div aria-live="polite" aria-atomic="true">
           <GameScoreboard
+            key={game.id}
+            kickoff={kickoff}
+            newlyFinished={!live && lastLiveId === game.id}
             rivalry={r}
             scores={s}
             designId={design.id}
@@ -308,10 +323,10 @@ export function GamePage() {
           setDismissedWin(`${acknowledged.id}:${acknowledged.revision}`);
           setWinningGame(null);
         }}
-        onRematch={next => {
+        onRematch={(next, created) => {
           if (!next.goals.length) setRematch({gameId: next.id, previous: s});
           setWinningGame(null);
-          navigate(`/game/${next.id}`);
+          navigate(`/game/${next.id}`, {state: {kickoff: created}});
         }}
       />}
       {draft && (

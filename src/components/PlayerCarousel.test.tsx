@@ -95,3 +95,13 @@ it('returns to the first visible passport when search changes the player list',(
   expect(list.scrollLeft).toBe(0);
   expect(screen.queryByRole('button',{name:'Next player'})).toBeNull();
 });
+
+it("tracks a partial swipe and lets the soccer-ball control select a passport", () => {
+  const {list, scrollTo} = mount();
+  list.scrollLeft = 160;
+  fireEvent.scroll(list);
+  expect(list.parentElement?.style.getPropertyValue("--swipe-progress")).toBe("0.25");
+  fireEvent.change(screen.getByRole("slider", {name:"Player position"}), {target:{value:"2"}});
+  expect(scrollTo).toHaveBeenCalledWith({left:640, behavior:"smooth"});
+  expect(screen.getByRole("status").textContent).toContain("3 / 3");
+});

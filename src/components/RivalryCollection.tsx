@@ -1,3 +1,4 @@
+import { CarouselTrack, updateCarouselProgress } from './CarouselTrack';
 import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, ChevronLeft, ChevronRight, Radio } from "lucide-react";
@@ -198,6 +199,7 @@ function TicketCollection({ entries }: { entries: Entry[] }) {
           if (delta < distance) { nearest = i; distance = delta; }
         }
       }
+      updateCarouselProgress(list);
       setCurrent(nearest);
     };
     sync();
@@ -248,7 +250,7 @@ function TicketCollection({ entries }: { entries: Entry[] }) {
       >
         {entries.map((entry, i) => <li key={entry.rivalry.id} aria-label={carousel ? `${i + 1} of ${entries.length}` : undefined}><Ticket entry={entry} /></li>)}
       </ul>
-
+      {carousel && <CarouselTrack index={index} count={entries.length} label="Rivalry position" controls={listId} goTo={goTo}/>}
     </div>
   );
 }
@@ -335,8 +337,8 @@ function FeaturedRivalries({ entries, profile }: { entries: Entry[]; profile: st
   const featured = entries.filter(entry =>
     entry.live || entry.teams[0].mine || entry.stats.completed >= 3
   )
-    .sort((a, b) => Number(b.live) - Number(a.live)
-      || Number(b.teams[0].mine) - Number(a.teams[0].mine)
+    .sort((a, b) => Number(b.teams[0].mine) - Number(a.teams[0].mine)
+      || Number(b.live) - Number(a.live)
       || b.stats.completed - a.stats.completed)
     .slice(0, 3);
   const selected = new Set(featured.map(entry => entry.rivalry.id));

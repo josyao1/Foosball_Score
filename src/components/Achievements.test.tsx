@@ -15,7 +15,7 @@ it('opens all twenty-two badges, distinguishes grey unearned badges, and shows r
  const trigger=screen.getByRole('button',{name:/Achievements/});
  expect(screen.queryByRole('dialog')).toBeNull();fireEvent.click(trigger);
  let dialog=screen.getByRole('dialog',{name:'Achievements'});
- expect(dialog.querySelectorAll('.achievement-tile')).toHaveLength(30);
+ expect(dialog.querySelectorAll('.achievement-tile')).toHaveLength(31);
  expect(dialog.querySelector('.achievement-tile')?.getAttribute('aria-label')).toBe('Escape artist, not earned');
  const perfect=within(dialog).getByRole('button',{name:'Perfect paper, earned'});
  expect(perfect.className).toContain('is-earned');

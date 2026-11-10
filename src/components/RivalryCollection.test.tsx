@@ -95,15 +95,15 @@ it("adapts to desktop resize and avoids carousel controls for a single ticket", 
   expect(screen.queryByText("Swipe left or right")).toBeNull();
 });
 
-it('features live, personal, then frequent matchups and lists the rest once', () => {
+it('features personal, live, then frequent matchups and lists the rest once', () => {
   const items = [...rivalries, {...rivalries[0], id:'four', player_a:'Friend'},
     {...rivalries[1], id:'five', player_a:'Guest'}];
   const games = items.flatMap((item,i) => finishedGames(item, [1,4,5,1,1][i]));
   games.push({...games[0], id:'live', rivalry_id:'five', ended_at:null});
   render(<MemoryRouter><RivalryCollection rivalries={items} games={games} profile="player 1" layout="tickets"/></MemoryRouter>);
   const tickets = screen.getAllByRole('article');
-  expect(tickets.map(card=>card.getAttribute('aria-label'))).toEqual(['Guest vs Player 4','Player 1 vs Player 2','Player 5 vs Player 6']);
-  expect(within(tickets[0]).getByRole('link',{name:'Resume game'}).getAttribute('href')).toBe('/game/live');
+  expect(tickets.map(card=>card.getAttribute('aria-label'))).toEqual(['Player 1 vs Player 2','Guest vs Player 4','Player 5 vs Player 6']);
+  expect(within(tickets[1]).getByRole('link',{name:'Resume game'}).getAttribute('href')).toBe('/game/live');
   expect(within(within(tickets[2]).getByRole('region',{name:'Recent games'})).getAllByRole('link')).toHaveLength(2);
   const details = screen.getByText('Other rivalries').closest('details')!;
   expect(details.open).toBe(false);

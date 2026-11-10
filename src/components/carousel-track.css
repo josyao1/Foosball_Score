@@ -1,0 +1,16 @@
+.carousel-ball-track { position: relative; height: 28px; margin-inline: 4px; }
+.carousel-ball-track > span {
+  position: absolute; top: 50%; inset-inline: 9px; height: 2px;
+  background: var(--line); border-radius: 2px; pointer-events: none;
+}
+.carousel-ball-track .goal-ball {
+  position: absolute; top: 50%; left: calc(100% * var(--swipe-progress, 0)); transform: translate(-50%, -50%);
+}
+.carousel-ball-track input[type="range"] {
+  position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; margin: 0;
+  opacity: 0; cursor: pointer;
+}
+.carousel-ball-track:has(input:focus-visible) { outline: 2px solid var(--text); border-radius: 5px; }
+@media (prefers-reduced-motion: no-preference) {
+  .carousel-ball-track .goal-ball { transform: translate(-50%, -50%) rotate(calc(360deg * var(--swipe-progress, 0))); }
+}

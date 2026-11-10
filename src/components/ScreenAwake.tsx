@@ -1,13 +1,12 @@
 import { Sun, Moon } from 'lucide-react';
-import { useScreenWakeLock } from '../lib/useScreenWakeLock';
+import type { useScreenWakeLock } from '../lib/useScreenWakeLock';
 import type { WakeLockStatus } from '../lib/useScreenWakeLock';
 const labels: Record<WakeLockStatus, string> = {
   active: 'Screen awake', requesting: 'Keeping screen awake…', off: 'Normal screen timeout',
   hidden: 'Screen lock paused', released: 'Screen may sleep', unavailable: 'Screen may sleep',
   unsupported: 'Keep-awake unavailable', inactive: 'Normal screen timeout',
 };
-export function ScreenAwake() {
-  const { status, enabled, setEnabled, retry } = useScreenWakeLock(true);
+export function ScreenAwake({status, enabled, setEnabled, retry}: ReturnType<typeof useScreenWakeLock>) {
   const needsRetry = status === 'released' || status === 'unavailable';
   const needsAttention = needsRetry || status === 'off';
   return <div className={`screen-awake-control${needsAttention ? ' screen-awake-warning' : ''}`}>

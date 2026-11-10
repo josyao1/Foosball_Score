@@ -26,6 +26,11 @@ export function winner(game: Game): Side | null {
 }
 export const isWinningScore = (s: Record<Side, number>) =>
   Math.max(s.a, s.b) >= 10 && Math.abs(s.a - s.b) >= 2;
+export function matchPointSide(scores: Record<Side, number>): Side | null {
+  if (scores.a === scores.b || isWinningScore(scores)) return null;
+  const leader = scores.a > scores.b ? 'a' : 'b';
+  return isWinningScore({ ...scores, [leader]: scores[leader] + 1 }) ? leader : null;
+}
 export const clock = (ms: number) => {
   const seconds = Math.max(0, Math.floor(ms / 1000));
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;

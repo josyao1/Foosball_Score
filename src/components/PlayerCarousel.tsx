@@ -1,3 +1,4 @@
+import { CarouselTrack, updateCarouselProgress } from './CarouselTrack';
 import { useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -35,6 +36,7 @@ export function PlayerCarousel({ entries }: { entries: {id:string;content:ReactN
           if (delta < distance) { nearest = i; distance = delta; }
         }
       }
+      updateCarouselProgress(list);
       setCurrent(nearest);
     };
     list.scrollLeft = 0;
@@ -86,7 +88,7 @@ export function PlayerCarousel({ entries }: { entries: {id:string;content:ReactN
       >
         {entries.map((entry, i) => <li key={entry.id} aria-label={carousel ? `${i + 1} of ${entries.length}` : undefined}>{entry.content}</li>)}
       </ul>
-
+      {carousel && <CarouselTrack index={index} count={entries.length} label="Player position" controls={listId} goTo={goTo}/>}
     </div>
   );
 }

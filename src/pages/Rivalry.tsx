@@ -38,15 +38,16 @@ export function RivalryPage() {
       return;
     }
     try {
+      const newId = crypto.randomUUID();
       const g = await store.saveGame({
-        id: crypto.randomUUID(),
+        id: newId,
         rivalry_id: r!.id,
         started_at: new Date().toISOString(),
         ended_at: null,
         revision: 0,
         goals: [],
       });
-      navigate(`/game/${g.id}`);
+      navigate(`/game/${g.id}`, {state: {kickoff: g.id === newId}});
     } catch {
       /* Store displays the error. */
     }

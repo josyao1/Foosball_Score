@@ -35,6 +35,7 @@ export const ACHIEVEMENTS = [
   {id:'lunchBreak',name:'Lunch break',requirement:'Win 4 games within 30 minutes, from the first game’s start to the fourth win’s finish. Losses in between are allowed.',color:'#a67c4b'},
   {id:'ethical',name:'Ethical game',requirement:'Win a game where every goal by either side is regular.',color:'#527856'},
   {id:'hardCarry',name:'Hard carry',requirement:'Win with a teammate and personally score every point your team earns.',color:'#94653e'},
+  {id:'droughtQuencher',name:'Drought quencher',requirement:'Win after your side goes at least 2 minutes without scoring, from kickoff through the final goal.',color:'#39828b'},
 ] as const;
 export type AchievementId=typeof ACHIEVEMENTS[number]['id'];
 export type AchievementHistory=Partial<Record<AchievementId,Game[]>>;
@@ -45,12 +46,15 @@ export function earnedAchievements(game:Game,side:Side,h=gameHighlights(game),ri
   const earned=new Set<AchievementId>();
   const opponent=otherSide(side);
   const validWin=h.moments.quickest?.side===side;
+  let lastPointMs = 0, hadDrought = false;
   let saved=0,own=0,run=0,lastRung:Rung|null=null;
   let opponentRun=0,brokeRun=false,specialRun=0;
   let recentRungs:Rung[]=[];
   const specialTypes=new Set<string>();
   h.goals.forEach((goal,i)=>{
     const scored=creditedSide(goal)===side;
+    if (goal.elapsed_ms - lastPointMs >= 120_000) hadDrought = true;
+    if (scored) lastPointMs = goal.elapsed_ms;
     const ownGoal=goal.flags.includes('own_goal');
     if(scored){
       specialRun=goal.flags.some(flag=>['dunk','bank','own_goal'].includes(flag)) ? specialRun+1 : 0;
@@ -86,6 +90,7 @@ export function earnedAchievements(game:Game,side:Side,h=gameHighlights(game),ri
   if (specialTypes.size===4) earned.add('fullHouse');
   if (h.goals.length>=10 && h.goals.slice(1,10).every((goal,i)=>creditedSide(goal)!==creditedSide(h.goals[i]))) earned.add('trading');
   if (validWin) {
+    if (hadDrought) earned.add('droughtQuencher');
     if (h.goals.every(goal => goal.flags.length === 0)) earned.add('ethical');
     if(rivalry){
       const members=sidePlayers(rivalry,side);

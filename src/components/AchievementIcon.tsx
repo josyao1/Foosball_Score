@@ -31,6 +31,7 @@ export function AchievementIcon({id}:{id:AchievementId}) {
     sixtySeven:<><path d="M20 12c-9-2-12 7-12 15s13 11 13 2-13-9-13-1M28 12h13L30 38"/></>,
     fourTwenty:<><path d="M24 41V26M24 32C17 33 11 31 7 27l11 1C10 24 7 18 6 12c8 3 12 8 15 14C18 17 20 9 24 5c4 4 6 12 3 21 3-6 7-11 15-14-1 6-4 12-12 16l11-1c-4 4-10 6-17 5z"/></>,
     ethical:<><path d="M13 23v-8l11-5 11 5v8c0 8-7 14-11 16-4-2-11-8-11-16Z"/><path d="m18 24 4 4 8-9"/></>,
+    droughtQuencher:<><path d="M24 6s-9 11-9 17a9 9 0 0 0 18 0c0-6-9-17-9-17Z M20 24q0 4 4 4 M7 37h12l4-3 3 6 4-3h11"/></>,
     hardCarry:<><path d="M8 30h32M12 26v8m24-8v8M19 39l3-9m7 9-3-9M17 24l5-5h5l5 5"/><circle cx="24" cy="13" r="4"/><path d="m9 18 2-4 2 4m22 0 2-4 2 4"/></>,
     lunchBreak:<><path d="M9 18h30v23H9zM17 18v-6h14v6M9 26h30M21 24h6v4h-6z"/><circle cx="34" cy="12" r="8"/><path d="M34 7v5l4 2"/></>,
   }[id];

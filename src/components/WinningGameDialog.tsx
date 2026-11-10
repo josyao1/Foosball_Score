@@ -9,7 +9,7 @@ import type { Game, Rivalry } from '../lib/types';
 import './winning-game.css';
 
 export function WinningGameDialog({snapshot,rivalry,onClose,onRematch}: {
- snapshot:Game; rivalry:Rivalry; onClose:(game:Game)=>void; onRematch:(game:Game)=>void;
+ snapshot:Game; rivalry:Rivalry; onClose:(game:Game)=>void; onRematch:(game:Game, created:boolean)=>void;
 }) {
  const store = useStore();
  const latestStore = useRef(store);
@@ -54,12 +54,12 @@ export function WinningGameDialog({snapshot,rivalry,onClose,onRematch}: {
    // Finishing and creating are separate guarded saves. If creation fails, the
    // result remains saved and this dialog offers a retry without finishing twice.
    const active = latestStore.current.games.find(g => g.rivalry_id === snapshot.rivalry_id && g.id !== snapshot.id && !g.ended_at);
-   if (active) { onRematch(active); return; }
+   if (active) { onRematch(active,false); return; }
    if (!nextGame.current) nextGame.current = {
     id:crypto.randomUUID(),rivalry_id:snapshot.rivalry_id,started_at:new Date().toISOString(),ended_at:null,revision:0,goals:[],
    };
    const created = await latestStore.current.saveGame(nextGame.current);
-   if (mounted.current) onRematch(created);
+   if (mounted.current) onRematch(created,created.id === nextGame.current.id);
   } catch (e) {
    if (mounted.current) setError(e instanceof Error ? e.message : 'Could not save. Please try again.');
   } finally {

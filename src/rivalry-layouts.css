@@ -210,9 +210,9 @@
     scroll-snap-type: x mandatory;
     scroll-padding-inline: 4px;
     padding: 4px 4px 12px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--line) transparent;
+    scrollbar-width: none;
   }
+  .rc-ticket-carousel-list::-webkit-scrollbar { display: none; }
   .rc-ticket-carousel-list > li { scroll-snap-align: start; min-width: 0; }
   .rc-ticket-carousel .rc-ticket-single { grid-auto-columns: 100%; }
   .rc-ticket-carousel-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; color: var(--muted); font-size: 11px; }

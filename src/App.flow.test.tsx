@@ -313,6 +313,7 @@ it('saves the result and immediately opens one fresh rematch', async()=>{
  await waitFor(()=>expect(stored().games).toHaveLength(2));
  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
  expect(await screen.findByRole('heading',{name:'Live game'})).toBeTruthy();
+ expect(screen.getAllByRole('button',{name:'Full screen'})).toHaveLength(1);
  const old=stored().games.find(g=>g.id==='g')!,next=stored().games.find(g=>g.id!=='g')!;
  expect(old.ended_at).not.toBeNull();
  expect(old.goals).toHaveLength(18);
@@ -546,4 +547,61 @@ it('scores through the mirrored table controls and keeps the game score visible 
   fireEvent.click(table.getByRole('button',{name:'Exit full screen'}));
   await waitFor(()=>expect(screen.queryByRole('dialog',{name:'Full screen scoring'})).toBeNull());
   expect(screen.getByRole('button',{name:'Ada goalie goal'})).toBeTruthy();
+});
+
+it('keeps the active wake lock while opening and closing full-screen scoring', async () => {
+  const previous = Object.getOwnPropertyDescriptor(navigator, 'wakeLock');
+  const locks: {release: ReturnType<typeof vi.fn>}[] = [];
+  const request = vi.fn(async () => {
+    const lock = Object.assign(new EventTarget(), {released: false, release: vi.fn(async () => {})});
+    locks.push(lock);
+    return lock;
+  });
+  Object.defineProperty(navigator, 'wakeLock', {configurable:true, value:{request}});
+  try {
+    seed({rivalries:[rivalry], games:[baseGame]});
+    const view = openApp('/game/g');
+    await screen.findByText('Screen awake');
+    const held = locks.at(-1)!;
+    const requests = request.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', {name:'Full screen'}));
+    const table = await screen.findByRole('dialog', {name:'Full screen scoring'});
+    fireEvent.click(within(table).getByRole('button', {name:'Exit full screen'}));
+    await waitFor(() => expect(table.hasAttribute('open')).toBe(false));
+    expect(held.release).not.toHaveBeenCalled();
+    expect(request).toHaveBeenCalledTimes(requests);
+    view.unmount();
+    expect(held.release).toHaveBeenCalledOnce();
+  } finally {
+    if (previous) Object.defineProperty(navigator, 'wakeLock', previous);
+    else Reflect.deleteProperty(navigator, 'wakeLock');
+  }
+});
+
+it('lets a scorer dismiss a declined wake lock and activate it on a later full-screen visit', async () => {
+  const previous = Object.getOwnPropertyDescriptor(navigator, 'wakeLock');
+  const request = vi.fn().mockRejectedValue(new Error('Power saving'));
+  Object.defineProperty(navigator, 'wakeLock', {configurable:true, value:{request}});
+  try {
+    seed({rivalries:[rivalry], games:[baseGame]});
+    openApp('/game/g');
+    await screen.findByText('Screen may sleep');
+    fireEvent.click(screen.getByRole('button', {name:'Full screen'}));
+    const prompt = await screen.findByRole('dialog', {name:'Keep screen awake?'});
+    fireEvent.click(within(prompt).getByRole('button', {name:'Dismiss'}));
+    expect(screen.queryByRole('dialog', {name:'Keep screen awake?'})).toBeNull();
+    fireEvent.click(screen.getByRole('button', {name:'Exit full screen'}));
+    await waitFor(() => expect(screen.queryByRole('dialog', {name:'Full screen scoring'})).toBeNull());
+    fireEvent.click(screen.getByRole('button', {name:'Full screen'}));
+    const reopened = await screen.findByRole('dialog', {name:'Keep screen awake?'});
+    request.mockResolvedValue(Object.assign(new EventTarget(), {released:false, release:async () => {}}));
+    fireEvent.click(within(reopened).getByRole('button', {name:'Turn on'}));
+    await waitFor(() => expect(screen.queryByRole('dialog', {name:'Keep screen awake?'})).toBeNull());
+    const table = within(screen.getByRole('dialog', {name:'Full screen scoring'}));
+    expect(table.queryByText('Screen awake')).toBeNull();
+    expect(table.getByRole('button',{name:'Ada goalie goal'})).toBeTruthy();
+  } finally {
+    if (previous) Object.defineProperty(navigator, 'wakeLock', previous);
+    else Reflect.deleteProperty(navigator, 'wakeLock');
+  }
 });

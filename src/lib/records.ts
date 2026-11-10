@@ -1,4 +1,4 @@
-import { creditedSide, isWinningScore, orderedGoals, score, winner } from './stats';
+import { creditedSide, isWinningScore, matchPointSide, orderedGoals, score, winner } from './stats';
 import { RUNGS, otherSide } from './types';
 import type { Game, Side } from './types';
 
@@ -40,11 +40,8 @@ export function gameHighlights(game: Game) {
     lastTime = goal.elapsed_ms;
     const after = { ...before, [side]: before[side] + 1 };
     scores.push(after);
-    if (!isWinningScore(after)) {
-      for (const candidate of ['a', 'b'] as const) {
-        if (isWinningScore({...after, [candidate]: after[candidate] + 1})) hadMatchPoint[candidate] = true;
-      }
-    }
+    const matchPoint = matchPointSide(after);
+    if (matchPoint) hadMatchPoint[matchPoint] = true;
     if (i < goals.length - 1 && isWinningScore(after)) wonBeforeLast = true;
     if (after.a === 9 && after.b === 9) reachedDeuce = true;
     const leader = after.a === after.b ? null : after.a > after.b ? 'a' : 'b';

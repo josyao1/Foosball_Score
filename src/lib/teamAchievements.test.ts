@@ -55,3 +55,17 @@ it('credits Hard carry only to the teammate personally responsible for every win
   g.goals[9].actor_side='b';g.goals[9].flags=['own_goal'];
   expect(earners()).toEqual([]);
 });
+
+it('uses a two-minute team scoring drought through the last goal of a regulation win', () => {
+  const g = game();
+  expect(earned(g)).not.toContain('droughtQuencher'); // Teammates alternate duties with no team drought.
+  g.goals.slice(5).forEach(goal => {goal.elapsed_ms += 89_999;});
+  expect(earned(g)).not.toContain('droughtQuencher');
+  g.goals.slice(5).forEach(goal => {goal.elapsed_ms += 1;});
+  expect(playerPassports([g],[r]).filter(p=>p.achievements.droughtQuencher).map(p=>p.name).sort()).toEqual(['Brooks','Josh']);
+  expect(earned({...g,ended_at:null})).not.toContain('droughtQuencher');
+  g.goals[5].actor_side = 'b';
+  g.goals[5].flags = ['own_goal'];
+  g.goals[5].elapsed_ms -= 1;
+  expect(earned(g)).not.toContain('droughtQuencher');
+});

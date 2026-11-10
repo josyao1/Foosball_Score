@@ -3,6 +3,7 @@ import {
   score,
   winner,
   isWinningScore,
+  matchPointSide,
   rivalryStats,
   gameStats,
   clock,
@@ -28,6 +29,15 @@ const game = (sides: Side[], n = 0, complete = true): Game => ({
   goals: goals(sides),
 });
 describe("scoring", () => {
+  it('shows match point one goal before a legal win, including overtime', () => {
+    expect(matchPointSide({a:9,b:0})).toBe('a');
+    expect(matchPointSide({a:8,b:9})).toBe('b');
+    expect(matchPointSide({a:9,b:9})).toBeNull();
+    expect(matchPointSide({a:10,b:9})).toBe('a');
+    expect(matchPointSide({a:12,b:13})).toBe('b');
+    expect(matchPointSide({a:10,b:8})).toBeNull();
+    expect(matchPointSide({a:7,b:8})).toBeNull();
+  });
   it("credits own goals to the opponent, retaining the actor rung", () => {
     const g = goals(["a", "a"]);
     g[1].flags = ["own_goal"];

@@ -1,4 +1,7 @@
+import { MatchPointNumber } from "./MatchPointNumber";
 import type { Rivalry, Side } from '../lib/types';
+import { matchPointSide } from '../lib/stats';
+import { GoalBall } from './GoalBall';
 import '../game-scoreboards.css';
 
 type Props = {
@@ -8,6 +11,8 @@ type Props = {
   live: boolean;
   pulse?: {id: string; side: Side};
   rematchFrom?: Record<Side, number>;
+  kickoff?: boolean;
+  newlyFinished?: boolean;
   achievementStrip?: React.ReactNode;
 };
 const SIDES: Side[] = ['a', 'b'];
@@ -20,7 +25,7 @@ function Person({ side }: { side: Side }) {
 }
 
 /** Score presentations intentionally use different document structures, not palette swaps. */
-export function GameScoreboard({ rivalry, scores, designId, live, pulse, rematchFrom, achievementStrip }: Props) {
+export function GameScoreboard({ rivalry, scores, designId, live, pulse, rematchFrom, achievementStrip, kickoff, newlyFinished }: Props) {
   const name = (side: Side) => side === 'a' ? rivalry.player_a : rivalry.player_b;
   const status = live ? 'Current score' : 'Final score';
   const label = `${status}: ${rivalry.player_a}, black, ${scores.a}; ${rivalry.player_b}, white, ${scores.b}`;
@@ -50,9 +55,24 @@ export function GameScoreboard({ rivalry, scores, designId, live, pulse, rematch
     case 'arcade':
       content = <><div className="gs-arcade-panels">{SIDES.map(side => <article className={`gs-digital-panel gs-digital-${side}`} key={side}><div className="gs-digital-label"><Kit side={side}/><span>Goals</span></div><div className="gs-digital-display">{number(side, true)}</div><strong className="gs-name">{name(side)}</strong></article>)}</div><p className="gs-status"><span className={live ? 'gs-live-lamp' : 'gs-final-lamp'} aria-hidden="true"/>{status}</p></>;
       break;
-    case 'clay':
-      content = <div className="gs-ticket"><header><span>{status}</span><span className="gs-ticket-mark" aria-hidden="true">▥</span></header><div className="gs-ticket-body">{SIDES.map(side => <div key={side}><Kit side={side}/>{number(side)}<strong className="gs-name">{name(side)}</strong></div>)}</div><footer><span>Black {scores.a}</span><span>White {scores.b}</span></footer>{achievementStrip}</div>;
+    case 'clay': {
+      const point = live ? matchPointSide(scores) : null;
+      content = <div className="gs-ticket"><header><span>{status}</span><span className="gs-ticket-mark" aria-hidden="true">▥</span></header><div className="gs-ticket-body">
+        {SIDES.map(side => <div key={side}>
+          <span className="gs-ticket-kit"><Kit side={side}/>
+            {point === side && <small className="match-point-label">Match point</small>}
+          </span>
+          <MatchPointNumber active={point === side}>{number(side)}</MatchPointNumber>
+          <strong className="gs-name">{name(side)}</strong>
+        </div>)}
+        {live && <span className="gs-ball-seat" aria-hidden="true">
+          <span className={kickoff ? 'gs-kickoff-roll' : undefined}><GoalBall size={19}/></span>
+        </span>}
+      </div><footer><span>Black {scores.a}</span>
+        {!live && <span aria-hidden="true" className={`gs-final-stamp${newlyFinished ? ' just-finished' : ''}`}>Final</span>}
+        <span>White {scores.b}</span></footer>{achievementStrip}</div>;
       break;
+    }
     case 'blueprint':
       content = <div className="gs-schematic"><div className="gs-schematic-title">{status}<span aria-hidden="true">┼</span></div><table><thead><tr><th scope="col">Position</th>{SIDES.map(side => <th scope="col" key={side}><Kit side={side}/></th>)}</tr></thead><tbody><tr><th scope="row">Player</th>{SIDES.map(side => <td key={side} className="gs-schematic-name">{name(side)}</td>)}</tr><tr><th scope="row">Goals</th>{SIDES.map(side => <td key={side}>{number(side)}</td>)}</tr></tbody></table></div>;
       break;
