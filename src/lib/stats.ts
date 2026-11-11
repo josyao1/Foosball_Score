@@ -38,7 +38,7 @@ export const clock = (ms: number) => {
 export const duration = (g: Game, now = Date.now()) =>
   Math.max(
     0,
-    (g.ended_at ? Date.parse(g.ended_at) : now) - Date.parse(g.started_at),
+    (g.paused_at ? Date.parse(g.paused_at) : g.ended_at ? Date.parse(g.ended_at) : now) - Date.parse(g.started_at) - (g.paused_ms ?? 0),
   );
 // Aggregate before rounding; a delayed Finish tap is not playing time.
 export const playingTime = (games: Game[]) => games.reduce((total, game) =>

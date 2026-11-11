@@ -102,6 +102,10 @@ it('defaults to a short overview and switches every passport together by keyboar
  expect(screen.getByRole('article',{name:'Josh passport'}).querySelector('.passport-winrate strong')?.textContent).toBe('100%');
  fireEvent.keyDown(josh.getByRole('tab',{name:/Badges/}),{key:'Home'});
  expect(josh.getByRole('region',{name:'Recent form'})).toBeTruthy();
+ fireEvent.keyDown(josh.getByRole('tab',{name:'Overview'}),{key:'End'});
+ expect(josh.getByRole('tab',{name:'Recent games'}).getAttribute('aria-selected')).toBe('true');
+ fireEvent.keyDown(josh.getByRole('tab',{name:'Recent games'}),{key:'ArrowRight'});
+ expect(josh.getByRole('tab',{name:'Overview'}).getAttribute('aria-selected')).toBe('true');
 });
 
 it('shows earned colored mastery highlights on Overview and opens the shared badges page',()=>{
@@ -122,6 +126,8 @@ it('keeps the viewport and selected player in place when a tab change causes a b
  const list=screen.getByRole('list',{name:'Players'});
  list.scrollLeft=320;
  // Model a browser layout adjustment between the click and the committed panel.
+ const tabs=within(passport).getByRole('tablist');
+ vi.spyOn(tabs,'getBoundingClientRect').mockReturnValueOnce({top:100} as DOMRect).mockReturnValue({top:700} as DOMRect);
  vi.spyOn(window,'scrollY','get').mockReturnValueOnce(600).mockReturnValue(0);
  vi.spyOn(window,'scrollX','get').mockReturnValue(0);
  const scroll=vi.spyOn(window,'scrollTo').mockImplementation(()=>{});
@@ -129,6 +135,33 @@ it('keeps the viewport and selected player in place when a tab change causes a b
  expect(scroll).toHaveBeenCalledWith({left:0,top:600,behavior:'instant'});
  expect(list.scrollLeft).toBe(320);
  expect(within(passport).getByRole('region',{name:'IXL mastery badges'})).toBeTruthy();
+});
+it('anchors the clicked tab row when shorter panels move a later desktop row upward',()=>{
+ fixture.games=[game];fixture.rivalries=[rivalry];
+ render(<MemoryRouter><Players/></MemoryRouter>);
+ const passport=screen.getByRole('article',{name:'Josh passport'});
+ vi.spyOn(window,'scrollY','get').mockReturnValue(600);
+ vi.spyOn(window,'scrollX','get').mockReturnValue(0);
+ const tabs=within(passport).getByRole('tablist');
+ vi.spyOn(tabs,'getBoundingClientRect').mockReturnValueOnce({top:100} as DOMRect).mockReturnValue({top:40} as DOMRect);
+ const scroll=vi.spyOn(window,'scrollTo').mockImplementation(()=>{});
+ fireEvent.click(within(passport).getByRole('tab',{name:'Scoring'}));
+ expect(scroll).toHaveBeenCalledWith({left:0,top:540,behavior:'instant'});
+});
+it('shows each player’s latest five finished games newest first in the fourth tab',()=>{
+ fixture.rivalries=[rivalry];
+ fixture.games=Array.from({length:7},(_,i)=>({...game,id:`recent-${i}`,started_at:new Date(Date.parse(game.started_at)+i*86400000).toISOString(),ended_at:new Date(Date.parse(game.ended_at!)+i*86400000).toISOString()}));
+ fixture.games.push({...game,id:'live',ended_at:null});
+ render(<MemoryRouter><Players/></MemoryRouter>);
+ const josh=within(screen.getByRole('article',{name:'Josh passport'}));
+ fireEvent.click(josh.getByRole('tab',{name:'Recent games'}));
+ const rows=within(josh.getByRole('list',{name:'Recent games'})).getAllByRole('link');
+ expect(rows.map(link=>link.getAttribute('href'))).toEqual(['6','5','4','3','2'].map(i=>`/game/recent-${i}`));
+ expect(rows[0].textContent).toContain('Brooks');
+ expect(rows[0].textContent).toContain('10:00');
+ expect(josh.getAllByRole('tab')).toHaveLength(4);
+ const brooks=within(screen.getByRole('article',{name:'Brooks passport'}));
+ expect(within(brooks.getByRole('list',{name:'Recent games'})).getAllByRole('link')[0].textContent).toContain('Loss');
 });
 it('moves keyboard focus between tabs without requesting a scroll',()=>{
  fixture.games=[game];fixture.rivalries=[rivalry];
@@ -138,4 +171,20 @@ it('moves keyboard focus between tabs without requesting a scroll',()=>{
  const focus=vi.spyOn(scoring,'focus');
  fireEvent.keyDown(within(passport).getByRole('tab',{name:'Overview'}),{key:'ArrowRight'});
  expect(focus).toHaveBeenCalledWith({preventScroll:true});
+});
+
+it('identifies each player’s teammate in recent team games and uses result balls',()=>{
+ const player=(name:string)=>({id:name.toLowerCase(),name,created_at:'2026-01-01'});
+ fixture.rivalries=[{...rivalry,player_a:'Josh and Brooks',player_b:'Andrew and Max',members:{a:[player('Josh'),player('Brooks')],b:[player('Andrew'),player('Max')]}}];
+ fixture.games=[game];
+ render(<MemoryRouter><Players/></MemoryRouter>);
+ const josh=within(screen.getByRole('article',{name:'Josh passport'}));
+ fireEvent.click(josh.getByRole('tab',{name:'Recent games'}));
+ const row=josh.getByRole('list',{name:'Recent games'});
+ expect(row.textContent).toContain('vs Andrew and Max');
+ expect(row.textContent).toContain('with Brooks');
+ expect(row.querySelector('.result-W .goal-ball')).toBeTruthy();
+ const andrew=within(screen.getByRole('article',{name:'Andrew passport'})).getByRole('list',{name:'Recent games'});
+ expect(andrew.textContent).toContain('with Max');
+ expect(andrew.querySelector('.result-L .goal-ball')).toBeTruthy();
 });

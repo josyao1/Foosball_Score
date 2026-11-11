@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { HallOfFame } from './HallOfFame';
 import { App } from '../App';
@@ -15,7 +15,7 @@ beforeEach(() => {
   Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, value: function (this: HTMLDialogElement) { this.open = true; } });
   Object.defineProperty(HTMLDialogElement.prototype, 'close', { configurable: true, value: function (this: HTMLDialogElement) { if (this.open) { this.open = false; this.dispatchEvent(new Event('close')); } } });
 });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); fixture.games = []; });
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); fixture.games = []; });
 it('ranks posters, uses real momentum, and keeps replay, details and formula actions separate', () => {
   fixture.games = [game('shutout', 'aaaaaaaaaa'), game('comeback', 'ababababbbbbb' + 'aaaaaaa')];
   const { container } = render(<MemoryRouter><HallOfFame/></MemoryRouter>);
@@ -23,7 +23,7 @@ it('ranks posters, uses real momentum, and keeps replay, details and formula act
   expect(posters[0].getAttribute('aria-label')).toBe('Rank 1: Josh versus Brooks');
   expect(within(posters[0]).getByRole('link', { name: /View game/ }).getAttribute('href')).toBe('/game/comeback');
   expect(within(posters[0]).getByText('Josh recovered from 4–9')).toBeTruthy();
-  expect(within(posters[0]).getByRole('link', { name: /Play replay/ }).getAttribute('href')).toBe('/game/comeback?play=1#momentum');
+  expect(within(posters[0]).getByRole('button', { name: /Play replay/ })).toBeTruthy();
   expect(within(posters[0]).getByText('10:00 AM PST')).toBeTruthy();
   expect(within(posters[0]).getByRole('img').getAttribute('aria-label')).toContain('3:20');
   const paths = container.querySelectorAll('.hall-trace');
@@ -44,6 +44,45 @@ it('ranks posters, uses real momentum, and keeps replay, details and formula act
   expect(within(dialog).getByText('Close finish')).toBeTruthy();
   fireEvent.click(within(dialog).getByRole('button', { name: 'Close dialog' }));
   expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+it('replays inside the poster with timed scores, markers, pause, resume and restart',()=>{
+  let now=0,id=0;
+  const frames=new Map<number,FrameRequestCallback>();
+  vi.spyOn(performance,'now').mockImplementation(()=>now);
+  vi.stubGlobal('requestAnimationFrame',(cb:FrameRequestCallback)=>{frames.set(++id,cb);return id;});
+  vi.stubGlobal('cancelAnimationFrame',(key:number)=>frames.delete(key));
+  const advance=(ms:number)=>{now+=ms;act(()=>{const pending=[...frames.values()];frames.clear();pending.forEach(cb=>cb(now));});};
+  fixture.games=[game('comeback','ababababbbbbb'+'aaaaaaa')];
+  const view=render(<MemoryRouter><HallOfFame/></MemoryRouter>);
+  const poster=screen.getByRole('article');
+  const values=()=>Array.from(poster.querySelectorAll('.hall-contender > strong')).map(el=>el.textContent);
+  expect(values()).toEqual(['11','9']);
+  expect(poster.querySelector('.hall-low-marker title')?.textContent).toContain('4–9');
+  expect(poster.querySelector('.hall-win-marker')).toBeTruthy();
+  fireEvent.click(within(poster).getByRole('button',{name:/Play replay/}));
+  expect(values()).toEqual(['0','0']);
+  expect(poster.querySelector('.hall-win-marker')).toBeNull();
+  advance(625); // 10 seconds at 16×: first goal.
+  expect(values()).toEqual(['1','0']);
+  expect(poster.querySelector('.hall-axis time')?.textContent).toBe('0:10');
+  expect(poster.querySelector('.hall-replay-cursor')).toBeTruthy();
+  fireEvent.click(within(poster).getByRole('button',{name:/Pause replay/}));
+  advance(2000);
+  expect(values()).toEqual(['1','0']);
+  fireEvent.click(within(poster).getByRole('button',{name:/Play replay/}));
+  advance(7500); // 2:10: winning side's low point.
+  expect(values()).toEqual(['4','9']);
+  expect(poster.querySelector('.hall-low-marker')).toBeTruthy();
+  expect(poster.querySelector('.hall-win-marker')).toBeNull();
+  advance(5000);
+  expect(values()).toEqual(['11','9']);
+  expect(poster.querySelector('.hall-win-marker')).toBeTruthy();
+  expect(frames.size).toBe(0);
+  fireEvent.click(within(poster).getByRole('button',{name:/Play replay/}));
+  expect(values()).toEqual(['0','0']);
+  view.unmount();
+  expect(frames.size).toBe(0);
 });
 it('shows a useful empty state without inventing ranked data', () => {
   fixture.games = [game('early', 'aba')];

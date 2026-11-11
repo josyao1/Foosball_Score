@@ -1,0 +1,36 @@
+.backlog-page{max-width:960px;margin-inline:auto}
+.backlog-page .page-heading{margin-block:24px 32px}
+.backlog-page section+section{margin-top:36px}
+.backlog-page h2{font-size:1.5rem;margin:0 0 16px}
+.backlog-page h2 small{font-size:.9rem;font-weight:400;opacity:.65;margin-left:8px}
+.backlog-list{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--panel)}
+.backlog-entry{padding:22px 24px;min-width:0}
+.backlog-entry+.backlog-entry{border-top:1px solid var(--line)}
+.backlog-entry:target{box-shadow:inset 4px 0 var(--text)}
+.backlog-entry-head{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.backlog-entry-head>div:first-child{min-width:0}
+.backlog-entry h3{font-family:inherit;font-weight:600;font-size:1.05rem;overflow-wrap:anywhere;margin:0 0 8px}
+.backlog-entry h3 a{color:inherit}
+.backlog-entry p{margin:6px 0;font-size:.9rem}
+.backlog-entry small{font-size:.78rem}
+.backlog-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.backlog-actions .button{min-height:44px;padding:9px 14px;font-size:.85rem}
+.backlog-actions .icon-button{min-width:44px;min-height:44px}
+.backlog-game-info{display:flex;align-items:center;gap:18px;margin:10px 0}
+.backlog-game-info strong{font-variant-numeric:tabular-nums;white-space:nowrap;font-size:1.2rem}
+.backlog-game-info span{font-size:.85rem}
+.backlog-game-info small{display:block;margin-top:4px;opacity:.75}
+.backlog-note{opacity:.75}
+.backlog-children{margin-top:16px;border-top:1px dashed var(--line);padding-top:12px}
+.backlog-children summary{cursor:pointer;font-size:.85rem}
+.backlog-children>div{max-height:300px;overflow-y:auto;overscroll-behavior:contain}
+.backlog-child{padding:8px 0;border-bottom:1px solid var(--line)}
+.backlog-notice{padding:12px 0;color:var(--text)}
+@media(max-width:540px){
+ .backlog-entry{padding:16px}
+ .backlog-entry-head{align-items:flex-start;gap:10px}
+ .backlog-entry h3{font-size:.95rem}
+ .backlog-actions{flex-direction:column;gap:0}
+ .backlog-game-info{gap:10px;align-items:flex-start}
+ .backlog-game-info span{font-size:.75rem}
+}

@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import type { Game, Data } from "./types";
+import type { Game, Data, BacklogData } from "./types";
 import type { Repository } from "./storage";
 import { validateNames } from "./storage";
 const url = import.meta.env.VITE_SUPABASE_URL?.trim();
@@ -26,6 +26,21 @@ export function createCloudRepository(): Repository {
       const { data, error } = await client.rpc("foos_load_state");
       fail(error);
       return data as Data;
+    },
+    async loadBacklog() {
+      const {data,error}=await client.rpc('foos_load_backlog');fail(error);return data as BacklogData;
+    },
+    async restoreGame(g) {
+      const {error}=await client.rpc('foos_restore_game',{p_id:g.id,p_expected_revision:g.revision});fail(error);
+    },
+    async purgeGame(g) {
+      const {error}=await client.rpc('foos_purge_game',{p_id:g.id,p_expected_revision:g.revision});fail(error);
+    },
+    async restoreRivalry(r,expected) {
+      const {error}=await client.rpc('foos_restore_rivalry',{p_id:r.id,p_deleted_at:r.deleted_at,p_expected_games:expected});fail(error);
+    },
+    async purgeRivalry(r,expected) {
+      const {error}=await client.rpc('foos_purge_rivalry',{p_id:r.id,p_deleted_at:r.deleted_at,p_expected_games:expected});fail(error);
     },
     async createPlayer(name){
       const {data,error}=await client.from('foos_players').insert({name:name.trim()}).select().single();
@@ -67,6 +82,10 @@ export function createCloudRepository(): Repository {
       });
       fail(error);
       return { ...game, revision: data as number };
+    },
+    async setGamePaused(game, paused) {
+      const {data,error}=await client.rpc('foos_set_game_paused',{p_id:game.id,p_expected_revision:game.revision,p_paused:paused});
+      fail(error); return data as Game;
     },
     async deleteGame(game){const {error}=await client.rpc('foos_delete_game',{p_id:game.id,p_expected_revision:game.revision});fail(error)},
     async deleteRivalry(id,expectedGames){const {error}=await client.rpc('foos_delete_rivalry',{p_id:id,p_expected_games:expectedGames});fail(error)},

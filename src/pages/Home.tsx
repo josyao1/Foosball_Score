@@ -1,4 +1,5 @@
 import { allPlayers, orderRivalries, rosterKey, sidePlayers } from '../lib/participants';
+import { RecentGames } from "../components/RecentGames";
 import { AchievementFeed } from "../components/AchievementFeed";
 import { GameAchievementMarker } from "../components/GameAchievements";
 import { useProfile } from "../lib/profile";
@@ -31,6 +32,7 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
   const players = allPlayers(store.rivalries, store.players);
   const sides = ['Black', 'White'] as const;
   const [attempted, setAttempted] = useState(false);
+  const [archivedExisting,setArchivedExisting]=useState<Rivalry|null>(null);
   const matchup = rosterKey(
     players.filter(player => rosters.Black.includes(player.id)),
     players.filter(player => rosters.White.includes(player.id)),
@@ -41,6 +43,7 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
 
   function togglePlayer(side: typeof sides[number], id: string) {
     setAttempted(false);
+    setArchivedExisting(null);
     setRosters(previous => {
       const members = previous[side];
       const next = members.includes(id) ? members.filter(member => member !== id) : [...members, id];
@@ -64,10 +67,22 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
       navigate(`/rivalry/${rivalry.id}`);
       onClose();
     } catch (cause) {
+      if(!adding) {
+        try {
+          const backlog=await store.loadBacklog();
+          const archived=backlog.rivalries.find(r=>r.deleted_at&&rosterKey(sidePlayers(r,'a'),sidePlayers(r,'b'))===matchup);
+          if(archived){setArchivedExisting(archived);return;}
+        }catch {/* Retain the original creation error. */}
+      }
       setError(cause instanceof Error ? cause.message : 'Could not create rivalry.');
     }
   }
 
+  if(archivedExisting) return <Dialog title="Rivalry is in the backlog" onClose={onClose}>
+    <p>{archivedExisting.player_a} vs {archivedExisting.player_b}</p><p className="muted">Restore it to keep its original games and history.</p>
+    <div className="dialog-actions"><button className="button secondary" onClick={()=>{setArchivedExisting(null);setAttempted(false);}}>Change players</button>
+    <span className="muted">Manage it at /backlog</span></div>
+  </Dialog>;
   if (attempted && existing) {
     return <Dialog key="duplicate" title="Rivalry already exists" onClose={onClose}>
       <p>{existing.player_a} vs {existing.player_b}</p>
@@ -235,6 +250,7 @@ export function Home() {
           </div>
         )}
       </section>
+      <RecentGames games={games} rivalries={rivalries}/>
       <AchievementFeed games={games} rivalries={rivalries}/>
       {creating && <NewRivalry onClose={() => setCreating(false)} />}
     </>

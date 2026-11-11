@@ -15,6 +15,9 @@ export interface Goal {
   occurred_at: string;
 }
 export interface Game {
+  paused_at?: string | null;
+  paused_ms?: number;
+  deleted_at?: string | null;
   lineup?: Lineup | null;
   id: string;
   rivalry_id: string;
@@ -24,6 +27,7 @@ export interface Game {
   goals: Goal[];
 }
 export interface Rivalry {
+  deleted_at?: string | null;
   members?: Record<Side, Player[]>;
   id: string;
   player_a: string;
@@ -38,3 +42,6 @@ export interface Data {
 export const otherSide = (side: Side): Side => (side === "a" ? "b" : "a");
 export const playerName = (r: Rivalry, s: Side) =>
   s === "a" ? r.player_a : r.player_b;
+
+/** Includes deleted rivalries and parents of individually deleted games. */
+export type BacklogData = Pick<Data, "rivalries" | "games">;

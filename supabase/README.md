@@ -53,3 +53,28 @@ Read the full app state with `supabase.rpc('foos_load_state')`. This parameterle
 The schema was applied twice successfully to an isolated local PostgreSQL database. Transactional SQL checks exercised anon/authenticated access, direct-write denial, duplicate pairing and active-game rejection, stale revisions, immutable start times, empty completion, valid special shots, invalid goal fields/timestamps/flags, duplicate goal IDs, rollback of both goals and metadata, completed-history correction, and discard cascading. The temporary server was stopped after testing. The schema and deletion migration are also applied to `josyao1’s Project` (`iqiffravpddrvpwqbrkm`) in BallKnowledge. The public API read path was verified after configuration. Existing unrelated table identities, columns, and RLS settings were checked before/after and remained unchanged.
 
 Deletion RPC checks also passed locally for completed-game deletion, empty-rivalry deletion, malformed arguments, missing records, stale revisions, added/removed games in the confirmation map, denied direct table deletes, both public client roles, and targeted cascading that preserves other rivalries. A trigger injected a failure into the final rivalry deletion to verify that earlier game and goal deletions roll back atomically. The complete save/read regression checks passed after adding the deletion functions.
+
+## Recoverable deletion (/backlog)
+
+Apply **`backlog.sql`**, after `schema.sql`, `individual-players.sql`, and `swap-timing.sql`, followed by **`pause-games.sql`**. Reapplying an older setup file afterward would replace the current RPCs; reapply these migrations afterward if necessary. Installation adds nullable `deleted_at` fields and replaces only foosball functions/indexes. No existing games, goals, positions, players, or roster rows are rewritten or removed. The legacy deletion contracts above describe the base schema; the following contracts supersede them.
+
+- `foos_delete_game` moves a **finished** game to the backlog. `foos_discard_game` still permanently discards an unfinished game, as requested.
+- `foos_delete_rivalry` marks the rivalry removed; every attached game/goal/roster stays in place. Games previously deleted separately keep their own deletion markers. The expected revision map includes only currently active games.
+- `foos_load_state` returns only active rivalries and active games belonging to active rivalries. Every normal app calculation uses that state. Old clients also receive this filtered state.
+- `foos_load_backlog` returns removed rivalries, their games, plus individually removed games with their parent labels and rosters. The route is publicly editable like the rest of the app, not an admin authorization boundary.
+- `foos_restore_game` / `foos_purge_game` require the game's current revision and an active parent. `foos_restore_rivalry` / `foos_purge_rivalry` require its exact deletion timestamp and the revision map of **all** children, including separately removed ones.
+- Restores preserve original IDs, start/end times, goals, flags, lineups, and swap timestamps. They change only deletion markers/revisions. Stats, achievements and rankings are derived afresh; there is no aggregate counter to repair. An unfinished game bundled in a restored rivalry keeps its original start time.
+- A restored rivalry leaves individually removed games in the backlog. Restore the parent first to manage those games. Permanent rivalry purge explicitly includes every child, including previously removed games, and keeps shared player profiles.
+- Both save-RPC versions reject archived targets. All game/rivalry mutations lock the parent before children and use optimistic revisions/snapshots. Archive and restore increment child revisions so stale scoring screens cannot overwrite restored history. A live-slot conflict rejects restoration without changing either game.
+- Roster uniqueness remains global (including archived rivalries) to avoid duplicate histories. Creating a reversed/reordered archived matchup directs the new UI to restore it from `/backlog`.
+- Direct table writes/deletes remain restricted. New functions follow the existing explicitly public editing contract with fixed empty search paths and fully qualified objects. Internal lock helpers are not callable by `anon` or `authenticated`.
+
+`backlog-check.sql` exercises archive/restore, full original-content equality, swap snapshots, previous deletions, invalid/stale mutations, live discard, orphan prevention, duplicate rosters, unrelated data, cascade purge, and rollback after an injected purge failure. Run on a disposable database after applying setup files; it creates only rollback-scoped fixtures. App tests cover local persistence, derived stat round-trips, duplicate navigation and confirmation flows.
+
+There are no navigation links to the backlog. Open it by typing `/backlog` after the site URL.
+
+## Pause and resume
+
+`pause-games.sql` adds `paused_at` and accumulated `paused_ms` to games, plus `foos_set_game_paused(p_id, p_expected_revision, p_paused)`. The function locks the active parent before its game, checks the revision, and returns the complete updated game. Only unfinished, active games can pause or resume. Both save-RPC versions reject edits while paused; archive/restore retain the paused state and accumulated time. Public access remains the same as the rest of the app.
+
+Displayed duration, new goals' elapsed times and position-swap times exclude pauses. Real start/end/event timestamps remain unchanged. `pause-games-check.sql` tests both save versions, revisions, accumulated time, public privileges, parent archive/restore, and finished-game protection with rollback-only fixtures.

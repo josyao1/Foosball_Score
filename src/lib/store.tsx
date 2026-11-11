@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import type { ReactNode } from "react";
-import type { Data, Game } from "./types";
+import type { Data, Game, Rivalry } from "./types";
 import { LocalRepository } from "./storage";
 import type { Repository } from "./storage";
 import { cloudConfigured, createCloudRepository } from "./supabase";
@@ -83,8 +83,17 @@ function useDataStore() {
       setBusy(false);
     }
   }
+  const loadBacklog = useCallback(() => getRepo().loadBacklog(), [getRepo]);
+  async function backlogMutation(fn: (r: Repository) => Promise<void>) {
+    return mutate(async r => {await fn(r); return r.load();}, (_old, next) => next);
+  }
   return {
     ...data,
+    loadBacklog,
+    restoreGame: (g:Game) => backlogMutation(r => r.restoreGame(g)),
+    purgeGame: (g:Game) => backlogMutation(r => r.purgeGame(g)),
+    restoreRivalry: (rivalry:Rivalry, expected:Record<string,number>) => backlogMutation(r => r.restoreRivalry(rivalry, expected)),
+    purgeRivalry: (rivalry:Rivalry, expected:Record<string,number>) => backlogMutation(r => r.purgeRivalry(rivalry, expected)),
     loading,
     busy,
     error,
@@ -108,6 +117,7 @@ function useDataStore() {
           games: [...d.games.filter((x) => x.id !== s.id), s],
         }),
       ),
+    setGamePaused: (g: Game, paused: boolean) => mutate(r=>r.setGamePaused(g,paused),(d,s)=>({...d,games:d.games.map(x=>x.id===s.id?s:x)})),
     discardGame: (g: Game) =>
       mutate(
         (r) => r.discardGame(g),

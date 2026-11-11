@@ -7,6 +7,8 @@ import {
   Flag,
   Undo2,
   Timer,
+  Pause,
+  Play,
   Trophy,
   CircleCheck,
   Trash2,
@@ -59,6 +61,7 @@ export function GamePage() {
     [winningGame,setWinningGame] = useState<Game|null>(null),
     [dismissedWin,setDismissedWin] = useState<string|null>(null);
   const [tableDraft, setTableDraft] = useState(false);
+  const [pauseError, setPauseError] = useState('');
   const [confirmation, setConfirmation] = useState<{gameId: string; goal: Goal} | null>(null);
   const [rematch, setRematch] = useState<{gameId: string; previous: Record<Side, number>} | null>(null);
   const [lastLiveId, setLastLiveId] = useState<string | null>(null);
@@ -97,7 +100,7 @@ export function GamePage() {
     setDismissedWin(null);
   }, [id]);
   useEffect(() => {
-    if (!game || game.ended_at || !isWinningScore(score(game.goals)) ||
+    if (!game || game.ended_at || game.paused_at || !isWinningScore(score(game.goals)) ||
       draft || confirm || removing || winningGame || store.busy ||
       dismissedWin === `${game.id}:${game.revision}`) return;
     setWinningGame(game);
@@ -117,8 +120,9 @@ export function GamePage() {
     w = winner(game),
     won = isWinningScore(s),
     last = orderedGoals(game.goals).at(-1);
-  const scoringDisabled = store.busy || (!game.lineup && (['a','b'] as const).some(side => sidePlayers(r, side).length === 2));
+  const scoringDisabled = store.busy || Boolean(game.paused_at) || (!game.lineup && (['a','b'] as const).some(side => sidePlayers(r, side).length === 2));
   function beginGoal(side: Side, rung: Rung, fromTable = false) {
+    if (scoringDisabled) return;
     setTableDraft(fromTable);
     const tapped = Date.now();
     setOpeningRevision(game!.revision);
@@ -129,7 +133,7 @@ export function GamePage() {
       lineup: game!.lineup ?? null,
       rung,
       flags: [],
-      elapsed_ms: Math.max(0, tapped - Date.parse(game!.started_at)),
+      elapsed_ms: duration(game!, tapped),
       occurred_at: new Date(
         Math.max(tapped, Date.parse(game!.started_at)),
       ).toISOString(),
@@ -150,9 +154,14 @@ export function GamePage() {
     cs = score(cg.goals),
     clast = orderedGoals(cg.goals).at(-1);
 
+  const pauseControl = <div className="pause-action"><button type="button" className={`table-tool game-pause${game.paused_at ? ' is-paused' : ''}`}
+    disabled={store.busy || Boolean(draft || confirm || winningGame || removing)}
+    onClick={()=>{setPauseError('');void store.setGamePaused(game,!game.paused_at).catch(e=>setPauseError(e instanceof Error ? e.message : 'Could not update pause.'));}}>
+    {game.paused_at ? <Play size={15}/> : <Pause size={15}/>}{game.paused_at ? 'Resume game' : 'Pause game'}
+  </button>{pauseError && <small role="alert">{pauseError}</small>}</div>;
   const gameClock = (<div className="game-clock">
           <Timer size={16} />
-          <span>{clock(duration(game, now))}</span>
+          <span>{clock(duration(game, now))}</span>{game.paused_at && <strong className="paused-label">Paused</strong>}
           <span className="clock-rule">First to 10 · win by 2</span>
         </div>);
 
@@ -187,6 +196,7 @@ export function GamePage() {
       <section ref={panel} className={`live-score-panel scorer-layout-${design.scorerLayout} ${live ? "is-live" : ""}`}>
         {live ? <TableScorer key={game.id} game={game} rivalry={r} scores={s} disabled={scoringDisabled}
           promptPaused={Boolean(draft || winningGame || confirm || removing)}
+          busy={store.busy} onSave={store.saveGame} pauseControl={pauseControl}
           onGoal={(side, rung) => beginGoal(side, rung, true)}>{gameClock}</TableScorer> : gameClock}
         <div aria-live="polite" aria-atomic="true">
           <GameScoreboard
@@ -210,7 +220,7 @@ export function GamePage() {
         )}
         {live && (
           <>
-            <TeamPositions game={game} rivalry={r} busy={store.busy} onSave={store.saveGame}/>
+            <TeamPositions game={game} rivalry={r} busy={store.busy || Boolean(game.paused_at)} onSave={store.saveGame}/>
             <div className="scoring-hint">Tap the rung that hit the ball.</div>
             <RungControls rivalry={r} lineup={game.lineup} layout={design.scorerLayout} disabled={scoringDisabled} onGoal={beginGoal}/>
             {won && (
@@ -223,7 +233,7 @@ export function GamePage() {
             <div className="scoring-actions">
               <button
                 className="button secondary"
-                disabled={!last || store.busy}
+                disabled={!last || scoringDisabled}
                 onClick={() => openConfirm("undo")}
               >
                 <Undo2 size={17} />
@@ -231,7 +241,7 @@ export function GamePage() {
               </button>
               <button
                 className="button primary"
-                disabled={!game.goals.length || store.busy}
+                disabled={!game.goals.length || scoringDisabled}
                 onClick={() => openConfirm("finish")}
               >
                 <Flag size={17} />
@@ -248,7 +258,7 @@ export function GamePage() {
             rivalry={r}
             compact
             confirmedId={confirmedGoal?.id}
-            onEdit={(g) => {
+            onEdit={game.paused_at ? undefined : (g) => {
               setOpeningRevision(game.revision);
               setEditing(true);
               setDraft(g);
@@ -262,8 +272,8 @@ export function GamePage() {
               restarts the countdown. Own goals go to the other player.
             </p>
             <p>
-              The clock keeps running if you leave. Come back here to pick up
-              where you left off.
+              Pause freezes the clock across devices. Resume when you’re ready;
+              leaving this page alone does not pause it.
             </p>
             </details>
             <span className="save-status">
@@ -315,7 +325,7 @@ export function GamePage() {
         </>
       )}
       {!live && <div className="danger-actions"><button className="text-button muted" disabled={store.busy} onClick={()=>openConfirm('delete')}><Trash2 size={15}/>Delete game</button></div>}
-      {confirm==='delete'&&<ConfirmDialog title="Delete game?" description={`Delete this game (${score(cg.goals).a}–${score(cg.goals).b}) and all of its goals? Rivalry stats will update. This cannot be undone.`} confirm="Delete game" danger onClose={()=>setConfirm(null)} onConfirm={async()=>{await store.deleteGame(cg);navigate(`/rivalry/${r.id}`)}}/>}
+      {confirm==='delete'&&<ConfirmDialog title="Delete game?" description={`Delete this game (${score(cg.goals).a}–${score(cg.goals).b})? It’ll move to the backlog and stop counting toward stats until restored.`} confirm="Delete game" danger onClose={()=>setConfirm(null)} onConfirm={async()=>{await store.deleteGame(cg);navigate(`/rivalry/${r.id}`)}}/>}
       {winningGame && winningGame.id === id && <WinningGameDialog
         snapshot={winningGame}
         rivalry={r}

@@ -7,6 +7,7 @@ import { App } from './App';
 import { StoreProvider } from './lib/store';
 import { LocalRepository, STORAGE_KEY } from './lib/storage';
 import { score } from './lib/stats';
+import { defaultLineup } from './lib/participants';
 import { GoalDialog } from './components/GoalDialog';
 import { ConfirmDialog } from './components/Dialog';
 import type { Data, Game, Goal, Rivalry } from './lib/types';
@@ -91,10 +92,12 @@ it('creates, resumes, scores, finishes early, corrects, removes, and deletes a r
   expect(stored().games[0].goals).toHaveLength(2);
   fireEvent.click(screen.getByRole('button', { name: 'Delete game' }));
   await confirm('Delete game');
-  expect(stored().games).toHaveLength(0);
+  expect(stored().games[0].deleted_at).toBeTruthy();
+  expect(stored().games[0].goals).toHaveLength(2);
   fireEvent.click(await screen.findByRole('button', { name: 'Delete rivalry' }));
   await confirm('Delete rivalry');
-  expect(stored()).toMatchObject({ rivalries: [], games: [] });
+  expect(stored().rivalries[0].deleted_at).toBeTruthy();
+  expect((await new LocalRepository(localStorage).load()).games).toEqual([]);
   expect(stored().players).toHaveLength(2);
   expect(await screen.findByRole('heading', { name: 'No rivalries yet' })).toBeTruthy();
 });
@@ -447,13 +450,15 @@ it('records team goals against individual positions and preserves attribution af
  fireEvent.click(screen.getByRole('button',{name:'Use these positions'}));
  await waitFor(()=>expect((screen.getByRole('button',{name:'Josh and Brooks goalie goal'}) as HTMLButtonElement).disabled).toBe(false));
  fireEvent.click(screen.getByRole('button',{name:'Josh and Brooks goalie goal'}));
- await confirm('Add goal for Josh and Brooks');
+ fireEvent.click(within(screen.getByRole('dialog',{name:'Add goal'})).getByRole('button',{name:'Add goal for Josh and Brooks'}));
+ await waitFor(()=>expect(screen.queryByRole('dialog',{name:'Add goal'})).toBeNull());
  const josh=stored().players!.find(p=>p.name.toLowerCase()==='josh')!.id;
  expect(stored().games[0].goals[0].lineup?.a.defense).toBe(josh);
  fireEvent.click(screen.getByRole('button',{name:'Swap black positions'}));
  await waitFor(()=>expect(stored().games[0].lineup?.a.attack).toBe(josh));
  fireEvent.click(screen.getByRole('button',{name:'Josh and Brooks attacker goal'}));
- await confirm('Add goal for Josh and Brooks');
+ fireEvent.click(within(screen.getByRole('dialog',{name:'Add goal'})).getByRole('button',{name:'Add goal for Josh and Brooks'}));
+ await waitFor(()=>expect(screen.queryByRole('dialog',{name:'Add goal'})).toBeNull());
  expect(stored().games[0].goals[1].lineup?.a.attack).toBe(josh);
  expect(stored().games[0].goals[0].lineup?.a.defense).toBe(josh);
 });
@@ -498,15 +503,14 @@ it.each([false, true])('offers to open a reversed team rivalry (created concurre
   expect(stored().rivalries).toHaveLength(1);
 });
 
-it('shows an achievement count as of this finish, including when a later game earns it again', async () => {
+it('keeps repeat achievements out of the ticket but retains the below-ticket pills', async () => {
   const blanked = scoredGame(10,0);
   const matches = [1,2,3].map(n=>({...blanked,id:'match'+n,ended_at:`2026-01-01T00:0${n}:00Z`}));
   seed({rivalries:[rivalry],games:matches});
   openApp('/game/match2');
-  const earns = await screen.findByRole('region',{name:'Achievements earned this game'});
-  const perfect = within(earns).getByText('Perfect paper').closest('li')!;
-  expect(within(perfect).getByText('×2')).toBeTruthy();
-  expect(earns.classList.contains('ticket-earns-new')).toBe(false);
+  await screen.findByRole('heading',{name:'Game result'});
+  expect(screen.queryByRole('region',{name:'Achievements earned this game'})).toBeNull();
+  expect(screen.getByRole('button',{name:/Ada: Perfect paper. Achievement details/})).toBeTruthy();
 });
 
 it('stamps a first achievement on the live game’s saved result ticket', async () => {
@@ -533,9 +537,8 @@ it('scores through the mirrored table controls and keeps the game score visible 
   expect(far.getAllByRole('button').map(b=>b.getAttribute('aria-label'))).toEqual(
     ['attacker','middle','defender','goalie'].map(rung=>`Bea ${rung} goal`)
   );
-  fireEvent.click(table.getByRole('button',{name:'Flip sides'}));
-  const flipped = within(table.getByRole('group',{name:'Near side: Bea'}));
-  fireEvent.click(flipped.getByRole('button',{name:'Bea defender goal'}));
+  expect(table.queryByRole('button',{name:'Flip sides'})).toBeNull();
+  fireEvent.click(far.getByRole('button',{name:'Bea defender goal'}));
   const confirmation = within(screen.getByRole('dialog',{name:'Add goal'}));
   expect(confirmation.getByLabelText('Current score').textContent).toContain('1 – 0');
   fireEvent.click(confirmation.getByRole('button',{name:'Bank shot'}));
@@ -543,7 +546,7 @@ it('scores through the mirrored table controls and keeps the game score visible 
   await waitFor(()=>expect(screen.queryByRole('dialog',{name:'Add goal'})).toBeNull());
   expect(stored().games[0].goals).toHaveLength(2);
   expect(stored().games[0].goals[1]).toMatchObject({actor_side:'b',rung:'defender',flags:['bank']});
-  expect(table.getByRole('status',{name:'Current score'}).textContent).toBe('Bea1Ada1');
+  expect(table.getByRole('status',{name:'Current score'}).textContent).toBe('Ada1Bea1');
   fireEvent.click(table.getByRole('button',{name:'Exit full screen'}));
   await waitFor(()=>expect(screen.queryByRole('dialog',{name:'Full screen scoring'})).toBeNull());
   expect(screen.getByRole('button',{name:'Ada goalie goal'})).toBeTruthy();
@@ -604,4 +607,93 @@ it('lets a scorer dismiss a declined wake lock and activate it on a later full-s
     if (previous) Object.defineProperty(navigator, 'wakeLock', previous);
     else Reflect.deleteProperty(navigator, 'wakeLock');
   }
+});
+
+it('moves finished games to backlog, restores stats, and only purges after confirmation',async()=>{
+ seed({rivalries:[rivalry],games:[{...baseGame,ended_at:'2026-01-01T00:01:00Z',goals:[goal]}]});
+ openApp('/game/g');
+ fireEvent.click(await screen.findByRole('button',{name:'Delete game'}));await confirm('Delete game');
+ expect((await new LocalRepository(localStorage).load()).games).toEqual([]);
+ expect(screen.queryByRole('link',{name:'Backlog'})).toBeNull();
+ cleanup();openApp('/backlog');
+ await screen.findByRole('heading',{name:'Games 1'});
+ expect(screen.getByText(/Game time 1:00/)).toBeTruthy();
+ fireEvent.click(screen.getByRole('button',{name:'Undo'}));
+ await screen.findByText('Restored. Stats are up to date.');
+ expect((await new LocalRepository(localStorage).load()).games[0].goals).toEqual([expect.objectContaining(goal)]);
+ expect(screen.getByRole('heading',{name:'Nothing in the backlog'})).toBeTruthy();
+ const repo=new LocalRepository(localStorage);await repo.deleteGame((await repo.load()).games[0]);
+ act(()=>window.dispatchEvent(new Event('focus')));
+ fireEvent.click(await screen.findByRole('button',{name:'Permanently delete game'}));
+ expect(stored().games).toHaveLength(1);
+ fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'Cancel'}));
+ expect(stored().games).toHaveLength(1);
+ fireEvent.click(screen.getByRole('button',{name:'Permanently delete game'}));
+ await confirm('Delete permanently');
+ expect(stored().games).toEqual([]);expect(stored().rivalries).toHaveLength(1);
+});
+
+it('shows saved games inside a deleted rivalry and returns a duplicate creation to its backlog',async()=>{
+ seed({rivalries:[rivalry],games:[{...baseGame,ended_at:'2026-01-01T00:01:00Z',goals:[goal]}]});
+ const repo=new LocalRepository(localStorage);await repo.load();await repo.deleteRivalry(rivalry.id,{g:1});
+ openApp();
+ fireEvent.click(await screen.findByRole('button',{name:'New rivalry'}));
+ const dialog=await screen.findByRole('dialog');
+ fireEvent.click(within(dialog).getByRole('checkbox',{name:'Bea on Black'}));
+ fireEvent.click(within(dialog).getByRole('checkbox',{name:'Ada on White'}));
+ fireEvent.click(within(dialog).getByRole('button',{name:'Create rivalry'}));
+ await screen.findByRole('heading',{name:'Rivalry is in the backlog'});
+ expect(screen.queryByRole('link',{name:'Open backlog'})).toBeNull();
+ cleanup();openApp('/backlog');
+ await screen.findByRole('heading',{name:'Rivalries 1'});
+ expect(screen.getByText('Saved games')).toBeTruthy();
+ expect(screen.queryByRole('button',{name:'Permanently delete game'})).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Undo'}));
+ await screen.findByText('Restored. Stats are up to date.');
+ expect((await repo.load()).games).toHaveLength(1);
+ expect((await repo.load()).rivalries[0].id).toBe(rivalry.id);
+});
+
+it('pauses across reloads, prevents scoring, and resumes using active game time',async()=>{
+ const now=vi.spyOn(Date,'now').mockReturnValue(Date.parse(baseGame.started_at)+60000);
+ seed({rivalries:[rivalry],games:[baseGame]});openApp('/game/g');
+ fireEvent.click(await screen.findByRole('button',{name:'Pause game'}));
+ await screen.findByRole('button',{name:'Resume game'});
+ expect((screen.getByRole('button',{name:'Ada attacker goal'}) as HTMLButtonElement).disabled).toBe(true);
+ expect(stored().games[0].paused_at).toBeTruthy();
+ now.mockReturnValue(Date.parse(baseGame.started_at)+180000);
+ cleanup();openApp('/game/g');
+ await screen.findByRole('button',{name:'Resume game'});
+ expect(screen.getByText('1:00')).toBeTruthy();
+ fireEvent.click(screen.getByRole('button',{name:'Resume game'}));
+ await screen.findByRole('button',{name:'Pause game'});
+ now.mockReturnValue(Date.parse(baseGame.started_at)+190000);
+ fireEvent.click(screen.getByRole('button',{name:'Ada attacker goal'}));
+ await confirm('Add goal for Ada');
+ expect(stored().games[0].goals[0].elapsed_ms).toBe(70000);
+ expect(stored().games[0].paused_ms).toBe(120000);
+});
+
+it('swaps only the chosen fullscreen team and snapshots the new scorer',async()=>{
+ const person=(name:string)=>({id:name.toLowerCase(),name,created_at:rivalry.created_at});
+ const team:Rivalry={...rivalry,player_a:'Josh and Brooks',player_b:'Andrew and Max',members:{a:[person('Josh'),person('Brooks')],b:[person('Andrew'),person('Max')]}};
+ seed({rivalries:[team],games:[baseGame]});
+ const repo=new LocalRepository(localStorage);const state=await repo.load();
+ await repo.saveGame({...state.games[0],lineup:defaultLineup(state.rivalries[0])});
+ openApp('/game/g');
+ fireEvent.click(await screen.findByRole('button',{name:'Full screen'}));
+ const table=within(screen.getByRole('dialog',{name:'Full screen scoring'}));
+ const before=stored().games[0].lineup!;
+ fireEvent.click(table.getByRole('button',{name:'Swap black rungs: Josh and Brooks'}));
+ await waitFor(()=>expect(stored().games[0].lineup!.a.attack).toBe(before.a.defense));
+ expect(stored().games[0].lineup!.b).toEqual(before.b);
+ expect(table.getByRole('group',{name:'Near side: Josh and Brooks'})).toBeTruthy();
+ fireEvent.click(table.getByRole('button',{name:'Josh and Brooks attacker goal'}));
+ fireEvent.click(within(screen.getByRole('dialog',{name:'Add goal'})).getByRole('button',{name:'Add goal for Josh and Brooks'}));
+ await waitFor(()=>expect(screen.queryByRole('dialog',{name:'Add goal'})).toBeNull());
+ expect(stored().games[0].goals[0].lineup!.a.attack).toBe(before.a.defense);
+ fireEvent.click(table.getByRole('button',{name:'Pause game'}));
+ await waitFor(()=>expect((table.getByRole('button',{name:'Swap white rungs: Andrew and Max'}) as HTMLButtonElement).disabled).toBe(true));
+ fireEvent.click(table.getByRole('button',{name:'Resume game'}));
+ await waitFor(()=>expect((table.getByRole('button',{name:'Josh and Brooks goalie goal'}) as HTMLButtonElement).disabled).toBe(false));
 });

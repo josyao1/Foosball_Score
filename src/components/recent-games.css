@@ -1,0 +1,29 @@
+.recent-results { margin-block: 34px; }
+.recent-results > header { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:16px; }
+.recent-results h2 { margin:0; font-size:24px; }
+.recent-results > header > span { color:var(--muted); font-size:11px; }
+.recent-results ol { list-style:none; padding:0; margin:0; border-block:1px solid var(--line); }
+.recent-results li + li { border-top:1px solid var(--line); }
+.recent-results li > a { display:grid; grid-template-columns:140px minmax(0,1fr) 60px 16px; gap:20px; align-items:center; padding:18px 12px; color:var(--text); text-decoration:none; transition:background 150ms ease; }
+.recent-results li > a:hover { background:var(--panel); }
+.recent-results li > a:focus-visible { outline:2px solid var(--text); outline-offset:-2px; }
+.recent-results time { display:grid; gap:4px; font-size:11px; color:var(--muted); }
+.recent-results time small { font-size:11px; }
+.recent-result-match { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:18px; font-size:13px; }
+.recent-result-match > span { overflow-wrap:anywhere; }
+.recent-result-match > span:first-child { text-align:right; }
+.recent-result-match > strong { display:flex; align-items:baseline; gap:9px; white-space:nowrap; font-size:23px; font-variant-numeric:tabular-nums; }
+.recent-result-match b { color:var(--muted); font-weight:400; }
+.recent-result-match .is-winner { color:var(--text); font-weight:700; }
+.recent-result-match i { font-style:normal; font-size:14px; color:var(--muted); }
+.recent-result-duration { display:flex; gap:5px; align-items:center; justify-content:flex-end; color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+@media(max-width:600px) {
+  .recent-results li > a { grid-template-columns:minmax(0,1fr) auto; gap:10px; padding:14px 4px; }
+  .recent-results time { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px; grid-column:1; grid-row:1; font-size:11px; }
+  .recent-result-duration { grid-column:2; grid-row:1; }
+  .recent-result-match { grid-column:1/-1; grid-row:2; gap:12px; font-size:13px; }
+  .recent-result-match > strong { font-size:22px; }
+  .recent-result-arrow { display:none; }
+}
+
+@media(max-width:400px) { .recent-results h2 { font-size:21px; } }

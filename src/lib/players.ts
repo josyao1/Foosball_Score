@@ -20,7 +20,7 @@ export interface PlayerPassport {
   rungs: Record<Rung, number>; types: Record<FinishType, number>;
   favoriteRungs: Rung[]; signatureTypes: FinishType[];
   firstPlayed: string | null;
-  recent: {game: Game; opponent: string; own: number; against: number; result: 'W'|'L'|'D'}[];
+  recent: {game: Game; opponent: string; teammates: string[]; own: number; against: number; result: 'W'|'L'|'D'}[];
   bestRun: Best | null; bestComeback: Best | null; quickestWin: Best | null;
   rivals: {rivalry: Rivalry; played: number; wins: number; losses: number}[];
 }
@@ -69,7 +69,7 @@ export function playerPassports(games: Game[], rivalries: Rivalry[], registry:Pl
       }
       p.playingMs += highlights.totalMs;
       if (!p.firstPlayed || Date.parse(game.started_at) < Date.parse(p.firstPlayed)) p.firstPlayed = game.started_at;
-      p.recent.push({game,opponent:playerName(rivalry,otherSide(side)),own:final[side],against:final[otherSide(side)],result});
+      p.recent.push({game,opponent:playerName(rivalry,otherSide(side)),teammates:sidePlayers(rivalry,side).filter(player=>player.id!==member.id).map(player=>player.name),own:final[side],against:final[otherSide(side)],result});
       p.recent = p.recent.slice(-5);
       for (const goal of highlights.goals) {
         if (goal.actor_side !== side) continue;

@@ -26,7 +26,7 @@ export function RungButton({rivalry, lineup, side, rung, label = true, disabled,
     {(label || assigned) && <span className="rung-label">
       {label && <span>{rung[0].toUpperCase() + rung.slice(1)}</span>}
       {assigned && <span className="rung-assignee-stack">{people.map(person => <strong key={person.id}
-        className="rung-assignee" id={person.id === scorerId ? nameId : undefined}
+        className="rung-assignee" data-player-id={person.id} data-side={side} id={person.id === scorerId ? nameId : undefined}
         aria-hidden={person.id !== scorerId}>{person.name}</strong>)}</span>}
     </span>}
     <b aria-hidden="true">+</b>

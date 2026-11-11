@@ -1,0 +1,42 @@
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { LocalRepository } from './storage';
+import { duration } from './stats';
+import type { Game } from './types';
+const start = Date.parse('2026-11-10T18:00:00Z');
+const g:Game={id:'g',rivalry_id:'r',started_at:new Date(start).toISOString(),ended_at:null,revision:1,goals:[]};
+afterEach(()=>vi.useRealTimers());
+describe('pausing',()=>{
+ it('freezes duration and subtracts accumulated pauses without rewriting start time',()=>{
+  const paused={...g,paused_at:new Date(start+60000).toISOString(),paused_ms:20000};
+  expect(duration(paused,start+600000)).toBe(40000);
+  expect(duration({...paused,paused_at:null},start+90000)).toBe(70000);
+ });
+ it('persists pause cycles, rejects stale/paused edits, and preserves state through backlog',async()=>{
+  vi.useFakeTimers();vi.setSystemTime(start);
+  let raw='';const repo=new LocalRepository({getItem:()=>raw||null,setItem:(_,s)=>{raw=s;}});
+  const r=await repo.createRivalry('Josh','Brooks');
+  const game=await repo.saveGame({...g,revision:0,rivalry_id:r.id});
+  vi.setSystemTime(start+60000);
+  const paused=await repo.setGamePaused(game,true);
+  vi.setSystemTime(start+180000);
+  expect(duration((await repo.load()).games[0])).toBe(60000);
+  await expect(repo.saveGame(paused)).rejects.toThrow(/paused/i);
+  await expect(repo.setGamePaused(game,false)).rejects.toThrow(/changed/i);
+  await repo.deleteRivalry(r.id,{[game.id]:paused.revision});
+  const archive=await repo.loadBacklog();
+  await expect(repo.setGamePaused(archive.games[0],false)).rejects.toThrow(/backlog|rivalry/i);
+  await repo.restoreRivalry(archive.rivalries[0],{[game.id]:archive.games[0].revision});
+  const resumed=await repo.setGamePaused((await repo.load()).games[0],false);
+  expect(resumed.paused_ms).toBe(120000);
+  expect(resumed.started_at).toBe(game.started_at);
+  vi.setSystemTime(start+210000);
+  expect(duration(resumed)).toBe(90000);
+  const again=await repo.setGamePaused(resumed,true);
+  vi.setSystemTime(start+240000);
+  const next=await repo.setGamePaused(again,false);
+  expect(next.paused_ms).toBe(150000);
+  const finished=await repo.saveGame({...next,ended_at:new Date().toISOString(),goals:[{id:'goal',actor_side:'a',rung:'attacker',flags:[],elapsed_ms:90000,occurred_at:new Date().toISOString()}]});
+  expect(duration(finished)).toBe(90000);
+  await expect(repo.setGamePaused(finished,true)).rejects.toThrow(/finished/i);
+ });
+});

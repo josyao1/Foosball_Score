@@ -9,6 +9,8 @@ it('combines names and side swaps across rivalries and includes confirmed legacy
   const people = playerPassports([game('aaaaaaaaaa'),game('bbbbbbbbbb','other','other'),game('aaaaaaaaaa','team','team')],[r,other,team]);
   const josh = people.find(p=>p.key==='josh')!;
   expect(josh).toMatchObject({played:3,wins:3,goals:25,bestStreak:3});
+  expect(josh.recent.find(result=>result.game.id==='team')?.teammates).toEqual(['Brooks']);
+  expect(josh.recent.find(result=>result.game.id==='g')?.teammates).toEqual([]);
   expect(people.find(p=>p.key==='josh and brooks')).toBeUndefined();
   expect(people.find(p=>p.key==='brooks')).toMatchObject({played:2,wins:1,goals:5});
 });

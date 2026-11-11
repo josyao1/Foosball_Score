@@ -3,10 +3,10 @@ import { Dialog } from './Dialog';
 import { ScreenAwake } from './ScreenAwake';
 import { useScreenWakeLock } from '../lib/useScreenWakeLock';
 import { MatchPointNumber } from "./MatchPointNumber";
-import { useEffect, useRef, useState } from 'react';
-import { ArrowUpDown, Maximize, Minimize } from 'lucide-react';
-import { matchesProfile, sidePlayers } from '../lib/participants';
-import { matchPointSide } from '../lib/stats';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { ArrowLeftRight, Maximize, Minimize } from 'lucide-react';
+import { defaultLineup, matchesProfile, sidePlayers } from '../lib/participants';
+import { duration, matchPointSide } from '../lib/stats';
 import { useProfile } from '../lib/profile';
 import { RUNGS, otherSide, playerName } from '../lib/types';
 import type { Game, Rivalry, Rung, Side } from '../lib/types';
@@ -16,6 +16,9 @@ import './table-scorer.css';
 type Props = {
   children: ReactNode;
   promptPaused: boolean;
+  busy: boolean;
+  onSave: (game: Game) => Promise<unknown>;
+  pauseControl: ReactNode;
   game: Game;
   rivalry: Rivalry;
   scores: Record<Side, number>;
@@ -24,8 +27,19 @@ type Props = {
 };
 const farRungs = [...RUNGS].reverse();
 
-export function TableScorer({game, rivalry, scores, disabled, onGoal, children, promptPaused}: Props) {
+export function TableScorer({game, rivalry, scores, disabled, onGoal, children, promptPaused, busy, onSave, pauseControl}: Props) {
   const profile = useProfile();
+  const [swapError, setSwapError] = useState('');
+  const [swapping, setSwapping] = useState(false);
+  const swapLock = useRef(false);
+  async function swap(side: Side) {
+    if (swapLock.current || busy || game.paused_at) return;
+    swapLock.current=true; setSwapping(true); setSwapError('');
+    const lineup = game.lineup ?? defaultLineup(rivalry);
+    try { await onSave({...game, lineup:{...lineup,[side]:{defense:lineup[side].attack,attack:lineup[side].defense,swapped_at_ms:duration(game)}}}); }
+    catch(e) {setSwapError(e instanceof Error ? e.message : 'Could not swap positions.');}
+    finally {swapLock.current=false;setSwapping(false);}
+  }
   const lock = useScreenWakeLock(true);
   const [dismissed, setDismissed] = useState(false);
   const [requested, setRequested] = useState(false);
@@ -38,6 +52,37 @@ export function TableScorer({game, rivalry, scores, disabled, onGoal, children, 
   const closeButton = useRef<HTMLButtonElement>(null);
   const far = otherSide(near);
   const point = matchPointSide(scores);
+  const namePositions = useRef(new Map<string, {x:number; y:number}>());
+  const nameAnimations = useRef<Animation[]>([]);
+
+  useLayoutEffect(() => {
+    const previous = namePositions.current;
+    const next = new Map<string, {x:number; y:number}>();
+    const occurrences = new Map<string,number>();
+    const names = active ? [...(board.current?.querySelectorAll<HTMLElement>('.rung-assignee[aria-hidden="false"]') ?? [])] : [];
+    // Match both copies of each teammate's name to their old rung positions.
+    const moves = names.map(node => {
+      const person = `${node.dataset.side}:${node.dataset.playerId}`;
+      const index = occurrences.get(person) ?? 0;
+      occurrences.set(person,index+1);
+      const key = `${person}:${index}`, rect = node.getBoundingClientRect();
+      const position = {x:rect.left+rect.width/2,y:rect.top+rect.height/2};
+      next.set(key,position);
+      return {node,from:previous.get(key),to:position};
+    });
+    nameAnimations.current.forEach(animation => animation.cancel());
+    nameAnimations.current = [];
+    namePositions.current = next;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    for (const {node,from,to} of moves) {
+      if (!from || !node.animate || (from.x===to.x && from.y===to.y)) continue;
+      nameAnimations.current.push(node.animate([
+        {transform:`translate(${from.x-to.x}px, ${from.y-to.y}px)`},
+        {transform:'translate(0, 0)'},
+      ], {duration:380,easing:'cubic-bezier(.22,1,.36,1)'}));
+    }
+  }, [active,near,game.lineup?.a.attack,game.lineup?.a.defense,game.lineup?.b.attack,game.lineup?.b.defense]);
+  useEffect(() => () => nameAnimations.current.forEach(animation => animation.cancel()), []);
 
   function open() {
     const modal = dialog.current;
@@ -76,20 +121,28 @@ export function TableScorer({game, rivalry, scores, disabled, onGoal, children, 
   }, [active]);
 
   function pads(side: Side, isFar: boolean) {
-    return <div className="table-pads" role="group"
+    return <div className="table-end" role="group"
       aria-label={`${isFar ? 'Far' : 'Near'} side: ${playerName(rivalry, side)}`}>
-      {(isFar ? farRungs : RUNGS).map(rung =>
+      <header><span><i className={`table-kit kit-${side}`} aria-hidden="true"/>{side==='a'?'Black':'White'} · {playerName(rivalry,side)}</span>
+        {sidePlayers(rivalry,side).length===2 && <button type="button" className="table-tool table-swap"
+          disabled={busy || swapping || Boolean(game.paused_at)} onClick={()=>void swap(side)}
+          aria-label={`Swap ${side==='a'?'black':'white'} rungs: ${playerName(rivalry,side)}`}>
+          <ArrowLeftRight size={15}/><span>Swap rungs</span>
+        </button>}
+      </header>
+      <div className="table-pads">{(isFar ? farRungs : RUNGS).map(rung =>
         <RungButton key={rung} rivalry={rivalry} lineup={game.lineup} side={side} rung={rung}
-          disabled={disabled} onGoal={onGoal}/>
-      )}
+          disabled={disabled || swapping} onGoal={onGoal}/>
+      )}</div>
     </div>;
   }
 
   return <>
     <div className="live-score-toolbar">
       {children}
+      <div className="live-pause-control">{pauseControl}</div>
       <ScreenAwake {...lock}/>
-      <button type="button" className="table-launch" onClick={open} disabled={disabled}
+      <button type="button" className="table-launch" onClick={open} disabled={busy}
       aria-haspopup="dialog" aria-label="Full screen" title="Full screen"><Maximize size={16} aria-hidden="true"/><span>Full screen</span></button>
     </div>
     <dialog ref={dialog} className="table-mode" aria-label="Full screen scoring"
@@ -98,10 +151,8 @@ export function TableScorer({game, rivalry, scores, disabled, onGoal, children, 
         {active && <>
           {pads(far, true)}
           <div className="table-midfield">
-            <button type="button" className="table-tool" onClick={() => setNear(far)}>
-              <ArrowUpDown size={16} aria-hidden="true"/>Flip sides
-            </button>
-            <div className="table-score" role="status" aria-label="Current score">
+            <div className="table-pause-controls">{pauseControl}</div>
+            <div className="table-score-center"><div className="table-score" role="status" aria-label="Current score">
               {[near, far].map(side => <span key={side} className="table-team-score">
                 <span className={`table-kit kit-${side}`} aria-label={side === 'a' ? 'Black' : 'White'}/>
                 <span className="table-team-name">{playerName(rivalry, side)}</span>
@@ -109,10 +160,12 @@ export function TableScorer({game, rivalry, scores, disabled, onGoal, children, 
                 {point === side && <small className="match-point-label">Match point</small>}
               </span>)}
             </div>
+            <div className="table-clock">{children}</div></div>
             <button ref={closeButton} type="button" className="table-tool" aria-label="Exit full screen"
               onClick={() => dialog.current?.close()}><Minimize size={16} aria-hidden="true"/>Exit</button>
           </div>
           {pads(near, false)}
+          {swapError && <p className="table-swap-error" role="alert">{swapError}</p>}
           {showPrompt && <Dialog title="Keep screen awake?" className="table-wake-prompt" closeOnBackdrop onClose={() => setDismissed(true)}>
             <p>{requested && lock.status === 'unavailable' ? 'Your phone declined the request. Check Low Power Mode or keep scoring.' : 'Keep the display on while you score.'}</p>
             <div className="dialog-actions">

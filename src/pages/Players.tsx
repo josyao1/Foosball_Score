@@ -1,7 +1,7 @@
 import { TabUnderline } from "../components/TabUnderline";
 import { NewPlayer } from '../components/NewPlayer';
 import { useProfile, profileFirst } from "../lib/profile";
-import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Award, Plus, Users } from 'lucide-react';
 import { useStore } from '../lib/store';
@@ -9,7 +9,7 @@ import { FINISH_LABELS, FINISH_TYPES, playerPassports, RUNG_LABELS } from '../li
 import type { FinishType, PlayerPassport } from '../lib/players';
 import { RUNGS } from '../lib/types';
 import type { GoalFlag, Rung } from '../lib/types';
-import { clock, playingTimeLabel } from '../lib/stats';
+import { clock, duration, playingTimeLabel } from '../lib/stats';
 import { gameDate, gameTime } from '../lib/time';
 import { GoalBall } from '../components/GoalBall';
 import { Achievements } from '../components/Achievements';
@@ -21,31 +21,55 @@ import '../players.css';
 const flags: Record<FinishType, GoalFlag[]> = {dunk:['dunk'],bank:['bank'],combo:['dunk','bank'],own_goal:['own_goal']};
 const figures: Record<Rung, number> = {goalie:3,defender:2,middle:5,attacker:3};
 const share = (count: number, total: number) => total ? Math.round(count/total*100) : 0;
+const playerTeams: Record<string, string> = {
+  josh: 'Digital Marketing Enablement',
+  joshua: 'Digital Marketing Enablement',
+  brooks: 'Quizzes/Demo Magic',
+  frank: 'Assessment Analytics',
+  andrew: 'Associate Product Manager',
+  aiden: 'Admin Experience',
+  max: 'Rosetta Stone',
+  thomas: 'Sales Central',
+  jeremy: 'B2C',
+  drew: 'Teacher Experience',
+};
 
-type PassportTab = 'overview'|'scoring'|'badges';
+const passportTabs = ['overview','scoring','badges','recent'] as const;
+type PassportTab = typeof passportTabs[number];
 function Passport({ player: p, players, tab, setTab }: { player: PlayerPassport; players:PlayerPassport[]; tab:PassportTab; setTab:(tab:PassportTab)=>void }) {
+  const team = playerTeams[p.name.trim().toLowerCase()];
   const stamps=MASTERY.map(b=>({...b,level:p.mastery[b.id].earned.length})).filter(b=>b.level>0).sort((a,b)=>b.level-a.level).slice(0,3);
   const tabId = useId();
   const tabsRef = useRef<HTMLDivElement>(null);
-  const scrollBeforeSwitch = useRef<{x:number;y:number;list:HTMLElement|null;left:number;top:number}|null>(null);
+  const scrollBeforeSwitch = useRef<{x:number;anchorTop:number;page:HTMLElement|null;pageTop:number;list:HTMLElement|null;left:number;top:number}|null>(null);
   function selectPage(next:PassportTab) {
     if(next===tab)return;
     const list=tabsRef.current?.closest<HTMLElement>('.player-carousel-list')??null;
-    scrollBeforeSwitch.current={x:window.scrollX,y:window.scrollY,list,left:list?.scrollLeft??0,top:list?.scrollTop??0};
+    const y=window.scrollY,page=tabsRef.current?.closest<HTMLElement>('.players-page')??null;
+    const anchorTop=tabsRef.current?.getBoundingClientRect().top??0;
+    const pageRect=page?.getBoundingClientRect();
+    scrollBeforeSwitch.current={x:window.scrollX,anchorTop,page,pageTop:(pageRect?.top??0)+y,list,left:list?.scrollLeft??0,top:list?.scrollTop??0};
+    // Hold the document open through the commit so a shorter panel cannot clamp
+    // the scroll position before we restore the clicked tab's viewport position.
+    if(page && pageRect)page.style.minHeight=`${pageRect.height}px`;
     setTab(next);
   }
   useLayoutEffect(()=>{
     const previous=scrollBeforeSwitch.current;
     if(!previous)return;
     scrollBeforeSwitch.current=null;
-    // Resolve the new panel's layout before correcting browser anchoring/re-snapping.
-    tabsRef.current?.getBoundingClientRect();
     if(previous.list){
       if(previous.list.scrollLeft!==previous.left)previous.list.scrollLeft=previous.left;
       if(previous.list.scrollTop!==previous.top)previous.list.scrollTop=previous.top;
     }
-    if(window.scrollY!==previous.y||window.scrollX!==previous.x)
-      window.scrollTo({left:previous.x,top:previous.y,behavior:'instant'});
+    const currentY=window.scrollY;
+    const anchorTop=tabsRef.current?.getBoundingClientRect().top??previous.anchorTop;
+    const targetY=Math.max(0,currentY+anchorTop-previous.anchorTop);
+    // Reserve only enough space to keep this viewport valid, not the old card
+    // heights. Cards can shrink naturally, including rows above the active one.
+    if(previous.page)previous.page.style.minHeight=`${Math.max(0,targetY+window.innerHeight-previous.pageTop)}px`;
+    if(window.scrollY!==targetY||window.scrollX!==previous.x)
+      window.scrollTo({left:previous.x,top:targetY,behavior:'instant'});
   },[tab]);
   const badgeCount = Object.values(p.mastery).filter(b=>b.earned.length>0).length + Object.keys(p.achievements).length;
   const bests = [
@@ -56,7 +80,7 @@ function Passport({ player: p, players, tab, setTab }: { player: PlayerPassport;
   return <article className="player-passport" aria-label={`${p.name} passport`}>
     <header className="passport-header">
       <div className="passport-portrait" aria-hidden="true"><svg viewBox="0 0 64 76"><path className="passport-rod" d="M0 36H64"/><circle cx="32" cy="16" r="9"/><path d="M19 31Q19 27 24 27H40Q45 27 45 31V46H39V59H42V69H22V59H25V46H19Z"/><path className="passport-shirt" d="M27 35H37"/></svg></div>
-      <div className="passport-identity"><h2>{p.name}</h2><span>{p.firstPlayed ? `Playing since ${gameDate(p.firstPlayed)}` : 'First game still to come'}</span></div>
+      <div className="passport-identity"><h2>{p.name}</h2>{team && <span className="passport-team">{team}</span>}<span>{p.firstPlayed ? `Playing since ${gameDate(p.firstPlayed)}` : 'First game still to come'}</span></div>
       <div className="passport-winrate"><strong>{p.played ? `${share(p.wins,p.played)}%` : '—'}</strong><span>win rate</span></div>
     </header>
     <dl className="passport-totals">
@@ -65,14 +89,14 @@ function Passport({ player: p, players, tab, setTab }: { player: PlayerPassport;
       <div><dt>At the table</dt><dd>{playingTimeLabel(p.playingMs)}</dd></div>
     </dl>
     <div ref={tabsRef} className="passport-tabs tab-underline-row" role="tablist" aria-label={`${p.name} passport pages`} onKeyDown={e=>{
-      const keys=['overview','scoring','badges'] as const;
+      const keys=passportTabs;
       if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
       e.preventDefault();e.stopPropagation();
-      const next=e.key==='Home'?keys[0]:e.key==='End'?keys[2]:keys[(keys.indexOf(tab)+(e.key==='ArrowRight'?1:2))%3];
+      const next=e.key==='Home'?keys[0]:e.key==='End'?keys.at(-1)!:keys[(keys.indexOf(tab)+(e.key==='ArrowRight'?1:keys.length-1))%keys.length];
       selectPage(next);e.currentTarget.querySelector<HTMLButtonElement>(`[data-page="${next}"]`)?.focus({preventScroll:true});
     }}>
-      {(['overview','scoring','badges'] as const).map(page=><button key={page} type="button" role="tab" data-page={page} id={`${tabId}-${page}`} aria-controls={`${tabId}-panel-${page}`} aria-selected={tab===page} tabIndex={tab===page?0:-1} onClick={()=>selectPage(page)}>
-        {page==='overview'?'Overview':page==='scoring'?'Scoring':'Badges'}{page==='badges'&&<span title="Earned mastery badges and achievements">{badgeCount}</span>}
+      {passportTabs.map(page=><button key={page} type="button" role="tab" data-page={page} id={`${tabId}-${page}`} aria-controls={`${tabId}-panel-${page}`} aria-selected={tab===page} tabIndex={tab===page?0:-1} onClick={()=>selectPage(page)}>
+        {page==='overview'?'Overview':page==='scoring'?'Scoring':page==='recent'?'Recent games':'Badges'}{page==='badges'&&<span title="Earned mastery badges and achievements">{badgeCount}</span>}
       </button>)}
       <TabUnderline selection={tab} />
     </div>
@@ -97,13 +121,13 @@ function Passport({ player: p, players, tab, setTab }: { player: PlayerPassport;
         <h3>Favorite rung</h3><p className="passport-specialty">{p.favoriteRungs.length ? p.favoriteRungs.map(rung=>RUNG_LABELS[rung]).join(' / ') : 'Not set yet'}</p>
         <div className="passport-rung-lineup">{RUNGS.map(rung=><div key={rung} className={p.favoriteRungs.includes(rung) ? 'is-favorite' : ''} aria-label={`${RUNG_LABELS[rung]}: ${p.rungs[rung]} goals, ${share(p.rungs[rung],p.goals)} percent${p.favoriteRungs.includes(rung) ? ', favorite' : ''}`}>
           <span className="passport-mini-rod" aria-hidden="true">{Array.from({length:figures[rung]},(_,i)=><i key={i}/>)}</span>
-          <span>{RUNG_LABELS[rung]}</span><strong>{share(p.rungs[rung],p.goals)}%</strong>
+          <span>{RUNG_LABELS[rung]}</span><strong>{share(p.rungs[rung],p.goals)}%</strong><small className="passport-goal-count">{p.rungs[rung]} {p.rungs[rung]===1?'goal':'goals'}</small>
         </div>)}</div>
       </section>
       <section className="passport-finishes" aria-label="Goal type profile">
         <h3 title="Share of all your recorded goals, including regular and own goals">Signature finish</h3><p className="passport-specialty">{p.signatureTypes.length ? p.signatureTypes.map(type=>FINISH_LABELS[type]).join(' / ') : 'Not set yet'}</p>
         <div className="passport-type-lineup">{FINISH_TYPES.map(type=><div key={type} className={p.signatureTypes.includes(type) ? 'is-favorite' : ''} aria-label={`${FINISH_LABELS[type]}: ${p.types[type]} goals, ${share(p.types[type],p.goals+p.types.own_goal)} percent${p.signatureTypes.includes(type) ? ', signature' : ''}`}>
-          <span aria-hidden="true"><GoalBall flags={flags[type]} size={22}/></span><span>{type==='combo' ? 'Dunk + bank' : FINISH_LABELS[type]}</span><strong>{share(p.types[type],p.goals+p.types.own_goal)}%</strong>
+          <span aria-hidden="true"><GoalBall flags={flags[type]} size={22}/></span><span>{type==='combo' ? 'Dunk + bank' : FINISH_LABELS[type]}</span><strong>{share(p.types[type],p.goals+p.types.own_goal)}%</strong><small className="passport-goal-count">{p.types[type]} {p.types[type]===1?'goal':'goals'}</small>
         </div>)}</div>
       </section>
     </div>
@@ -112,6 +136,14 @@ function Passport({ player: p, players, tab, setTab }: { player: PlayerPassport;
     <MasteryBadges progress={p.mastery}/>
     <Achievements name={p.name} earned={p.achievements} history={p.achievementHistory} players={players}/>
       </>}
+      {tab==='recent' && (p.recent.length ? <ol className="passport-recent-list" aria-label="Recent games">{[...p.recent].reverse().map(result=><li key={result.game.id}>
+        <Link to={`/game/${result.game.id}`}>
+          <span className={`passport-result result-${result.result}`}><span className="rc-sr">{result.result==='W'?'Win':result.result==='L'?'Loss':'Draw'}</span><span className="passport-result-ball" aria-hidden="true"><GoalBall size={34}/><b>{result.result}</b></span></span>
+          <span className="passport-recent-opponent"><strong>vs {result.opponent}</strong>{result.teammates.length>0 && <span className="passport-recent-teammate">with <b>{result.teammates.join(' and ')}</b></span>}<time dateTime={result.game.started_at}>{gameDate(result.game.started_at)} · {gameTime(result.game.started_at)}</time></span>
+          <span className="passport-recent-score"><strong>{result.own}–{result.against}</strong><small>{clock(duration(result.game))} played</small></span>
+          <ArrowUpRight size={13} aria-hidden="true"/>
+        </Link>
+      </li>)}</ol> : <p className="passport-recent-empty">No finished games yet.</p>)}
     </div>
   </article>;
 }
@@ -122,12 +154,26 @@ export function Players() {
   const people = useMemo(()=>playerPassports(games,rivalries,players),[games,rivalries,players]);
   const [creating,setCreating] = useState(false);
   const [tab,setTab] = useState<PassportTab>('overview');
+  const pageRef=useRef<HTMLElement>(null);
+  useEffect(()=>{
+    // Release spare space as the visitor scrolls upward. Never shrink past the
+    // current viewport, which would cause another browser scroll clamp.
+    const releaseSpace=()=>{
+      const page=pageRef.current;if(!page?.style.minHeight)return;
+      const floor=parseFloat(page.style.minHeight),top=page.getBoundingClientRect().top+window.scrollY;
+      const needed=Math.max(0,window.scrollY+window.innerHeight-top);
+      if(needed<floor)page.style.minHeight=`${needed}px`;
+    };
+    window.addEventListener('scroll',releaseSpace,{passive:true});
+    window.addEventListener('resize',releaseSpace);
+    return ()=>{window.removeEventListener('scroll',releaseSpace);window.removeEventListener('resize',releaseSpace);};
+  },[]);
   const lastPlayed = (player: PlayerPassport) => Date.parse(player.recent.at(-1)?.game.started_at ?? '') || 0;
   const ranked = [...people].sort((a, b) =>
     b.wins - a.wins || lastPlayed(b) - lastPlayed(a) || a.name.localeCompare(b.name)
   );
   const visible = profileFirst(ranked, p => p.key === profile || p.name.trim().toLowerCase() === profile);
-  return <section className="players-page">
+  return <section ref={pageRef} className="players-page">
     <header className="players-heading"><div><h1>Players</h1><p>Your table, by player.</p></div><button className="button primary" onClick={()=>setCreating(true)}><Plus size={18}/>New player</button></header>
     <p className="players-note">Your singles and team games, together.</p>
     {visible.length ? <PlayerCarousel entries={visible.map(p=>({id:p.key,content:<Passport player={p} players={people} tab={tab} setTab={setTab}/>}))}/> : <div className="empty-state"><Users size={30}/><h2>No players yet</h2><p>Add your friends, then choose sides in a rivalry.</p></div>}

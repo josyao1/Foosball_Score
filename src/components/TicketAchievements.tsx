@@ -9,7 +9,7 @@ export function TicketAchievements({ gameId, animate }: { gameId: string; animat
   const earns = useMemo(() => playerPassports(games, rivalries).flatMap(player => {
     const badges = ACHIEVEMENTS.flatMap(badge => {
       const count = (player.achievementHistory[badge.id]?.findIndex(game => game.id === gameId) ?? -1) + 1;
-      return count ? [{badge, count}] : [];
+      return count === 1 ? [{badge, count}] : [];
     });
     return badges.length ? [{player, badges}] : [];
   }), [games, rivalries, gameId]);

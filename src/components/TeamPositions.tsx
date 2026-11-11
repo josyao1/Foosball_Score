@@ -1,3 +1,4 @@
+import { duration } from '../lib/stats';
 import { useState } from 'react';
 import { ArrowLeftRight } from 'lucide-react';
 import type { Game, Rivalry, Side } from '../lib/types';
@@ -10,7 +11,7 @@ export function TeamPositions({game,rivalry,busy,onSave}:{game:Game;rivalry:Riva
  async function save(side?:Side){
   if(pending||busy)return;
   setPending(true);setError('');
-  const next=side?{...lineup,[side]:{defense:lineup[side].attack,attack:lineup[side].defense,swapped_at_ms:Math.max(0,Date.now()-Date.parse(game.started_at))}}:lineup;
+  const next=side?{...lineup,[side]:{defense:lineup[side].attack,attack:lineup[side].defense,swapped_at_ms:duration(game)}}:lineup;
   try{await onSave({...game,lineup:next});}catch(e){setError(e instanceof Error?e.message:'Could not swap positions.');}finally{setPending(false);}
  }
  return <section className="team-positions" aria-label="Team positions">
