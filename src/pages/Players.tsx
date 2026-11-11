@@ -16,6 +16,7 @@ import { Achievements } from '../components/Achievements';
 import { MASTERY, TIERS } from '../lib/mastery';
 import { MasteryBadges } from '../components/MasteryBadges';
 import { PlayerCarousel } from '../components/PlayerCarousel';
+import { PlayerJersey } from '../components/PlayerJersey';
 import '../players.css';
 
 const flags: Record<FinishType, GoalFlag[]> = {dunk:['dunk'],bank:['bank'],combo:['dunk','bank'],own_goal:['own_goal']};
@@ -31,6 +32,7 @@ const playerTeams: Record<string, string> = {
   max: 'Rosetta Stone',
   thomas: 'Sales Central',
   jeremy: 'B2C',
+  jermey: 'B2C',
   drew: 'Teacher Experience',
 };
 
@@ -79,7 +81,7 @@ function Passport({ player: p, players, tab, setTab }: { player: PlayerPassport;
   ];
   return <article className="player-passport" aria-label={`${p.name} passport`}>
     <header className="passport-header">
-      <div className="passport-portrait" aria-hidden="true"><svg viewBox="0 0 64 76"><path className="passport-rod" d="M0 36H64"/><circle cx="32" cy="16" r="9"/><path d="M19 31Q19 27 24 27H40Q45 27 45 31V46H39V59H42V69H22V59H25V46H19Z"/><path className="passport-shirt" d="M27 35H37"/></svg></div>
+      <div className="passport-portrait"><PlayerJersey name={p.name}/></div>
       <div className="passport-identity"><h2>{p.name}</h2>{team && <span className="passport-team">{team}</span>}<span>{p.firstPlayed ? `Playing since ${gameDate(p.firstPlayed)}` : 'First game still to come'}</span></div>
       <div className="passport-winrate"><strong>{p.played ? `${share(p.wins,p.played)}%` : '—'}</strong><span>win rate</span></div>
     </header>

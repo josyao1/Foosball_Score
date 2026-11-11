@@ -1,0 +1,14 @@
+.player-jersey { display:block; width:28px; height:auto; flex-shrink:0; }
+.profile-picker > .player-jersey { width:24px; }
+.profile-options .profile-option-person { display:flex; align-items:center; gap:10px; }
+.profile-option-person > span { min-width:0; overflow-wrap:anywhere; }
+.roster-person { display:flex; align-items:center; gap:8px; padding-block:5px; padding-right:6px; }
+.roster-person > span { min-width:0; overflow-wrap:anywhere; }
+.roster-person > .player-jersey { width:26px; }
+.position-lineup > .position-name { display:flex; align-items:center; gap:6px; min-width:0; }
+.position-name > .player-jersey { width:24px; }
+.position-name > span { min-width:0; overflow-wrap:anywhere; }
+@media(max-width:400px) {
+  .position-name > .player-jersey { width:20px; }
+  .position-lineup > .position-name { gap:4px; }
+}

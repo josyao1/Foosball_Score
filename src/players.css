@@ -10,10 +10,8 @@ html[data-design] .players-search input:focus-visible { outline:none; }
 .player-passport { container:passport / inline-size;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:12px 12px 4px 4px;overflow:hidden;display:flex;flex-direction:column; }
 .passport-header { display:flex;align-items:center;gap:16px;padding:22px 22px 18px; }
 .passport-identity .passport-team { display:block;font-size:10px;font-weight:600;line-height:1.4;margin:5px 0;overflow-wrap:anywhere; }
-.passport-portrait { width:55px;flex:0 0 55px;color:var(--text); }
-.passport-portrait svg { width:100%;display:block;fill:currentColor; }
-.passport-rod { stroke:var(--line);stroke-width:3; }
-.passport-shirt { stroke:var(--panel);stroke-width:2; }
+.passport-portrait { width:58px;flex:0 0 58px; }
+.passport-portrait svg { width:100%;height:auto;display:block; }
 .passport-identity { min-width:0;flex:1; }
 .passport-identity h2 { font-size:28px;line-height:1.1;overflow-wrap:anywhere; }
 .passport-identity > span { display:block;margin-top:7px;font-size:11px;color:var(--muted); }
@@ -67,7 +65,7 @@ html[data-design] .players-search input:focus-visible { outline:none; }
 }
 @container passport (max-width: 350px) {
   .passport-header { padding:16px 14px;gap:10px; }
-  .passport-portrait { flex-basis:36px;width:36px; }
+  .passport-portrait { flex-basis:44px;width:44px; }
   .passport-identity h2 { font-size:23px; }
   .passport-winrate strong { font-size:25px; }
   .passport-totals,.passport-form { margin-inline:14px; }

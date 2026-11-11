@@ -1,5 +1,6 @@
 import { allPlayers, orderRivalries, rosterKey, sidePlayers } from '../lib/participants';
 import { RecentGames } from "../components/RecentGames";
+import { PlayerJersey } from '../components/PlayerJersey';
 import { AchievementFeed } from "../components/AchievementFeed";
 import { GameAchievementMarker } from "../components/GameAchievements";
 import { useProfile } from "../lib/profile";
@@ -101,7 +102,7 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
             <th scope="col" key={side}>{side} <small>{rosters[side].length}/2</small></th>
           )}</tr></thead>
           <tbody>{players.map(player => <tr key={player.id}>
-            <th scope="row">{player.name}</th>
+            <th scope="row"><span className="roster-person"><PlayerJersey name={player.name} decorative/><span>{player.name}</span></span></th>
             {sides.map(side => {
               const checked = rosters[side].includes(player.id);
               const other = side === 'Black' ? rosters.White : rosters.Black;

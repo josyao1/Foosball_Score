@@ -1,4 +1,5 @@
 import { duration } from '../lib/stats';
+import { PlayerJersey } from './PlayerJersey';
 import { useState } from 'react';
 import { ArrowLeftRight } from 'lucide-react';
 import type { Game, Rivalry, Side } from '../lib/types';
@@ -25,7 +26,7 @@ export function TeamPositions({game,rivalry,busy,onSave}:{game:Game;rivalry:Riva
          const shift = (onDefense ? 0 : 1) - index;
          return <strong key={person.id} className={`position-name shift-${shift}`}
            style={{gridColumn: index + 1}} aria-label={`${person.name}, ${onDefense ? 'goalie and defender' : 'middle and attacker'}`}>
-           {person.name}
+           <PlayerJersey name={person.name} decorative/><span>{person.name}</span>
          </strong>;
        })}
        <small>Goalie + defender</small><small>Middle + attacker</small>
