@@ -94,9 +94,9 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
     </Dialog>;
   }
 
-  return <Dialog className="roster-dialog" title="New rivalry" onClose={onClose} dismissible={!store.busy}>
+  return <Dialog className={`roster-dialog${adding ? ' player-create-dialog' : ''}`} title={adding ? 'Add player' : 'New rivalry'} onClose={onClose} dismissible={!store.busy}>
     <form onSubmit={submit}>
-      {players.length > 0 ? <div className="roster-scroll">
+      {!adding && (players.length > 0 ? <div className="roster-scroll">
         <table className="roster-table" aria-label="Choose players for each side">
           <thead><tr><th scope="col">Player</th>{sides.map(side =>
             <th scope="col" key={side}>{side} <small>{rosters[side].length}/2</small></th>
@@ -117,7 +117,7 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
             })}
           </tr>)}</tbody>
         </table>
-      </div> : <p className="roster-empty">Add players to choose sides.</p>}
+      </div> : <p className="roster-empty">Add players to choose sides.</p>)}
       {adding && <label className="roster-new-player">Player name
         <input autoFocus required maxLength={40} autoComplete="off" value={newName} disabled={store.busy}
           onChange={event => setNewName(event.target.value)} />

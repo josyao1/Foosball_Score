@@ -228,6 +228,15 @@ html[data-design] dialog.roster-dialog { width: min(420px, calc(100% - 32px)); p
 .roster-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; }
 .roster-dialog .roster-footer button { min-height: 44px; }
 
+html[data-design] dialog.player-create-dialog { width: min(360px, calc(100% - 32px)); padding: 20px; border-radius: 18px; }
+.player-create-dialog .dialog-head { margin-bottom: 14px; }
+.player-create-dialog .dialog-head h2 { font-size: 26px; }
+.player-create-dialog form > label { display: grid; gap: 6px; margin: 0; font-size: 13px; }
+html[data-design] .player-create-dialog input { min-height: 44px; height: 44px; width: 100%; margin: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 16px; background: var(--bg); }
+html[data-design] .player-create-dialog input:focus-visible { outline: 1px solid var(--text); outline-offset: 2px; }
+.player-create-dialog .roster-footer { border: 0; padding-top: 14px; }
+html[data-design] .player-create-dialog .roster-footer button { min-height: 44px; padding: 10px 14px; font-size: 14px; border-radius: 8px; }
+
 
 /* Passport pages keep the identity and totals visible while details stay focused. */
 .players-page { overflow-anchor: none; }

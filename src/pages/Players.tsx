@@ -34,6 +34,7 @@ const playerTeams: Record<string, string> = {
   jeremy: 'B2C',
   jermey: 'B2C',
   drew: 'Teacher Experience',
+  kevin: 'B2B',
 };
 
 const passportTabs = ['overview','scoring','badges','recent'] as const;
