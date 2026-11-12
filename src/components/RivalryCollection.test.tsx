@@ -95,20 +95,19 @@ it("adapts to desktop resize and avoids carousel controls for a single ticket", 
   expect(screen.queryByText("Swipe left or right")).toBeNull();
 });
 
-it('features personal, live, then frequent matchups and lists the rest once', () => {
+it('features personal then frequent matchups and keeps live matchups accessible', () => {
   const items = [...rivalries, {...rivalries[0], id:'four', player_a:'Friend'},
     {...rivalries[1], id:'five', player_a:'Guest'}];
   const games = items.flatMap((item,i) => finishedGames(item, [1,4,5,1,1][i]));
   games.push({...games[0], id:'live', rivalry_id:'five', ended_at:null});
   render(<MemoryRouter><RivalryCollection rivalries={items} games={games} profile="player 1" layout="tickets"/></MemoryRouter>);
   const tickets = screen.getAllByRole('article');
-  expect(tickets.map(card=>card.getAttribute('aria-label'))).toEqual(['Player 1 vs Player 2','Guest vs Player 4','Player 5 vs Player 6']);
-  expect(within(tickets[1]).getByRole('link',{name:'Resume game'}).getAttribute('href')).toBe('/game/live');
+  expect(tickets.map(card=>card.getAttribute('aria-label'))).toEqual(['Player 1 vs Player 2','Player 5 vs Player 6','Player 3 vs Player 4']);
   expect(within(within(tickets[2]).getByRole('region',{name:'Recent games'})).getAllByRole('link')).toHaveLength(2);
   const details = screen.getByText('Other rivalries').closest('details')!;
   expect(details.open).toBe(false);
   fireEvent.click(details.querySelector('summary')!);
-  expect(within(details).getAllByRole('link').map(link=>link.getAttribute('href'))).toEqual(['/rivalry/two','/rivalry/four']);
+  expect(within(details).getAllByRole('link').map(link=>link.getAttribute('href'))).toEqual(['/rivalry/five','/rivalry/four']);
 });
 
 it('keeps every matchup directly accessible when none qualifies for a ticket', () => {
@@ -117,7 +116,7 @@ it('keeps every matchup directly accessible when none qualifies for a ticket', (
   expect(within(screen.getByRole('region',{name:'All rivalries'})).getAllByRole('link')).toHaveLength(3);
 });
 
-it('puts the profile and their team first with the corresponding kit, wins and game score', () => {
+it('puts the profile and their team first with the corresponding jerseys, wins and game score', () => {
   const [max, andrew, aiden] = ['Max', 'Andrew', 'Aiden'].map(name => ({id: 'id-' + name, name, created_at: ''}));
   const team = {...rivalries[0], player_a: 'Max', player_b: 'Andrew and Aiden', members: {a: [max], b: [andrew, aiden]}};
   const games = finishedGames(team, 1);
@@ -125,9 +124,10 @@ it('puts the profile and their team first with the corresponding kit, wins and g
   const page = (profile: string | null) => <MemoryRouter><RivalryCollection rivalries={[team]} games={games} layout="tickets" profile={profile}/></MemoryRouter>;
   const view = render(page(aiden.id));
   const ticket = screen.getByRole('article',{name:'Aiden and Andrew vs Max'});
-  const first = ticket.querySelector('.rc-ticket-player-line')!;
-  expect(first.textContent).toBe('Aiden and Andrew1');
-  expect(first.querySelector('[aria-label="White team"]')).toBeTruthy();
+  const first = ticket.querySelector('.rtp-identities > div')!;
+  expect(first.querySelector('strong')?.textContent).toBe('Aiden and Andrew');
+  expect(first.querySelectorAll('.player-jersey')).toHaveLength(2);
+  expect(ticket.querySelector('.rtp-numbers')?.textContent).toBe('1–0');
   expect(within(ticket).getByRole('link',{name:/Aiden and Andrew 1, Max 0/})).toBeTruthy();
   expect(within(ticket).getByText('Aiden and Andrew · 1-win streak')).toBeTruthy();
   view.rerender(page(null));
@@ -138,4 +138,32 @@ it('puts the profile and their team first with the corresponding kit, wins and g
   fireEvent.click(screen.getByText('Other rivalries'));
   const row = screen.getByRole('link',{name:/Aiden and Andrew vs Max/});
   expect(row.textContent).toContain('1–0');
+});
+
+it('ranks personal matchups by completed games, selected-side win rate, then recency in cards and directory', () => {
+  const thomas = {id:'thomas-id', name:'thomas', created_at:''};
+  const specs = [
+    {id:'loss-new', count:1, wins:0, day:11},
+    {id:'win-old', count:1, wins:1, day:8},
+    {id:'win-new', count:1, wins:1, day:10},
+    {id:'busy', count:2, wins:0, day:7},
+    {id:'loss-old', count:1, wins:0, day:9},
+    {id:'win-middle', count:1, wins:1, day:9},
+  ];
+  const items = specs.map(({id}) => ({id, player_a:id, player_b:'thomas', created_at:'2026-11-01T12:00:00Z',
+    members:{a:[{id, name:id, created_at:''}], b:[thomas]}}));
+  const games = specs.flatMap((spec, index) => finishedGames(items[index], spec.count).map((game, i) => ({...game,
+    started_at:`2026-11-${String(spec.day).padStart(2,'0')}T12:00:00Z`,
+    goals:[{id:game.id+'-goal', actor_side:i < spec.wins ? 'b' as const : 'a' as const,
+      rung:'attacker' as const, flags:[], elapsed_ms:1000, occurred_at:game.started_at}],
+  })));
+  render(<MemoryRouter><RivalryCollection rivalries={items} games={games} profile={thomas.id} layout="tickets"/></MemoryRouter>);
+  expect(screen.getAllByRole('article').map(card=>card.getAttribute('aria-label'))).toEqual([
+    'thomas vs busy', 'thomas vs win-new', 'thomas vs win-middle',
+  ]);
+  const details = screen.getByText('Other rivalries').closest('details')!;
+  fireEvent.click(details.querySelector('summary')!);
+  expect(within(details).getAllByRole('link').map(link=>link.getAttribute('href'))).toEqual([
+    '/rivalry/win-old', '/rivalry/loss-new', '/rivalry/loss-old',
+  ]);
 });

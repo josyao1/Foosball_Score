@@ -1,8 +1,8 @@
 import './player-jersey.css';
 
-type Kit = { letters: string; school: string; color: string; trim: string };
+type Kit = { letters: string; school: string; color: string; trim: string; lettering?: string };
 const northwestern = {school:'Northwestern',color:'#4E2A84',trim:'#FFFFFF'};
-const cornell = {school:'Cornell',color:'#B31B1B',trim:'#FFFFFF'};
+const cornell = {school:'Cornell',color:'#B31B1B',trim:'#5E3920',lettering:'#FFFFFF'};
 const kits: Record<string, Kit> = {
   josh: {...northwestern,letters:'DME'},
   joshua: {...northwestern,letters:'DME'},
@@ -32,7 +32,7 @@ export function PlayerJersey({name, decorative = false}: {name:string; decorativ
     <path d="M8 32L22 42M78 42L92 32" fill="none" stroke={kit.trim} strokeWidth="4"/>
     <path d="M29 88H71" fill="none" stroke={kit.trim} strokeWidth="2" opacity=".45"/>
     <path d="M29 42L27 83M71 42L73 83" fill="none" stroke={kit.trim} opacity=".17"/>
-    <text x="50" y="64" textAnchor="middle" fill={kit.trim}
+    <text x="50" y="64" textAnchor="middle" fill={kit.lettering ?? kit.trim}
       fontFamily="'DM Sans', Arial, sans-serif" fontWeight="650" fontSize={kit.letters.length>3?15:18}
       letterSpacing=".3">{kit.letters}</text>
   </svg>;

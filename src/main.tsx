@@ -7,6 +7,7 @@ import { StoreProvider } from "./lib/store";
 import "./styles.css";
 import "./designs.css";
 import "./sides.css";
+import "./live-scoring.css";
 retireRecordPreview();
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

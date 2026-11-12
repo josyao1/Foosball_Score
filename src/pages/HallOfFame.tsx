@@ -1,6 +1,6 @@
 import { RivalryOptions } from "../components/RivalryOptions";
 import { useId, useMemo, useState } from 'react';
-import { ArrowUpRight, ArrowLeftRight, Award, ChevronDown, Flag, Pause, Play, Sparkles, Timer, Trophy, Undo2 } from 'lucide-react';
+import { Award, ChevronDown, Flag, Pause, Play, Timer, Trophy, Undo2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Dialog } from '../components/Dialog';
 import { useStore } from '../lib/store';
@@ -10,7 +10,11 @@ import { clock } from '../lib/stats';
 import { gameDate, gameTime } from '../lib/time';
 import { useMomentumReplay } from '../hooks/useMomentumReplay';
 import { GoalBall } from '../components/GoalBall';
+import { PlayerJersey } from '../components/PlayerJersey';
+import { allPlayers, matchesProfile, sidePlayers } from '../lib/participants';
+import { useProfile } from '../lib/profile';
 import '../hall-of-fame.css';
+import '../hall-featured.css';
 
 /** Time-proportional steps, from kickoff through the actual final goal. */
 export function PosterMomentum({ entry, position = null }: { entry: RankedClassic; position?: number | null }) {
@@ -47,39 +51,49 @@ export function PosterMomentum({ entry, position = null }: { entry: RankedClassi
   </figure>;
 }
 
-function PosterCaption({ caption }: { caption: string }) {
-  const [kind, Icon] = caption === 'Both held match point' ? ['match-point', Flag] as const
-    : caption.includes('recovered from') ? ['comeback', Undo2] as const
-    : caption.endsWith('lead changes') ? ['lead-changes', ArrowLeftRight] as const
-    : caption.endsWith('special goals') ? ['special', Sparkles] as const
-    : ['duration', Timer] as const;
-  return <li className={`hall-moment-pill hall-moment-${kind}`}><Icon size={16} aria-hidden="true"/><span>{caption}</span></li>;
-}
-
-function MatchPoster({ entry, rank, onRating }: { entry: RankedClassic; rank: number; onRating: () => void }) {
-  const { game, rivalry, rating, captions } = entry;
+/** Feature the top-ranked game; keep the remaining classics compact. */
+function RankedMatch({ entry, rank, variant, onRating }: {
+  entry: RankedClassic; rank: number; variant: 'row' | 'feature'; onRating: () => void;
+}) {
+  const { game, rivalry, rating } = entry;
+  const [expanded, setExpanded] = useState(false);
   const replay = useMomentumReplay(rating.highlights.totalMs);
-  const count = replay.position === null ? rating.highlights.goals.length : rating.highlights.goals.filter(goal=>goal.elapsed_ms <= replay.position!).length;
+  const replayId = useId();
+  const full = variant === 'feature' || expanded;
+  const count = replay.position === null ? rating.highlights.goals.length : rating.highlights.goals.filter(g => g.elapsed_ms <= replay.position!).length;
   const displayed = rating.highlights.scores[count];
-  return <article className={`hall-poster${rank === 1 ? ' hall-feature hall-gold' : rank === 2 ? ' hall-silver' : rank === 3 ? ' hall-bronze' : ''}`} aria-label={`Rank ${rank}: ${rivalry.player_a} versus ${rivalry.player_b}`}>
-    <header className="hall-poster-head">
-      <span className="hall-rank">{rank<=3 && <Award className="hall-medal" aria-label={`${rank===1?'Gold':rank===2?'Silver':'Bronze'} medal`}/>}#{rank}</span>
-      <div className="hall-date"><time dateTime={game.started_at}>{gameDate(game.started_at)}</time><span>{gameTime(game.started_at)}</span></div>
-      <button className="hall-rating" onClick={onRating} aria-label={`Classic score ${ratingLabel(rating.total)} out of 100. View formula for rank ${rank}`}><strong>{ratingLabel(rating.total)}</strong><span>Classic score <small>/100</small></span></button>
-    </header>
-    <div className="hall-poster-match">
-      <h2 className="hall-score"><Link to={`/game/${game.id}`} aria-label={`${rivalry.player_a} ${displayed.a}, ${rivalry.player_b} ${displayed.b}. View game`}>
-        <span className="hall-contender"><span className="hall-player"><i className="hall-side black"/>{rivalry.player_a}</span><strong>{displayed.a}</strong></span>
-        <span className="hall-score-divider" aria-hidden="true">–</span>
-        <span className="hall-contender"><span className="hall-player"><i className="hall-side white"/>{rivalry.player_b}</span><strong>{displayed.b}</strong></span>
-      </Link></h2>
+  const highlight = entry.captions.find(caption => caption.includes('recovered from')) ?? entry.captions[0];
+  const toggleReplay = () => {
+    if (replay.playing) replay.pause();
+    else { setExpanded(true); replay.play(); }
+  };
+  return <article className={`hc-match hc-${variant} hc-place-${rank <= 3 ? rank : 'other'}`} aria-label={`Rank ${rank}: ${rivalry.player_a} versus ${rivalry.player_b}`}>
+    <div className="hc-match-head">
+      <span className="hc-rank">{rank <= 3 && <Award size={18} aria-label={`${rank === 1 ? 'Gold' : rank === 2 ? 'Silver' : 'Bronze'} medal`}/>}<span>#{rank}</span></span>
+      <time className="hc-date" dateTime={game.started_at}>{gameDate(game.started_at)}<span>{gameTime(game.started_at)}</span></time>
+      <button className="hc-rating" onClick={onRating} aria-label={`Classic score ${ratingLabel(rating.total)} out of 100. View formula for rank ${rank}`}><strong>{ratingLabel(rating.total)}</strong><small>/100</small></button>
+    </div>
+    {variant === 'feature' && <div className="hc-table-rail" aria-hidden="true"><span/><span/><span/><span/><span/></div>}
+    <Link className="hc-matchup" to={`/game/${game.id}`} aria-label={`${rivalry.player_a} ${displayed.a}, ${rivalry.player_b} ${displayed.b}. View game`}>
+      {(['a', 'b'] as const).map(side => <span className="hc-team" key={side}>
+        <span className="hc-kits">{sidePlayers(rivalry, side).map(p => <PlayerJersey key={p.id} name={p.name} decorative/>)}</span>
+        <span className="hc-team-name">{side === 'a' ? rivalry.player_a : rivalry.player_b}</span>
+        <strong>{displayed[side]}</strong>
+      </span>)}
+      {variant === 'feature' && <span className="hc-score-ball" aria-hidden="true"><GoalBall size={23}/></span>}
+    </Link>
+    <div className={`hc-chart ${full ? 'hc-chart-open' : 'hc-chart-preview'}`} id={replayId}>
+      {variant === 'feature' && <div className="hc-field-markings" aria-hidden="true"><i/><i/><i/></div>}
       <PosterMomentum entry={entry} position={replay.position}/>
     </div>
-    <ul className="hall-captions" aria-label="Game highlights">{captions.map(caption => <PosterCaption key={caption} caption={caption}/>)}</ul>
-    <footer className="hall-poster-footer">
-      <Link to={`/rivalry/${rivalry.id}`} aria-label={`View rivalry: ${rivalry.player_a} versus ${rivalry.player_b}`}>Rivalry <ArrowUpRight size={15}/></Link>
-      <div className="hall-replay-controls"><span className="hall-replay-speed">16×</span><button type="button" className="hall-play" onClick={replay.playing?replay.pause:replay.play} aria-label={`${replay.playing?'Pause':'Play'} replay of rank ${rank}: ${rivalry.player_a} versus ${rivalry.player_b}`}>{replay.playing?<Pause size={15}/>:<Play size={15}/>} {replay.playing?'Pause replay':'Play replay'}</button></div>
-    </footer>
+    <p className="hc-highlight">{highlight}</p>
+    <div className="hc-actions">
+      <span className="hc-duration"><Timer size={13} aria-hidden="true"/>{clock(rating.highlights.totalMs)}</span>
+      <button className="hc-play" onClick={toggleReplay} aria-controls={replayId} aria-label={`${replay.playing ? 'Pause' : 'Play'} replay of rank ${rank}: ${rivalry.player_a} versus ${rivalry.player_b}`}>
+        {replay.playing ? <Pause size={16}/> : <Play size={16}/>}<span>{replay.playing ? 'Pause' : 'Play'}</span>
+      </button>
+      {full && variant !== 'feature' && <button className="hc-collapse" onClick={() => { replay.pause(); replay.seek(rating.highlights.totalMs); setExpanded(false); }} aria-label={`Collapse replay of rank ${rank}`}><ChevronDown size={16}/></button>}
+    </div>
   </article>;
 }
 
@@ -112,17 +126,43 @@ function RatingBreakdown({ entry, onClose }: { entry: RankedClassic; onClose: ()
   </Dialog>;
 }
 
+type RankingFilter = { kind: 'all' } | { kind: 'rivalry' | 'player'; id: string };
+
 export function HallOfFame() {
-  const { games, rivalries } = useStore();
-  const [scope, setScope] = useState('');
-  const entries = useMemo(() => rankedClassics(scope ? games.filter(game => game.rivalry_id === scope) : games, rivalries), [games, rivalries, scope]);
-  const topEntries = entries.slice(0, 10);
+  const { games, rivalries, players } = useStore();
+  const profile = useProfile();
+  // One selection makes mutually exclusive filters impossible to combine accidentally.
+  const [filter, setFilter] = useState<RankingFilter>({ kind: 'all' });
   const [ratingId, setRatingId] = useState<string | null>(null);
+  const people = useMemo(() => allPlayers(rivalries, players).sort((a, b) =>
+    Number(matchesProfile(b, profile)) - Number(matchesProfile(a, profile)) || a.name.localeCompare(b.name)
+  ), [rivalries, players, profile]);
+  const entries = useMemo(() => {
+    const eligibleRivalries = filter.kind === 'player'
+      ? new Set(rivalries.filter(r => (['a', 'b'] as const).some(side => sidePlayers(r, side).some(p => p.id === filter.id))).map(r => r.id))
+      : null;
+    const filteredGames = games.filter(game => filter.kind === 'all' || (filter.kind === 'rivalry' ? game.rivalry_id === filter.id : eligibleRivalries!.has(game.rivalry_id)));
+    return rankedClassics(filteredGames, rivalries);
+  }, [games, rivalries, filter]);
+  const topEntries = entries.slice(0, 10);
   const selected = entries.find(entry => entry.game.id === ratingId);
+  const changeFilter = (kind: 'rivalry' | 'player', id: string) => {
+    setFilter(id ? { kind, id } : { kind: 'all' });
+    setRatingId(null);
+  };
+  const scopeKey = filter.kind === 'all' ? 'all' : `${filter.kind}:${filter.id}`;
   return <section className="hall-page">
-    <div className="hall-page-heading"><h1>Hall of Fame</h1><label className="hall-filter">Rivalry<select value={scope} onChange={e => { setScope(e.target.value); setRatingId(null); }}><RivalryOptions rivalries={rivalries} games={games}/></select></label></div>
+    <div className="hall-page-heading">
+      <h1>Hall of Fame</h1>
+      <div className="hall-filters">
+        <label className="hall-filter">Rivalry<select value={filter.kind === 'rivalry' ? filter.id : ''} onChange={e => changeFilter('rivalry', e.target.value)}><RivalryOptions rivalries={rivalries} games={games}/></select></label>
+        <label className="hall-filter">Player<select value={filter.kind === 'player' ? filter.id : ''} onChange={e => changeFilter('player', e.target.value)}><option value="">All players</option>{people.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+      </div>
+    </div>
     <p className="hall-intro">Top {topEntries.length} of {entries.length} ranked {entries.length === 1 ? 'game' : 'games'}. Tap a rating to see why.</p>
-    {entries.length ? <div className="hall-gallery">{topEntries.map((entry, i) => <MatchPoster key={`${scope}:${entry.game.id}:${entry.game.revision}`} entry={entry} rank={i + 1} onRating={() => setRatingId(entry.game.id)}/>)}</div> : <div className="empty-state"><Trophy size={32}/><h2>No ranked games yet</h2><p>Finish a first-to-10, win-by-two game at its first winning score to enter the rankings.</p><Link className="button primary" to="/">Go to rivalries</Link></div>}
+    {entries.length ? <div className="hc-gallery hc-layout-featured">{topEntries.map((entry, i) =>
+      <RankedMatch key={`${scopeKey}:${entry.game.id}:${entry.game.revision}`} entry={entry} rank={i + 1} variant={i === 0 ? 'feature' : 'row'} onRating={() => setRatingId(entry.game.id)}/>)}</div>
+      : <div className="empty-state"><Trophy size={32}/><h2>No ranked games yet</h2><p>{filter.kind === 'all' ? 'Finish a first-to-10, win-by-two game at its first winning score to enter the rankings.' : 'No qualifying finished games for this selection.'}</p>{filter.kind !== 'all' ? <button className="button primary" onClick={() => setFilter({kind:'all'})}>Show all games</button> : <Link className="button primary" to="/">Go to rivalries</Link>}</div>}
     {selected && <RatingBreakdown entry={selected} onClose={() => setRatingId(null)}/>}
   </section>;
 }

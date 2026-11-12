@@ -15,6 +15,8 @@ import './table-scorer.css';
 
 type Props = {
   children: ReactNode;
+  centralClock?: boolean;
+  flipControl?: ReactNode;
   promptPaused: boolean;
   busy: boolean;
   onSave: (game: Game) => Promise<unknown>;
@@ -27,7 +29,7 @@ type Props = {
 };
 const farRungs = [...RUNGS].reverse();
 
-export function TableScorer({game, rivalry, scores, disabled, onGoal, children, promptPaused, busy, onSave, pauseControl}: Props) {
+export function TableScorer({game, rivalry, scores, disabled, onGoal, children, promptPaused, busy, onSave, pauseControl, centralClock = false, flipControl}: Props) {
   const profile = useProfile();
   const [swapError, setSwapError] = useState('');
   const [swapping, setSwapping] = useState(false);
@@ -138,9 +140,10 @@ export function TableScorer({game, rivalry, scores, disabled, onGoal, children, 
   }
 
   return <>
-    <div className="live-score-toolbar">
-      {children}
+    <div className={`live-score-toolbar${centralClock ? ' has-central-clock' : ''}`}>
+      {!centralClock && children}
       <div className="live-pause-control">{pauseControl}</div>
+      {flipControl}
       <ScreenAwake {...lock}/>
       <button type="button" className="table-launch" onClick={open} disabled={busy}
       aria-haspopup="dialog" aria-label="Full screen" title="Full screen"><Maximize size={16} aria-hidden="true"/><span>Full screen</span></button>

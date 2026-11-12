@@ -1,0 +1,104 @@
+.live-layout-kit { display: inline-block; width: 9px; height: 9px; border-radius: 50%; border: 1px solid #8f8273; flex-shrink: 0; }
+.live-layout-kit.kit-a { background: #111; }
+.live-layout-kit.kit-b { background: #fff; }
+.live-layout-number { display: block; font: 400 clamp(48px, 8vw, 76px)/1 Georgia, serif; font-variant-numeric: tabular-nums; }
+.live-layout-number.gs-rematch-number { display: inline-grid; overflow: hidden; padding-block: .04em; }
+.live-layout-table { margin-top: 12px; }
+.live-layout-pad { display: grid; gap: 8px; min-width: 0; }
+html[data-design] .live-layout-pad .rung-button {
+  display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: center; align-items: center;
+  min-width: 0; min-height: 82px; gap: 8px; padding: 10px 6px; text-align: center; border-radius: 9px;
+}
+html[data-design] .live-layout-pad .rung-button > .rung-label { flex: 0 1 auto; padding: 0; font-size: 13px; line-height: 1.2; width: 100%; overflow-wrap: anywhere; }
+html[data-design] .live-layout-pad .rung-button > b { display: none; }
+html[data-design] .live-layout-pad .rung-illustration { width: 42px; padding: 0; justify-content: center; gap: 3px; }
+html[data-design] .live-layout-pad .rung-illustration i { width: 5px; height: 13px; }
+.live-layout-pad .rung-assignee { font-size: 12px; margin-top: 4px; }
+.live-layout-table .team-position-row { border-top: 0; }
+.live-layout-table .live-layout-pad { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.live-table-name { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 10px 0; overflow-wrap: anywhere; }
+.live-table-flip { flex-shrink: 0; font-size: 11px; }
+.live-table-score { display: grid; position: relative; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 18px 0; margin: 10px 0; border-block: 1px dashed var(--line); }
+.live-table-score > div:not(.live-table-timer) { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; padding: 0 16px; text-align: center; }
+.live-table-score > div > span:not(.match-point-number) { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; overflow-wrap: anywhere; }
+.live-table-ball { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.live-table-timer { grid-column: 1 / -1; justify-self: center; margin: 0 0 12px; }
+html[data-design] .live-table-timer .game-clock { font-size: 14px; gap: 6px; }
+.live-table-timer .clock-rule { display: none; }
+.live-table-score:has(.live-table-timer) .live-table-ball { top: calc(50% + 14px); }
+.live-score-panel.is-live .live-score-toolbar.has-central-clock { grid-template-columns: minmax(0, 1fr) auto auto; }
+.live-score-panel.is-live .live-score-toolbar.has-central-clock .live-pause-control { grid-area: 1 / 1; }
+.live-score-panel.is-live .live-score-toolbar.has-central-clock .live-table-flip { grid-area: 1 / 2; }
+.live-score-panel.is-live .live-score-toolbar.has-central-clock .table-launch { grid-area: 1 / 3; }
+@media (max-width: 600px) {
+  .live-layout-pad { gap: 6px; }
+  .live-layout-number { font-size: 52px; }
+  html[data-design] .live-layout-pad .rung-button { min-height: 76px; gap: 6px; padding: 8px 4px; }
+  html[data-design] .live-layout-pad .rung-button > .rung-label { font-size: 12px; }
+  .live-layout-pad .rung-assignee { font-size: 11px; }
+  .live-table-score { padding: 14px 0; }
+}
+@media (max-width: 360px) {
+  html[data-design] .live-layout-table .rung-button > .rung-label { font-size: 10px; }
+  .live-layout-table .rung-assignee { font-size: 10px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .live-layout-number.just-scored { animation: score-confirm 300ms ease-out; }
+}
+
+/* The phone scoring surface stays compact; result tickets and table mode keep
+   their own layouts. All rung buttons share the same geometry, including 2v1. */
+@media (max-width: 600px) {
+  html[data-design="clay"] .live-score-panel.is-live {
+    padding: 12px;
+    border-width: 2px;
+    border-radius: 18px;
+  }
+
+  .live-score-panel.is-live .live-score-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 4px 8px;
+  }
+  .live-score-panel.is-live .live-score-toolbar .game-clock {
+    grid-area: 1 / 1;
+    justify-content: flex-start;
+    gap: 5px;
+    font-size: 14px;
+  }
+  .live-score-panel.is-live .live-score-toolbar .clock-rule { display: none; }
+  .live-score-panel.is-live .live-pause-control { grid-area: 1 / 2; }
+  .live-score-panel.is-live .live-score-toolbar .table-launch { grid-area: 1 / 3; min-width: 44px; }
+  .live-score-panel.is-live .table-launch span { display: none; }
+  .live-score-panel.is-live .live-score-toolbar .table-tool {
+    flex-direction: row;
+    gap: 5px;
+    padding: 6px 8px;
+    font-size: 11px;
+    min-height: 44px;
+  }
+  .live-score-panel.is-live .live-score-toolbar .screen-awake-control {
+    grid-area: 2 / 1 / 3 / -1;
+    justify-self: stretch;
+    justify-content: center;
+    margin: 0;
+    gap: 0 8px;
+    font-size: 11px;
+  }
+  .live-score-panel.is-live .screen-awake-control .text-button { font-size: 11px; }
+
+  .live-score-panel.is-live .team-positions { margin: 8px 0; }
+  .live-score-panel.is-live .team-position-row { gap: 8px; padding: 8px 0; }
+  .live-score-panel.is-live .position-side { font-size: 11px; }
+  .live-score-panel.is-live .position-lineup { --position-gap: 8px; }
+  .live-score-panel.is-live .position-lineup .position-name { font-size: 12px; gap: 4px; }
+  .live-score-panel.is-live .position-name .player-jersey { width: 18px; height: 20px; }
+  .live-score-panel.is-live .position-lineup small { font-size: 10px; line-height: 1.3; }
+  .live-score-panel.is-live .position-swap { min-width: 44px; min-height: 44px; padding: 6px; }
+  .live-score-panel.is-live .position-swap span { display: none; }
+  .live-score-panel.is-live .scoring-actions { margin-top: 12px; gap: 8px; }
+  html[data-design="clay"] .live-score-panel.is-live .scoring-actions .button {
+    min-height: 44px;
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+}

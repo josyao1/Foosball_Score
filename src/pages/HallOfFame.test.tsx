@@ -4,10 +4,10 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { MemoryRouter } from 'react-router-dom';
 import { HallOfFame } from './HallOfFame';
 import { App } from '../App';
-import type { Game } from '../lib/types';
+import type { Game, Rivalry } from '../lib/types';
 
-const fixture = vi.hoisted(() => ({ games: [] as Game[] }));
-vi.mock('../lib/store', () => ({ useStore: () => ({ games: fixture.games, rivalries: [{ id: 'r', player_a: 'Josh', player_b: 'Brooks', created_at: '2026-01-01' }, { id: 'other', player_a: 'Andrew', player_b: 'Alex', created_at: '2026-01-01' }], cloud: true, loading: false, error: null }) }));
+const fixture = vi.hoisted(() => ({ games: [] as Game[], extraRivalries: [] as Rivalry[] }));
+vi.mock('../lib/store', () => ({ useStore: () => ({ games: fixture.games, rivalries: [{ id: 'r', player_a: 'Josh', player_b: 'Brooks', created_at: '2026-01-01' }, { id: 'other', player_a: 'Andrew', player_b: 'Alex', created_at: '2026-01-01' }, ...fixture.extraRivalries], cloud: true, loading: false, error: null }) }));
 function game(id: string, sequence: string): Game {
   return { id, rivalry_id: 'r', revision: 1, started_at: '2026-11-02T18:00:00Z', ended_at: '2026-11-02T18:05:00Z', goals: [...sequence].map((s, i) => ({ id: `${id}-${i}`, actor_side: s === 'a' ? 'a' : 'b', rung: 'attacker', flags: [], elapsed_ms: (i + 1) * 10000, occurred_at: '2026-11-02T18:00:00Z' })) };
 }
@@ -15,7 +15,7 @@ beforeEach(() => {
   Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, value: function (this: HTMLDialogElement) { this.open = true; } });
   Object.defineProperty(HTMLDialogElement.prototype, 'close', { configurable: true, value: function (this: HTMLDialogElement) { if (this.open) { this.open = false; this.dispatchEvent(new Event('close')); } } });
 });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); fixture.games = []; });
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); fixture.games = []; fixture.extraRivalries = []; });
 it('ranks posters, uses real momentum, and keeps replay, details and formula actions separate', () => {
   fixture.games = [game('shutout', 'aaaaaaaaaa'), game('comeback', 'ababababbbbbb' + 'aaaaaaa')];
   const { container } = render(<MemoryRouter><HallOfFame/></MemoryRouter>);
@@ -56,7 +56,7 @@ it('replays inside the poster with timed scores, markers, pause, resume and rest
   fixture.games=[game('comeback','ababababbbbbb'+'aaaaaaa')];
   const view=render(<MemoryRouter><HallOfFame/></MemoryRouter>);
   const poster=screen.getByRole('article');
-  const values=()=>Array.from(poster.querySelectorAll('.hall-contender > strong')).map(el=>el.textContent);
+  const values=()=>Array.from(poster.querySelectorAll('.hc-team > strong')).map(el=>el.textContent);
   expect(values()).toEqual(['11','9']);
   expect(poster.querySelector('.hall-low-marker title')?.textContent).toContain('4–9');
   expect(poster.querySelector('.hall-win-marker')).toBeTruthy();
@@ -131,4 +131,61 @@ it('dismisses the rating on an outside tap, but keeps inside clicks and drags op
   down(50, 50);
   fireEvent.click(dialog, { clientX: 50, clientY: 50 });
   expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+it('uses Featured classic permanently and filters solo and team games by exact player membership', () => {
+  const member = (id: string) => ({id, name: id, created_at:'2026-01-01'});
+  fixture.extraRivalries = [
+    {id:'team', player_a:'Josh and Max', player_b:'Brooks and Andrew', created_at:'2026-01-01', members:{a:[member('josh'), member('max')], b:[member('brooks'),member('andrew')]}},
+    {id:'similar', player_a:'Josh Jr', player_b:'Max', created_at:'2026-01-01', members:{a:[member('josh-jr')], b:[member('max')]}}
+  ];
+  fixture.games = [game('solo', 'aaaaaaaaaa'), {...game('team-best', 'ababababbbbbb' + 'aaaaaaa'), rivalry_id:'team'}, {...game('unrelated', 'aaaaaaaaaa'), rivalry_id:'other'}, {...game('similar-name', 'aaaaaaaaaa'), rivalry_id:'similar'}];
+  const {container} = render(<MemoryRouter><HallOfFame/></MemoryRouter>);
+  expect(screen.queryByRole('tablist', {name:/Compare/})).toBeNull();
+  expect(container.querySelectorAll('.hc-feature')).toHaveLength(1);
+  expect(container.querySelectorAll('.hc-row')).toHaveLength(3);
+  const player = screen.getByLabelText('Player') as HTMLSelectElement;
+  const rivalry = screen.getByLabelText('Rivalry') as HTMLSelectElement;
+  fireEvent.change(rivalry, {target:{value:'other'}});
+  expect(screen.getAllByRole('article')).toHaveLength(1);
+  fireEvent.change(player, {target:{value:'josh'}});
+  expect(rivalry.value).toBe('');
+  expect(screen.getAllByRole('article')).toHaveLength(2);
+  expect(within(screen.getAllByRole('article')[0]).getByRole('link',{name:/View game/}).getAttribute('href')).toBe('/game/team-best');
+  expect(screen.queryByRole('link', {name:/Josh Jr.*View game/})).toBeNull();
+  fireEvent.change(player, {target:{value:'andrew'}});
+  expect(screen.getAllByRole('article')).toHaveLength(2); // Opposing team member also included.
+  fireEvent.change(rivalry, {target:{value:'r'}});
+  expect(player.value).toBe('');
+  expect(screen.getAllByRole('article')).toHaveLength(1);
+  fireEvent.change(rivalry, {target:{value:''}});
+  expect(screen.getAllByRole('article')).toHaveLength(4);
+});
+it('caps player rankings at ten and resets rating details when changing filters', () => {
+  fixture.games = Array.from({length:12}, (_,i) => game(`g-${i}`, 'aaaaaaaaaa'));
+  render(<MemoryRouter><HallOfFame/></MemoryRouter>);
+  fireEvent.change(screen.getByLabelText('Player'), {target:{value:'josh'}});
+  expect(screen.getAllByRole('article')).toHaveLength(10);
+  expect(screen.getByText(/Top 10 of 12/)).toBeTruthy();
+  fireEvent.click(screen.getAllByRole('button',{name:/Classic score/})[0]);
+  expect(screen.getByRole('dialog')).toBeTruthy();
+  fireEvent.change(screen.getByLabelText('Player'), {target:{value:'alex'}});
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(screen.getByText('No ranked games yet')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button',{name:'Show all games'}));
+  expect((screen.getByLabelText('Player') as HTMLSelectElement).value).toBe('');
+  expect(screen.getAllByRole('article')).toHaveLength(10);
+});
+it('expands inline replay from a ranked row and collapses back to the final score', () => {
+  vi.stubGlobal('requestAnimationFrame', () => 1);
+  vi.stubGlobal('cancelAnimationFrame', () => {});
+  fixture.games = [game('comeback', 'ababababbbbbb' + 'aaaaaaa'), game('shutout','aaaaaaaaaa')];
+  render(<MemoryRouter><HallOfFame/></MemoryRouter>);
+  const match = screen.getAllByRole('article')[1];
+  fireEvent.click(within(match).getByRole('button', {name:/Play replay/}));
+  expect(match.querySelector('.hc-chart-open')).toBeTruthy();
+  expect(within(match).getByRole('link', {name:/View game/}).getAttribute('aria-label')).toContain('Josh 0, Brooks 0');
+  fireEvent.click(within(match).getByRole('button', {name:/Collapse replay/}));
+  expect(match.querySelector('.hc-chart-open')).toBeNull();
+  expect(within(match).getByRole('link', {name:/View game/}).getAttribute('aria-label')).toContain('Josh 10, Brooks 0');
 });

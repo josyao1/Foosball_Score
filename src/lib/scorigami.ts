@@ -7,7 +7,7 @@ export interface ScoreBucket { key: string; high: number; low: number; games: Ga
 /** Opposite table sides share a final score. Only completed first-to-10, win-by-two results enter the map. */
 export function scorigami(games: Game[], rivalryId = '') {
   const completed = games.filter(g => {
-    if (!g.ended_at || (rivalryId && g.rivalry_id !== rivalryId)) return false;
+    if (g.deleted_at || !g.ended_at || (rivalryId && g.rivalry_id !== rivalryId)) return false;
     const s = score(g.goals), high = Math.max(s.a, s.b), low = Math.min(s.a, s.b);
     return (high === 10 && low <= 8) || (high > 10 && high - low === 2);
   })

@@ -17,6 +17,9 @@ import { MASTERY, TIERS } from '../lib/mastery';
 import { MasteryBadges } from '../components/MasteryBadges';
 import { PlayerCarousel } from '../components/PlayerCarousel';
 import { PlayerJersey } from '../components/PlayerJersey';
+import { ScoutingNote } from '../components/ScoutingNote';
+import { useScoutingNotes } from '../lib/useScoutingNotes';
+import type { ScoutingNote as Note } from '../lib/scouting';
 import '../players.css';
 
 const flags: Record<FinishType, GoalFlag[]> = {dunk:['dunk'],bank:['bank'],combo:['dunk','bank'],own_goal:['own_goal']};
@@ -39,7 +42,7 @@ const playerTeams: Record<string, string> = {
 
 const passportTabs = ['overview','scoring','badges','recent'] as const;
 type PassportTab = typeof passportTabs[number];
-function Passport({ player: p, players, tab, setTab }: { player: PlayerPassport; players:PlayerPassport[]; tab:PassportTab; setTab:(tab:PassportTab)=>void }) {
+function Passport({ player: p, players, tab, setTab, note }: { player: PlayerPassport; players:PlayerPassport[]; tab:PassportTab; setTab:(tab:PassportTab)=>void; note?:Note }) {
   const team = playerTeams[p.name.trim().toLowerCase()];
   const stamps=MASTERY.map(b=>({...b,level:p.mastery[b.id].earned.length})).filter(b=>b.level>0).sort((a,b)=>b.level-a.level).slice(0,3);
   const tabId = useId();
@@ -105,6 +108,7 @@ function Passport({ player: p, players, tab, setTab }: { player: PlayerPassport;
     </div>
     <div className={`passport-page passport-page-${tab}`} role="tabpanel" id={`${tabId}-panel-${tab}`} aria-labelledby={`${tabId}-${tab}`} tabIndex={0}>
       {tab==='overview'&&<>
+    {note&&<ScoutingNote note={note} name={p.name}/>}
     <section className="passport-form" aria-label="Recent form">
       <div><h3>Recent form</h3><span>Oldest → latest</span></div>
       {p.recent.length ? <ol>{p.recent.map(result=><li key={result.game.id}><Link className={`form-stamp result-${result.result}`} to={`/game/${result.game.id}`} title={`${result.result === 'W' ? 'Won' : result.result === 'L' ? 'Lost' : 'Drew'} ${result.own}–${result.against} vs ${result.opponent} · ${gameDate(result.game.started_at)}, ${gameTime(result.game.started_at)}`} aria-label={`${result.result === 'W' ? 'Won' : result.result === 'L' ? 'Lost' : 'Drew'} ${result.own}–${result.against} against ${result.opponent}, ${gameDate(result.game.started_at)}, ${gameTime(result.game.started_at)}`}>{result.result}</Link></li>)}</ol> : <span className="passport-muted">No finished games</span>}
@@ -152,9 +156,10 @@ function Passport({ player: p, players, tab, setTab }: { player: PlayerPassport;
 }
 
 export function Players() {
-  const {games,rivalries,players} = useStore();
+  const {games,rivalries,players,loading} = useStore();
   const profile=useProfile();
   const people = useMemo(()=>playerPassports(games,rivalries,players),[games,rivalries,players]);
+  const notes=useScoutingNotes(games,rivalries,!loading);
   const [creating,setCreating] = useState(false);
   const [tab,setTab] = useState<PassportTab>('overview');
   const pageRef=useRef<HTMLElement>(null);
@@ -179,7 +184,7 @@ export function Players() {
   return <section ref={pageRef} className="players-page">
     <header className="players-heading"><div><h1>Players</h1><p>Your table, by player.</p></div><button className="button primary" onClick={()=>setCreating(true)}><Plus size={18}/>New player</button></header>
     <p className="players-note">Your singles and team games, together.</p>
-    {visible.length ? <PlayerCarousel entries={visible.map(p=>({id:p.key,content:<Passport player={p} players={people} tab={tab} setTab={setTab}/>}))}/> : <div className="empty-state"><Users size={30}/><h2>No players yet</h2><p>Add your friends, then choose sides in a rivalry.</p></div>}
+    {visible.length ? <PlayerCarousel entries={visible.map(p=>({id:p.key,content:<Passport player={p} players={people} tab={tab} setTab={setTab} note={notes[p.key]}/>}))}/> : <div className="empty-state"><Users size={30}/><h2>No players yet</h2><p>Add your friends, then choose sides in a rivalry.</p></div>}
     {creating && <NewPlayer onClose={()=>setCreating(false)}/>}
   </section>;
 }

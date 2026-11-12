@@ -188,3 +188,14 @@ it('identifies each player’s teammate in recent team games and uses result bal
  expect(andrew.textContent).toContain('with Max');
  expect(andrew.querySelector('.result-L .goal-ball')).toBeTruthy();
 });
+it('shows exactly one scouting note per scoring player only on Overview',()=>{
+ fixture.games=[game];fixture.rivalries=[rivalry];
+ render(<MemoryRouter><Players/></MemoryRouter>);
+ const josh=within(screen.getByRole('article',{name:'Josh passport'}));
+ expect(josh.getAllByRole('button',{name:/Scouting note/})).toHaveLength(1);
+ expect(within(screen.getByRole('article',{name:'Brooks passport'})).queryByRole('button',{name:/Scouting note/})).toBeNull();
+ fireEvent.click(josh.getByRole('tab',{name:'Scoring'}));
+ expect(josh.queryByRole('button',{name:/Scouting note/})).toBeNull();
+ fireEvent.click(josh.getByRole('tab',{name:'Overview'}));
+ expect(josh.getAllByRole('button',{name:/Scouting note/})).toHaveLength(1);
+});

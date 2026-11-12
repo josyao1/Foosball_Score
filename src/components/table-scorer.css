@@ -67,7 +67,7 @@ html[data-design] .table-pads .rung-illustration i, .table-pads .rung-illustrati
   .table-score { gap: 8px; }
   .table-team-score { flex-wrap: wrap; justify-content: center; }
   .table-team-name { font-size: 11px; }
-  .table-tool { flex-direction: column; gap: 2px; font-size: 10px; padding: 4px 6px; }
+  .table-mode .table-tool { flex-direction: column; gap: 2px; font-size: 10px; padding: 4px 6px; }
 }
 
 .table-dialog-score { text-align: center; margin: 0 0 8px; font-size: 13px; color: var(--muted); }

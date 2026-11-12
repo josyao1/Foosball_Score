@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { ArrowLeftRight } from 'lucide-react';
 import type { Game, Rivalry, Side } from '../lib/types';
 import { defaultLineup, sidePlayers } from '../lib/participants';
-export function TeamPositions({game,rivalry,busy,onSave}:{game:Game;rivalry:Rivalry;busy:boolean;onSave:(g:Game)=>Promise<unknown>}){
+export function TeamPositions({game,rivalry,busy,onSave,onlySide}:{game:Game;rivalry:Rivalry;busy:boolean;onSave:(g:Game)=>Promise<unknown>;onlySide?:Side}){
  const [error,setError]=useState(''),[pending,setPending]=useState(false);
  const lineup=game.lineup??defaultLineup(rivalry);
- const teams=(['a','b'] as const).filter(s=>sidePlayers(rivalry,s).length===2);
+ const teams=(['a','b'] as const).filter(s=>(!onlySide||s===onlySide)&&sidePlayers(rivalry,s).length===2);
  if(!teams.length)return null;
  async function save(side?:Side){
   if(pending||busy)return;

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigationType, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
+  ArrowDownUp,
   Flag,
   Undo2,
   Timer,
@@ -33,7 +34,7 @@ import { playerName } from "../lib/types";
 import type { Game, Goal, Rung, Side } from "../lib/types";
 import { useDesign } from "../components/SiteDesign";
 import { TableScorer } from "../components/TableScorer";
-import { RungControls } from "../components/RungControls";
+import { LiveScoringLayout } from "../components/LiveScoringLayout";
 import { TicketAchievements } from "../components/TicketAchievements";
 import { GameScoreboard } from "../components/GameScoreboard";
 import { GoalDialog } from "../components/GoalDialog";
@@ -61,6 +62,7 @@ export function GamePage() {
     [winningGame,setWinningGame] = useState<Game|null>(null),
     [dismissedWin,setDismissedWin] = useState<string|null>(null);
   const [tableDraft, setTableDraft] = useState(false);
+  const [scoringNear, setScoringNear] = useState<Side>('a');
   const [pauseError, setPauseError] = useState('');
   const [confirmation, setConfirmation] = useState<{gameId: string; goal: Goal} | null>(null);
   const [rematch, setRematch] = useState<{gameId: string; previous: Record<Side, number>} | null>(null);
@@ -165,6 +167,14 @@ export function GamePage() {
           <span className="clock-rule">First to 10 · win by 2</span>
         </div>);
 
+  const scoreboard = <div aria-live="polite" aria-atomic="true"><GameScoreboard
+    key={game.id} kickoff={kickoff} newlyFinished={!live && lastLiveId === game.id}
+    rivalry={r} scores={s} designId={design.id} live={live}
+    rematchFrom={rematch?.gameId === game.id && live && !game.goals.length ? rematch.previous : undefined}
+    achievementStrip={!live && <TicketAchievements gameId={game.id} animate={lastLiveId === game.id}/>}
+    pulse={confirmedGoal && {id: confirmedGoal.id, side: creditedSide(confirmedGoal)}}
+  /></div>;
+
   return (
     <>
       <Link className="back-link" to={`/rivalry/${r.id}`}>
@@ -195,23 +205,21 @@ export function GamePage() {
       </div>
       <section ref={panel} className={`live-score-panel scorer-layout-${design.scorerLayout} ${live ? "is-live" : ""}`}>
         {live ? <TableScorer key={game.id} game={game} rivalry={r} scores={s} disabled={scoringDisabled}
+          centralClock
+          flipControl={<button type="button" className="table-tool live-table-flip"
+            onClick={()=>setScoringNear(side=>side === 'a' ? 'b' : 'a')} title="Switch the top and bottom teams">
+            <ArrowDownUp size={15} aria-hidden="true"/>Flip sides</button>}
           promptPaused={Boolean(draft || winningGame || confirm || removing)}
           busy={store.busy} onSave={store.saveGame} pauseControl={pauseControl}
           onGoal={(side, rung) => beginGoal(side, rung, true)}>{gameClock}</TableScorer> : gameClock}
-        <div aria-live="polite" aria-atomic="true">
-          <GameScoreboard
-            key={game.id}
-            kickoff={kickoff}
-            newlyFinished={!live && lastLiveId === game.id}
-            rivalry={r}
-            scores={s}
-            designId={design.id}
-            live={live}
-            rematchFrom={rematch?.gameId === game.id && live && !game.goals.length ? rematch.previous : undefined}
-            achievementStrip={!live && <TicketAchievements gameId={game.id} animate={lastLiveId === game.id} />}
-            pulse={confirmedGoal && {id: confirmedGoal.id, side: creditedSide(confirmedGoal)}}
-          />
-        </div>
+        {live ? <LiveScoringLayout rivalry={r} lineup={game.lineup} scores={s}
+            near={scoringNear}
+            rematchFrom={rematch?.gameId === game.id && !game.goals.length ? rematch.previous : undefined}
+            clock={gameClock}
+            whitePositions={<TeamPositions onlySide="b" game={game} rivalry={r} busy={store.busy || Boolean(game.paused_at)} onSave={store.saveGame}/>}
+            blackPositions={<TeamPositions onlySide="a" game={game} rivalry={r} busy={store.busy || Boolean(game.paused_at)} onSave={store.saveGame}/>}
+            disabled={scoringDisabled} onGoal={beginGoal}
+            pulse={confirmedGoal && {id: confirmedGoal.id, side: creditedSide(confirmedGoal)}}/> : scoreboard}
         {!live && (
           <div className="winner-line">
             <Trophy size={18} />
@@ -220,9 +228,6 @@ export function GamePage() {
         )}
         {live && (
           <>
-            <TeamPositions game={game} rivalry={r} busy={store.busy || Boolean(game.paused_at)} onSave={store.saveGame}/>
-            <div className="scoring-hint">Tap the rung that hit the ball.</div>
-            <RungControls rivalry={r} lineup={game.lineup} layout={design.scorerLayout} disabled={scoringDisabled} onGoal={beginGoal}/>
             {won && (
               <div className="winning-notice" role="status">
                 <Trophy size={16} />

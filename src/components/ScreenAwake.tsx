@@ -1,4 +1,4 @@
-import { Sun, Moon } from 'lucide-react';
+import { Moon } from 'lucide-react';
 import type { useScreenWakeLock } from '../lib/useScreenWakeLock';
 import type { WakeLockStatus } from '../lib/useScreenWakeLock';
 const labels: Record<WakeLockStatus, string> = {
@@ -7,11 +7,12 @@ const labels: Record<WakeLockStatus, string> = {
   unsupported: 'Keep-awake unavailable', inactive: 'Normal screen timeout',
 };
 export function ScreenAwake({status, enabled, setEnabled, retry}: ReturnType<typeof useScreenWakeLock>) {
+  if (status === 'active') return null;
   const needsRetry = status === 'released' || status === 'unavailable';
   const needsAttention = needsRetry || status === 'off';
   return <div className={`screen-awake-control${needsAttention ? ' screen-awake-warning' : ''}`}>
     <span className="screen-awake-status" role="status">
-      {status === 'active' ? <Sun size={15} aria-hidden="true"/> : <Moon size={15} aria-hidden="true"/>}
+      <Moon size={15} aria-hidden="true"/>
       {labels[status]}
     </span>
     {status !== 'unsupported' && <button type="button" className={`text-button${!enabled ? ' screen-awake-retry' : ''}`} role="switch" aria-label="Keep screen awake" aria-checked={enabled} onClick={() => setEnabled(!enabled)}>{enabled ? 'Turn off' : 'Turn on'}</button>}

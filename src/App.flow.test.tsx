@@ -30,6 +30,32 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); localStorage.clear(); });
 
+it('uses the permanent table layout and preserves attribution and pause state when flipping sides', async () => {
+  seed({rivalries:[rivalry], games:[{...baseGame, goals:[goal]}]});
+  openApp('/game/g');
+  await screen.findByRole('heading', {name:'Live game'});
+  expect(screen.queryByRole('tablist', {name:'Scoring layout'})).toBeNull();
+  expect(screen.getAllByRole('button', {name:'Full screen'})).toHaveLength(1);
+  expect(screen.getAllByRole('group', {name:/scoring rungs/}).map(pad=>pad.getAttribute('aria-label')))
+    .toEqual(['White scoring rungs','Black scoring rungs']);
+  const beforeFlip = stored().games[0];
+  fireEvent.click(screen.getByRole('button', {name:'Flip sides'}));
+  const pads = screen.getAllByRole('group', {name:/scoring rungs/});
+  expect(pads.map(pad=>pad.getAttribute('aria-label'))).toEqual(['Black scoring rungs','White scoring rungs']);
+  expect(within(pads[0]).getAllByRole('button').map(button=>button.getAttribute('aria-label'))).toEqual(
+    ['attacker','middle','defender','goalie'].map(rung=>`Ada ${rung} goal`));
+  expect(stored().games[0]).toEqual(beforeFlip);
+  fireEvent.click(screen.getByRole('button', {name:'Bea defender goal'}));
+  await confirm('Add goal for Bea');
+  expect(stored().games).toHaveLength(1);
+  expect(stored().games[0].goals.at(-1)).toMatchObject({actor_side:'b', rung:'defender'});
+  fireEvent.click(screen.getByRole('button', {name:'Pause game'}));
+  await screen.findByRole('button', {name:'Resume game'});
+  expect((screen.getByRole('button', {name:'Ada attacker goal'}) as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(screen.getByRole('button', {name:'Flip sides'}));
+  expect((screen.getByRole('button', {name:'Ada attacker goal'}) as HTMLButtonElement).disabled).toBe(true);
+});
+
 it('creates, resumes, scores, finishes early, corrects, removes, and deletes a rivalry through the app', async () => {
   seed({rivalries:[],games:[],players:[{id:'ada',name:'Ada',created_at:''},{id:'bea',name:'Bea',created_at:''}]});
   openApp();
@@ -554,7 +580,7 @@ it('scores through the mirrored table controls and keeps the game score visible 
 
 it('keeps the active wake lock while opening and closing full-screen scoring', async () => {
   const previous = Object.getOwnPropertyDescriptor(navigator, 'wakeLock');
-  const locks: {release: ReturnType<typeof vi.fn>}[] = [];
+  const locks: (EventTarget & {release: ReturnType<typeof vi.fn>})[] = [];
   const request = vi.fn(async () => {
     const lock = Object.assign(new EventTarget(), {released: false, release: vi.fn(async () => {})});
     locks.push(lock);
@@ -564,7 +590,10 @@ it('keeps the active wake lock while opening and closing full-screen scoring', a
   try {
     seed({rivalries:[rivalry], games:[baseGame]});
     const view = openApp('/game/g');
-    await screen.findByText('Screen awake');
+    await screen.findByRole('heading', {name:'Live game'});
+    await waitFor(()=>expect(request).toHaveBeenCalled());
+    await waitFor(()=>expect(screen.queryByRole('switch',{name:'Keep screen awake'})).toBeNull());
+    expect(screen.queryByText('Screen awake')).toBeNull();
     const held = locks.at(-1)!;
     const requests = request.mock.calls.length;
     fireEvent.click(screen.getByRole('button', {name:'Full screen'}));
@@ -573,8 +602,13 @@ it('keeps the active wake lock while opening and closing full-screen scoring', a
     await waitFor(() => expect(table.hasAttribute('open')).toBe(false));
     expect(held.release).not.toHaveBeenCalled();
     expect(request).toHaveBeenCalledTimes(requests);
+    act(()=>held.dispatchEvent(new Event('release')));
+    await screen.findByText('Screen may sleep');
+    fireEvent.click(screen.getByRole('button',{name:'Try again'}));
+    await waitFor(()=>expect(screen.queryByText('Screen may sleep')).toBeNull());
+    const renewed = locks.at(-1)!;
     view.unmount();
-    expect(held.release).toHaveBeenCalledOnce();
+    expect(renewed.release).toHaveBeenCalledOnce();
   } finally {
     if (previous) Object.defineProperty(navigator, 'wakeLock', previous);
     else Reflect.deleteProperty(navigator, 'wakeLock');

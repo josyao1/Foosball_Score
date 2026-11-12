@@ -195,3 +195,26 @@ it('lists the selected player’s rivalries first and keeps the filter tied to i
     selectProfile(null);
   }
 });
+
+it('opens tied oddity games, updates broken records live, and scopes discoveries to the rivalry', () => {
+ Object.defineProperty(HTMLDialogElement.prototype,'showModal',{configurable:true,value:function(this:HTMLDialogElement){this.open=true;}});
+ Object.defineProperty(HTMLDialogElement.prototype,'close',{configurable:true,value:function(this:HTMLDialogElement){this.open=false;this.dispatchEvent(new Event('close'));}});
+ const old=game('odd-old',10,8), tied=game('odd-tied',10,8), newer=game('odd-new',10,8,'other');
+ old.goals[0].flags=tied.goals[0].flags=['bank'];
+ newer.goals[0].flags=newer.goals[1].flags=['bank'];
+ fixture.games=[old,tied];
+ const view=render(<MemoryRouter><Scorigami/></MemoryRouter>);
+ expect(within(screen.getByRole('region',{name:'Still missing'})).getByText('10–0')).toBeTruthy();
+ fireEvent.click(screen.getByRole('button',{name:'Banks in a game: 1. 2 record games'}));
+ expect(within(screen.getByRole('dialog',{name:'Banks in a game'})).getAllByRole('link')).toHaveLength(2);
+ fixture.games=[old,tied,newer];
+ view.rerender(<MemoryRouter><Scorigami/></MemoryRouter>);
+ expect(within(screen.getByRole('dialog')).getAllByRole('link').map(a=>a.getAttribute('href'))).toEqual(['/game/odd-new']);
+ fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'Close dialog'}));
+ expect(screen.queryByRole('dialog')).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Banks in a game: 2. 1 record games'}));
+ fireEvent.change(screen.getByLabelText('Rivalry'),{target:{value:'r'}});
+ expect(screen.queryByRole('dialog')).toBeNull();
+ expect(screen.getByRole('button',{name:'Banks in a game: 1. 2 record games'})).toBeTruthy();
+ expect(screen.getByRole('button',{name:'Own goals in a game: none yet. 0 record games'}).hasAttribute('disabled')).toBe(true);
+});

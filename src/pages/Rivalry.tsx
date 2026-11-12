@@ -5,15 +5,13 @@ import {
   Play,
   Trash2,
 } from "lucide-react";
-import { useDesign } from "../components/SiteDesign";
 import { useStore } from "../lib/store";
-import { RivalrySummary } from "../components/RivalrySummary";
+import { MatchupSummary } from "../components/MatchupSummary";
 import { ConfirmDialog } from "../components/Dialog";
 import { RivalryBreakdown } from "../components/RivalryBreakdown";
 import { RecordBook } from "../components/Records";
 import { GameHistory } from "../components/GameHistory";
 export function RivalryPage() {
-  const design=useDesign();
   const { id } = useParams(),
     store = useStore(),
     navigate = useNavigate(),
@@ -73,7 +71,7 @@ export function RivalryPage() {
           {live ? "Resume game" : "Start a game"}
         </button>
       </div>
-      <RivalrySummary rivalry={r} games={games} designId={design.id}/>
+      <MatchupSummary rivalry={r} games={games}/>
       <RivalryBreakdown games={games} rivalry={r}/>
       <GameHistory key={r.id} games={games} rivalry={r} onStart={() => void start()} busy={store.busy}/>
       <RecordBook games={games} rivalry={r}/>
