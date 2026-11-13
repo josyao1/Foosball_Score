@@ -38,6 +38,7 @@ const playerTeams: Record<string, string> = {
   jermey: 'B2C',
   drew: 'Teacher Experience',
   kevin: 'B2B',
+  alex: 'Consumer Experience',
 };
 
 const passportTabs = ['overview','scoring','badges','recent'] as const;

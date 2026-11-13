@@ -16,6 +16,7 @@ const kits: Record<string, Kit> = {
   jermey: {...northwestern,letters:'B2C'},
   drew: {...cornell,letters:'TE'},
   kevin: {school:'UChicago',color:'#800000',trim:'#FFFFFF',letters:'B2B'},
+  alex: {school:'Michigan',color:'#00274C',trim:'#FFCB05',letters:'CE'},
 };
 
 export function PlayerJersey({name, decorative = false}: {name:string; decorative?:boolean}) {
