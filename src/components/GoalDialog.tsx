@@ -1,3 +1,4 @@
+import { useGameColor } from '../lib/GameColors';
 import { goalPlayer, sidePlayers } from '../lib/participants';
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CornerUpRight, Zap, Undo2, Check } from "lucide-react";
@@ -22,6 +23,7 @@ export function GoalDialog({
   onSave: (goal: Goal) => Promise<void>;
   onClose: () => void;
 }) {
+  const color = useGameColor();
   const [draft, setDraft] = useState(goal),
     [pending, setPending] = useState(false),
     [error, setError] = useState("");
@@ -110,7 +112,7 @@ export function GoalDialog({
         {currentScore && <p className="table-dialog-score" aria-label="Current score">
           {rivalry.player_a} <strong>{currentScore.a} – {currentScore.b}</strong> {rivalry.player_b}
         </p>}
-        <div className={`goal-preview side-${credited}`}>
+        <div className={`goal-preview side-${color(credited)}`}>
           <span>
             {playerName(rivalry, credited)} <strong>+1</strong>
           </span>

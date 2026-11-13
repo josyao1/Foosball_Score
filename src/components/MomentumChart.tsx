@@ -1,11 +1,12 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, KeyboardEvent, PointerEvent } from 'react';
+import type { CSSProperties, KeyboardEvent } from 'react';
 import { Pause, Play } from 'lucide-react';
 import { momentWindow, recordLabels } from '../lib/records';
 import type { Moment } from '../lib/records';
 import { clock, creditedSide, duration, gameStats, orderedGoals } from '../lib/stats';
 import { playerName } from '../lib/types';
 import type { Game, Rivalry } from '../lib/types';
+import { useChartScrub } from '../hooks/useChartScrub';
 import { useMomentumReplay } from '../hooks/useMomentumReplay';
 import { GoalBall } from './GoalBall';
 import '../momentum.css';
@@ -88,23 +89,7 @@ function MomentumView({ game, rivalry, highlight, watchMoment }: Props) {
     if (target !== null) { event.preventDefault(); choose(target, true); }
     else if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); choose(index); }
   };
-  const selectPointer = (event: PointerEvent<SVGSVGElement>) => {
-    if (!goals.length) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
-    const plotX = (event.clientX - rect.left) / rect.width * 720;
-    if (replaying) {
-      seek((plotX - LEFT) / (RIGHT - LEFT) * total);
-      return;
-    }
-    const plotY = (event.clientY - rect.top) / rect.height * 220;
-    let nearest = 0, distance = Infinity;
-    momentum.slice(1).forEach((p, index) => {
-      const next = Math.abs(x(p.elapsed) - plotX) + Math.abs(y(p.lead) - plotY) * 0.15;
-      if (next < distance) { distance = next; nearest = index; }
-    });
-    choose(nearest);
-  };
+  const scrub = useChartScrub({total,position:replay.position,times:goals.map(g=>g.elapsed_ms),left:LEFT,right:RIGHT,width:720,height:220,stretch:true,seek});
 
   return <section id="momentum" style={{ scrollMarginTop: 100 }} className="momentum-report" aria-labelledby={`${id}-heading`}>
     <header className="momentum-heading">
@@ -120,7 +105,7 @@ function MomentumView({ game, rivalry, highlight, watchMoment }: Props) {
     {!goals.length ? <div className="momentum-empty"><strong>Tied · 0 – 0</strong><p>The first goal will start the momentum chart.</p></div> : <>
       <div className="momentum-visually-hidden">Goal difference</div>
       <div className="momentum-plot-wrap">
-        <svg className="momentum-plot" viewBox="0 0 720 220" preserveAspectRatio="none" aria-labelledby={`${id}-heading ${id}-help`} onPointerDown={selectPointer} onPointerMove={e => { if (!replaying && (e.pointerType === 'mouse' || e.buttons)) selectPointer(e); }}>
+        <svg className="momentum-plot" viewBox="0 0 720 220" preserveAspectRatio="none" aria-labelledby={`${id}-heading ${id}-help`} {...scrub} tabIndex={0} role="group" aria-roledescription="interactive momentum chart">
           <defs><clipPath id={`${id}-black`}><rect x={LEFT} y={TOP} width={RIGHT - LEFT} height={CENTER - TOP}/></clipPath><clipPath id={`${id}-white`}><rect x={LEFT} y={CENTER} width={RIGHT - LEFT} height={BOTTOM - CENTER}/></clipPath></defs>
           <rect className="momentum-plot-bg" x={LEFT} y={TOP} width={RIGHT - LEFT} height={BOTTOM - TOP}/>
           {[0, .25, .5, .75, 1].map(fraction => <g key={fraction} className="momentum-time-grid"><line x1={x(chartTotal * fraction)} x2={x(chartTotal * fraction)} y1={TOP} y2={BOTTOM}/></g>)}
@@ -132,7 +117,7 @@ function MomentumView({ game, rivalry, highlight, watchMoment }: Props) {
           {goals.slice(0, visibleCount).map((g, index) => {
             const p = momentum[index + 1];
             const label = `Goal ${index + 1}, ${exactClock(g.elapsed_ms)}, ${playerName(rivalry, creditedSide(g))} scores, ${p.a} to ${p.b}`;
-            return <g key={g.id} ref={el => { points.current[index] = el; }} role="button" tabIndex={index === selectedIndex ? 0 : -1} aria-label={label} aria-pressed={index === selectedIndex} className={`momentum-point ${index === selectedIndex ? 'selected' : ''}`} onFocus={() => { if (!replaying) choose(index); }} onKeyDown={e => onKey(e, index)} onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); choose(index); }}><title>{label}</title><circle className="momentum-point-target" cx={x(p.elapsed)} cy={y(p.lead)} r="14"/><circle className="momentum-point-dot" cx={x(p.elapsed)} cy={y(p.lead)} r={index === selectedIndex ? 6 : 3.5}/></g>;
+            return <g key={g.id} ref={el => { points.current[index] = el; }} role="button" tabIndex={index === selectedIndex ? 0 : -1} aria-label={label} aria-pressed={index === selectedIndex} className={`momentum-point ${index === selectedIndex ? 'selected' : ''}`} onFocus={() => { if (!replaying) choose(index); }} onKeyDown={e => onKey(e, index)} onClick={e => { e.stopPropagation(); choose(index); }}><title>{label}</title><circle className="momentum-point-target" cx={x(p.elapsed)} cy={y(p.lead)} r="14"/><circle className="momentum-point-dot" cx={x(p.elapsed)} cy={y(p.lead)} r={index === selectedIndex ? 6 : 3.5}/></g>;
           })}
           {!replaying && <circle className="momentum-final-marker" cx={RIGHT} cy={y(current.lead)} r="5"><title>{game.ended_at ? 'Final' : 'Current'} score {current.a} to {current.b} at {exactClock(chartTotal)}</title></circle>}
         </svg>
@@ -169,7 +154,7 @@ function MomentumView({ game, rivalry, highlight, watchMoment }: Props) {
         </div>
         <button type="button" aria-label="Next goal" disabled={selectedIndex === goals.length - 1} onClick={() => choose(selectedIndex + 1)}>→</button>
       </div>
-      <p className="momentum-visually-hidden" id={`${id}-help`}>Touch or hover to inspect a goal. Use ← and → when a chart point has keyboard focus. Replay runs at {replay.speed}×; touch the chart to seek.</p>
+      <p className="momentum-visually-hidden" id={`${id}-help`}>Drag or tap to inspect game time. Use arrow keys on the chart to step between goals. Use ← and → when a chart point has keyboard focus. Replay runs at {replay.speed}×; touch the chart to seek.</p>
     </>}
   </section>;
 }

@@ -195,3 +195,23 @@ describe('momentum replay', () => {
   expect(container.querySelector('.momentum-axis-alert')).toBeNull();
  });
 });
+
+it('drags through game time and scores even before replay starts',()=>{
+ const {container}=render(<MomentumChart game={game} rivalry={rivalry}/>);
+ const svg=container.querySelector('.momentum-plot')!;
+ vi.spyOn(svg,'getBoundingClientRect').mockReturnValue({left:0,top:0,width:720,height:220} as DOMRect);
+ Object.assign(svg,{setPointerCapture:vi.fn(),hasPointerCapture:()=>true,releasePointerCapture:vi.fn()});
+ const pointer=(type:string,x:number)=>fireEvent(svg,Object.assign(new MouseEvent(type,{bubbles:true,clientX:x,clientY:90,button:0}),{pointerId:1,isPrimary:true}));
+ pointer('pointerdown',54);
+ expect(container.querySelector('.momentum-result strong')?.textContent).toBe('0 – 0');
+ pointer('pointermove',372);
+ expect(container.querySelector('.momentum-result strong')?.textContent).toBe('1 – 0');
+ expect(container.querySelector('.momentum-result time')?.textContent).toBe('0:20');
+ pointer('pointermove',800);
+ expect(container.querySelector('.momentum-result strong')?.textContent).toBe('1 – 1');
+ pointer('pointerup',800);
+ pointer('pointermove',54);
+ expect(container.querySelector('.momentum-result strong')?.textContent).toBe('1 – 1');
+ expect(container.querySelector('.momentum-goal-celebration')).toBeNull();
+ vi.restoreAllMocks();
+});

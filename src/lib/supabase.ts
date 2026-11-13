@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Game, Data, BacklogData } from "./types";
 import type { Repository } from "./storage";
+import { validatePlayerSettings } from './playerAppearance';
 import { validateNames } from "./storage";
 const url = import.meta.env.VITE_SUPABASE_URL?.trim();
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
@@ -46,6 +47,12 @@ export function createCloudRepository(): Repository {
       const {data,error}=await client.from('foos_players').insert({name:name.trim()}).select().single();
       if(error?.code==='23505')throw new Error('This player already exists.');
       fail(error);return data;
+    },
+    async updatePlayer(player,input){
+      const settings=validatePlayerSettings(input);
+      const {error}=await client.rpc('foos_update_player',{p_id:player.id,p_expected_revision:player.settings_revision??0,p_name:settings.name,p_appearance:settings.appearance});
+      if(error?.code==='23505')throw new Error('This player name is already in use.');
+      fail(error);
     },
     async createTeamRivalry(a,b){
       const {data,error}=await client.rpc('foos_create_team_rivalry',{p_a:a,p_b:b});fail(error);return data;

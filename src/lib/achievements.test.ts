@@ -166,3 +166,11 @@ it('keeps every qualifying game across side swaps while retaining only the first
  second.ended_at=null;
  expect(playerPassports([first,second],rivals).find(p=>p.key==='josh')!.achievementHistory.perfect?.map(g=>g.id)).toEqual(['first']);
 });
+it('awards Wrong way for an own goal while holding match point immediately before it',()=>{
+ for (const [seq,yes] of [['aaaaaaaaabbbbbbbb',true],['ab'.repeat(9),false],['ab'.repeat(9)+'a',true],['aaaaaaaaaabb',false],['ab'.repeat(9)+'b',false]] as const) {
+   const g=game(seq+'a');g.goals.at(-1)!.flags=['own_goal'];
+   expect(earnedAchievements(g,'a').includes('wrongWay')).toBe(yes);
+   expect(earnedAchievements(g,'b')).not.toContain('wrongWay');
+   expect(earnedAchievements({...g,ended_at:null},'a')).not.toContain('wrongWay');
+ }
+});

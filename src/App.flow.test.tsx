@@ -529,14 +529,15 @@ it.each([false, true])('offers to open a reversed team rivalry (created concurre
   expect(stored().rivalries).toHaveLength(1);
 });
 
-it('keeps repeat achievements out of the ticket but retains the below-ticket pills', async () => {
+it('keeps repeat achievements and the removed highlight pills out of the result', async () => {
   const blanked = scoredGame(10,0);
   const matches = [1,2,3].map(n=>({...blanked,id:'match'+n,ended_at:`2026-01-01T00:0${n}:00Z`}));
   seed({rivalries:[rivalry],games:matches});
   openApp('/game/match2');
   await screen.findByRole('heading',{name:'Game result'});
   expect(screen.queryByRole('region',{name:'Achievements earned this game'})).toBeNull();
-  expect(screen.getByRole('button',{name:/Ada: Perfect paper. Achievement details/})).toBeTruthy();
+  expect(screen.queryByRole('button',{name:/Ada: Perfect paper. Achievement details/})).toBeNull();
+  expect(screen.getByRole('button',{name:'Share ticket'}).closest('.game-heading-actions')).toBeTruthy();
 });
 
 it('stamps a first achievement on the live game’s saved result ticket', async () => {

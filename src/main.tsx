@@ -5,6 +5,7 @@ import { retireRecordPreview } from "./lib/retirePreview";
 import { App } from "./App";
 import { StoreProvider } from "./lib/store";
 import "./styles.css";
+import "./game-scoreboards.css";
 import "./designs.css";
 import "./sides.css";
 import "./live-scoring.css";

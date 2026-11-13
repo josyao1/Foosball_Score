@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { PlayerSettings } from '../components/PlayerSettings';
 import { Archive, ArrowLeft, RotateCcw, Trash2 } from 'lucide-react';
 import { useStore } from '../lib/store';
 import type { BacklogData, Game, Rivalry } from '../lib/types';
@@ -17,6 +18,19 @@ function GameInfo({game}:{game:Game}) {
     <small>{game.ended_at?`Game time ${clock(duration(game))}`:'Unfinished'} · {game.goals.length} goals</small></span></div>;
 }
 export function Backlog() {
+ const [params,setParams]=useSearchParams();
+ const settings=params.get('tab')==='players';
+ return <div className="backlog-page">
+  <Link className="back-link" to="/"><ArrowLeft size={16}/>Rivalries</Link>
+  <div className="page-heading"><h1>Backlog</h1></div>
+  <nav className="backlog-tabs" aria-label="Backlog sections">
+   <button aria-current={!settings?'page':undefined} onClick={()=>setParams({})}>Trash</button>
+   <button aria-current={settings?'page':undefined} onClick={()=>setParams({tab:'players'})}>Player settings</button>
+  </nav>
+  {settings?<PlayerSettings/>:<BacklogTrash/>}
+ </div>;
+}
+function BacklogTrash() {
   const store=useStore();
   const [data,setData]=useState<BacklogData>({rivalries:[],games:[]});
   const [loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState('');
@@ -59,9 +73,8 @@ export function Backlog() {
       <button className="icon-button" aria-label={`Permanently delete ${item.kind==='game'?'game':title(item.rivalry)}`} disabled={pending||store.busy} onClick={()=>setPurging(item)}><Trash2 size={17}/></button>
     </div>;
   }
-  return <div className="backlog-page">
-    <Link className="back-link" to="/"><ArrowLeft size={16}/>Rivalries</Link>
-    <div className="page-heading"><div><h1>Backlog</h1><p className="muted">Removed from the table. Kept here until you decide.</p></div></div>
+  return <div>
+    <p className="muted">Removed from the table. Kept here until you decide.</p>
     {error&&<p role="alert" className="form-error">{error} <button className="text-button" onClick={()=>void refresh()}>Retry</button></p>}
     {notice&&<p role="status" className="backlog-notice">{notice}</p>}
     {loading?<p>Loading backlog…</p>:<>

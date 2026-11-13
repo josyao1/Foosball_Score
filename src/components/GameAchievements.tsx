@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useMemo, useState } from 'react';
 import { Award } from 'lucide-react';
-import { ACHIEVEMENTS, earnedAchievements, hardCarryWinner, streakAchievementPlayers, lunchBreakPlayers } from '../lib/achievements';
+import { ACHIEVEMENTS, earnedAchievements, wrongWayPlayers, hardCarryWinner, streakAchievementPlayers, lunchBreakPlayers } from '../lib/achievements';
 import { gameHighlights } from '../lib/records';
 import { playerName } from '../lib/types';
 import type { Game, Rivalry, Side } from '../lib/types';
@@ -20,11 +20,16 @@ export function gameAwards(game:Game,rivalry:Rivalry,streakSides:Side[]=[],strea
   const highlights=gameHighlights(game);
   const carry = hardCarryWinner(game, rivalry, highlights);
   const awards = (['a','b'] as const).flatMap(side=>{
-    const ids=earnedAchievements(game,side,highlights,rivalry);
+    const ids=earnedAchievements(game,side,highlights,rivalry).filter(id=>id !== 'wrongWay');
     if(streakSides.includes(side))ids.push('streak');
     return ids.map(id=>({side,name:id==='streak'&&streakPeople.some(p=>p.side===side)?streakPeople.filter(p=>p.side===side).map(p=>p.name).join(' and '):playerName(rivalry,side),badge:ACHIEVEMENTS.find(b=>b.id===id)!}));
   });
   if (carry) awards.push({side: carry.side, name: carry.player.name, badge: ACHIEVEMENTS.find(badge => badge.id === 'hardCarry')!});
+  const wrongWay = wrongWayPlayers(game, rivalry, highlights);
+  for (const side of ['a','b'] as const) {
+    const people = wrongWay.filter(p=>p.side === side);
+    if (people.length) awards.push({side, name:people.map(p=>p.player.name).join(' and '), badge:ACHIEVEMENTS.find(b=>b.id === 'wrongWay')!});
+  }
   return awards;
 }
 export function useGameAwards(game:Game,rivalry:Rivalry){

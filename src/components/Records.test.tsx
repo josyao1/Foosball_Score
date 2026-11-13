@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { RecordMomentGraphic } from './RecordMomentGraphic';
 import { GameHighlightTags, RecordBook } from './Records';
@@ -22,7 +22,7 @@ it('links each record to its existing game, with the selected record and chart a
     expect(document.querySelector(`a[href="/game/${game.id}?record=${moment.kind}&play=1#momentum"]`)).toBeTruthy();
   }
 });
-it('opens the exact record from a rivalry, selects its chart moment without shading timeline rows, and allows choosing another highlight', async () => {
+it('opens the exact record from a rivalry and selects its chart moment without timeline shading or removed highlight pills', async () => {
   const data = createRecordDemoData();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
@@ -36,9 +36,7 @@ it('opens the exact record from a rivalry, selects its chart moment without shad
   expect(container.querySelectorAll('.timeline .record-goal')).toHaveLength(0);
   expect(container.querySelector('.momentum-selection')?.textContent).toContain('Goal 7 of 14');
   expect(scroll).toHaveBeenCalled();
-  const highlights = screen.getByRole('group', { name: 'Notable moments' });
-  fireEvent.click(within(highlights).getByRole('link', { name: /5-goal run/ }));
-  expect(container.querySelector('.record-focus-note')?.textContent).toContain('Biggest run');
+  expect(screen.queryByRole('group', { name: 'Notable moments' })).toBeNull();
 });
 it('handles empty rivalry records and unknown record query parameters', () => {
   const data = createRecordDemoData();

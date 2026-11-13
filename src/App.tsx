@@ -44,7 +44,7 @@ export function App() {
               <span className="brand-period">.</span>
             </span>
           </Link>
-          <span className="ixl-league" aria-label="IXL League"><svg viewBox="0 0 116 38" aria-hidden="true"><path d="M1 1h15v36H1zM22 1h16l10 11L58 1h16L56 19l18 18H58L48 26 38 37H22l18-18zM79 1h15v25h18v11H79z" fill="currentColor"/></svg><span>League</span></span>
+          <a className="ixl-league" href="https://www.ixl.com/" aria-label="IXL League"><svg viewBox="0 0 116 38" aria-hidden="true"><path d="M1 1h15v36H1zM22 1h16l10 11L58 1h16L56 19l18 18H58L48 26 38 37H22l18-18zM79 1h15v25h18v11H79z" fill="currentColor"/></svg><span>League</span></a>
           <nav className="tab-underline-row" aria-label="Main navigation">
             <Link to="/" aria-current={!isScorigami && !isHallOfFame && !isPlayers && !isBacklog ? "page" : undefined}>Rivalries</Link>
             <Link to="/scorigami" aria-current={isScorigami ? "page" : undefined}>Scorigami</Link>

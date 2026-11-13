@@ -104,3 +104,7 @@ html[data-design] .table-pads .rung-illustration i, .table-pads .rung-illustrati
 .table-clock .game-clock { margin:4px 0 0; justify-content:center; font-size:12px; gap:5px; }
 .table-clock .clock-rule { display:none; }
 .table-clock .game-clock > svg { width:12px; height:12px; }
+
+
+.table-pause-controls { display:flex; flex-wrap:wrap; gap:6px; max-width:180px; }
+@media(max-width:540px) { .table-pause-controls { max-width:80px; } }

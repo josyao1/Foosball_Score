@@ -1,3 +1,4 @@
+import { useGameColor } from '../lib/GameColors';
 import type { ReactNode } from 'react';
 import { RungButton } from './RungControls';
 import { GoalBall } from './GoalBall';
@@ -10,6 +11,7 @@ export function LiveScoringLayout({rivalry, lineup, scores, disabled, onGoal, pu
   {rivalry: Rivalry; lineup?: Lineup | null; scores: Record<Side, number>;
    disabled: boolean; onGoal: (side: Side, rung: Rung) => void;
    pulse?: {id: string; side: Side}; clock?: ReactNode; whitePositions?: ReactNode; blackPositions?: ReactNode; rematchFrom?: Record<Side, number>; near: Side}) {
+  const color = useGameColor();
   const far = otherSide(near);
   const sidePositions = (side: Side) => side === 'a' ? blackPositions : whitePositions;
   const point = matchPointSide(scores);
@@ -18,8 +20,8 @@ export function LiveScoringLayout({rivalry, lineup, scores, disabled, onGoal, pu
       {rematchFrom ? <><span className="gs-rematch-old" aria-hidden="true">{rematchFrom[side]}</span><span className="gs-rematch-new">{scores[side]}</span></> : scores[side]}
     </strong>
   </MatchPointNumber>;
-  const kit = (side: Side) => <span className={`live-layout-kit kit-${side}`} aria-hidden="true"/>;
-  const pad = (side: Side, rungs: readonly Rung[]) => <div className="live-layout-pad" role="group" aria-label={`${side === 'a' ? 'Black' : 'White'} scoring rungs`}>{rungs.map(rung =>
+  const kit = (side: Side) => <span className={`live-layout-kit kit-${color(side)}`} aria-hidden="true"/>;
+  const pad = (side: Side, rungs: readonly Rung[]) => <div className="live-layout-pad" role="group" aria-label={`${color(side) === 'a' ? 'Black' : 'White'} scoring rungs`}>{rungs.map(rung =>
     <RungButton key={rung} {...{rivalry, lineup, side, rung, disabled, onGoal}}/>
   )}</div>;
   return <div className="live-layout-table">

@@ -69,3 +69,11 @@ it('uses a two-minute team scoring drought through the last goal of a regulation
   g.goals[5].elapsed_ms -= 1;
   expect(earned(g)).not.toContain('droughtQuencher');
 });
+it('attributes Wrong way to the hitter using the goal lineup, even after positions change',()=>{
+ const g=game();g.goals.at(-1)!.flags=['own_goal'];
+ const scorer=lineup.a.attack;
+ g.lineup={...lineup,a:{defense:lineup.a.attack,attack:lineup.a.defense}};
+ expect(playerPassports([g],[r]).filter(p=>p.achievements.wrongWay).map(p=>p.key)).toEqual([scorer]);
+ g.goals.at(-1)!.lineup=null;
+ expect(playerPassports([g],[r]).some(p=>p.achievements.wrongWay)).toBe(false);
+});

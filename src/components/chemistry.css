@@ -1,0 +1,50 @@
+.passport-page-chemistry { display: flex; flex: 1; min-height: 0; }
+.passport-chemistry { display: flex; flex-direction: column; flex: 1; padding: 16px 22px 22px; min-width: 0; min-height: 0; }
+/* Quiet subnavigation echoes the passport tabs. */
+.chemistry-switch { align-self:flex-start; flex-shrink:0; position:relative; display:inline-grid; grid-template-columns:repeat(2,1fr); border-bottom:1px solid var(--line); }
+.chemistry-switch button { position:relative; min-height:40px; padding:6px 14px; background:transparent; border:0; border-radius:0; color:var(--muted); font:inherit; font-size:12px; cursor:pointer; }
+.chemistry-switch::before { content:''; position:absolute; bottom:-1px; left:0; width:50%; height:2px; background:var(--text); pointer-events:none; transition:transform 220ms cubic-bezier(.4,0,.2,1); }
+.chemistry-switch[data-mode="against"]::before { transform:translateX(100%); }
+.chemistry-switch button[aria-pressed=true] { color:var(--text); font-weight:700; }
+@media (prefers-reduced-motion: reduce) { .chemistry-switch::before, .chemistry-switch button { transition: none; } }
+.chemistry-caption, .chemistry-empty { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 14px 0; }
+.chemistry-list { list-style: none; padding: 0; margin: 0; }
+.chemistry-pair { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.chemistry-pair:last-child { border-bottom: 0; padding-bottom: 0; }
+.chemistry-pair-head { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 12px; }
+.chemistry-jerseys { display: flex; align-items: center; gap: 3px; }
+.chemistry-jerseys .player-jersey { width: 28px; height: 32px; }
+.chemistry-jerseys > span { font-size: 10px; color: var(--muted); }
+.chemistry-person, .chemistry-record { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.chemistry-person strong { font-size: 14px; overflow-wrap: anywhere; }
+.chemistry-record { text-align: right; font-variant-numeric: tabular-nums; }
+.chemistry-record b { font-size: 15px; white-space: nowrap; }
+.chemistry-pair small { font-size: 11px; color: var(--muted); }
+.chemistry-contribution { margin-top: 14px; }
+.chemistry-share-labels { display: flex; justify-content: space-between; gap: 16px; font-size: 12px; }
+.chemistry-share-labels > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.chemistry-share-labels > span:last-child { text-align: right; }
+.chemistry-share-labels b { margin-left: 4px; }
+.chemistry-share-labels small { display: block; margin-top: 3px; }
+.chemistry-share-track { height: 6px; overflow: hidden; border: 1px solid var(--line); border-radius: 5px; background: var(--panel-light); margin: 7px 0; }
+.chemistry-share-track i { display: block; height: 100%; background: var(--text); }
+.chemistry-unknown { display: block; }
+.chemistry-opponents { margin-top: 0; }
+.chemistry-opponents h3 { font-size: 15px; margin: 0 0 10px; }
+.chemistry-opponents > section + section { margin-top: 26px; }
+/* Five passport pages remain full-size touch targets, scrolling on narrow cards. */
+.passport-tabs { overflow-x: auto; scrollbar-width: thin; scroll-padding-inline: 6px; }
+.passport-tabs > button { flex-shrink: 0; white-space: nowrap; }
+@container (max-width: 430px) {
+ .passport-chemistry { padding: 14px; }
+ .chemistry-pair-head { gap: 8px; }
+ .chemistry-jerseys .player-jersey { width: 23px; height: 28px; }
+ .chemistry-person strong { font-size: 12px; }
+ .chemistry-record b { font-size: 13px; }
+}
+
+/* Keep one bounded viewport for each mode.
+   Padding protects stats even on systems with overlay scrollbars. */
+.chemistry-scroll { flex: 1; min-height: 0; max-height: 440px; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: var(--line) transparent; padding: 2px 16px 6px 0; margin-top: 16px; }
+.chemistry-scroll > .chemistry-caption:first-child { margin-top: 0; }
+

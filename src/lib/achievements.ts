@@ -1,6 +1,6 @@
 import { sidePlayers, hasDistinctSides, goalPlayer } from './participants';
 import { gameHighlights } from './records';
-import { creditedSide, isWinningScore, score } from './stats';
+import { creditedSide, isWinningScore, matchPointSide, score } from './stats';
 import { otherSide } from './types';
 import type { Game, Rivalry, Rung, Side } from './types';
 
@@ -36,6 +36,7 @@ export const ACHIEVEMENTS = [
   {id:'ethical',name:'Ethical game',requirement:'Win a game where every goal by either side is regular.',color:'#527856'},
   {id:'hardCarry',name:'Hard carry',requirement:'Win with a teammate and personally score every point your team earns.',color:'#94653e'},
   {id:'droughtQuencher',name:'Drought quencher',requirement:'Win after your side goes at least 2 minutes without scoring, from kickoff through the final goal.',color:'#39828b'},
+  {id:'wrongWay',name:'Wrong way',requirement:'Score an own goal while your side has match point.',color:'#ad665a'},
 ] as const;
 export type AchievementId=typeof ACHIEVEMENTS[number]['id'];
 export type AchievementHistory=Partial<Record<AchievementId,Game[]>>;
@@ -67,6 +68,7 @@ export function earnedAchievements(game:Game,side:Side,h=gameHighlights(game),ri
       else if(goal.flags.includes('bank'))specialTypes.add('bank');
     }
     const before=h.scores[i];
+    if (goal.actor_side===side && ownGoal && matchPointSide(before)===side) earned.add('wrongWay');
     if (scored && !isWinningScore(before) && isWinningScore({...before,[opponent]:before[opponent]+1})) saved++;
     if (goal.actor_side===side && ownGoal) own++;
     if (goal.actor_side===side && !ownGoal) {
@@ -117,6 +119,20 @@ export function earnedAchievements(game:Game,side:Side,h=gameHighlights(game),ri
     if (h.scores.every(s=>Math.abs(s.a-s.b)<=2)) earned.add('tightrope');
   }
   return [...earned];
+}
+
+/** Own-goal mishaps belong to the hitter saved on that goal, not their teammate. */
+export function wrongWayPlayers(game: Game, rivalry: Rivalry, h = gameHighlights(game)) {
+  if (!game.ended_at) return [];
+  const people = new Map<string, {side: Side; player: ReturnType<typeof sidePlayers>[number]}>();
+  h.goals.forEach((goal, i) => {
+    const side = goal.actor_side;
+    if (!goal.flags.includes('own_goal') || matchPointSide(h.scores[i]) !== side) return;
+    const id = goalPlayer(goal, rivalry);
+    const player = sidePlayers(rivalry, side).find(p => p.id === id);
+    if (player) people.set(player.id, {side, player});
+  });
+  return [...people.values()];
 }
 
 /** Hard carry is personal, even though most team achievements are shared. */

@@ -1,3 +1,4 @@
+import { useGameColor } from '../lib/GameColors';
 import {useId} from 'react';
 import {defaultLineup,sidePlayers} from '../lib/participants';
 import {RUNGS,playerName} from '../lib/types';
@@ -13,13 +14,14 @@ type RungProps = {
 
 export function RungButton({rivalry, lineup, side, rung, label = true, disabled, onGoal}:
   RungProps & {side: Side; rung: Rung; label?: boolean}) {
+  const color = useGameColor();
   const nameId = useId();
   const people = sidePlayers(rivalry, side);
   const position = rung === 'goalie' || rung === 'defender' ? 'defense' : 'attack';
   const scorerId = (lineup ?? defaultLineup(rivalry))[side][position];
   const assigned = people.length === 2 && people.some(person => person.id === scorerId);
 
-  return <button type="button" className={`rung-button side-${side}${assigned ? ' has-assignee' : ''}`}
+  return <button type="button" className={`rung-button side-${color(side)}${assigned ? ' has-assignee' : ''}`}
     disabled={disabled} onClick={() => onGoal(side, rung)}
     aria-label={`${playerName(rivalry, side)} ${rung} goal`} aria-describedby={assigned ? nameId : undefined}>
     <Rod rung={rung}/>

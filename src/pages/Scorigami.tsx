@@ -114,7 +114,6 @@ export function Scorigami() {
       </section>
     </div>
     {!data.completed.length && <p className="sc-empty">Finish a game and its final score will appear here.</p>}
-    <p className="sc-caption">Bar height = game count. Tap a score for details. Standard finishes only.</p>
     <ScorigamiDiscoveries key={scope} games={data.completed} buckets={data.buckets} maxScore={data.maxScore} rivalries={rivalries}/>
     {popupAnchor && <ScorePopover key={selectedKey} anchor={popupAnchor} score={`${selectedHigh}–${selectedLow}`} count={count} share={data.completed.length ? Math.round(count / data.completed.length * 100) : 0} onClose={closePopup}>
       {count ? <>

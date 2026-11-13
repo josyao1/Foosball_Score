@@ -78,3 +78,11 @@ There are no navigation links to the backlog. Open it by typing `/backlog` after
 `pause-games.sql` adds `paused_at` and accumulated `paused_ms` to games, plus `foos_set_game_paused(p_id, p_expected_revision, p_paused)`. The function locks the active parent before its game, checks the revision, and returns the complete updated game. Only unfinished, active games can pause or resume. Both save-RPC versions reject edits while paused; archive/restore retain the paused state and accumulated time. Public access remains the same as the rest of the app.
 
 Displayed duration, new goals' elapsed times and position-swap times exclude pauses. Real start/end/event timestamps remain unchanged. `pause-games-check.sql` tests both save versions, revisions, accumulated time, public privileges, parent archive/restore, and finished-game protection with rollback-only fixtures.
+
+## Player settings
+
+Apply `player-settings.sql` after the existing upgrades above. `/backlog?tab=players` edits a player's name, jersey lettering, shirt/trim/letter colors, and subtitle. The route remains absent from main navigation. Customization lives in `foos_players.appearance`; null uses the existing name-based preset. Saving stores the complete resolved appearance so subsequent renames retain the same jersey and subtitle.
+
+`foos_update_player` checks `settings_revision`, validates the name and appearance, and updates display labels in active and archived rivalries without changing any player IDs, membership IDs, games, goals, or attribution snapshots. Rivalry JSON also derives labels directly from memberships to cover concurrent rivalry creation. Duplicate names are rejected case-insensitively; stale edits must be reopened before retrying. There is no player deletion or identity merge in this editor.
+
+The function intentionally permits anonymous execution, matching the site's shared editing model. Direct UPDATE remains unavailable to public clients; the function uses an empty search path and qualified objects. Supabase's public SECURITY DEFINER advisory is expected for this explicitly shared mutation, as for the other scoring RPCs. Other application tables are untouched.

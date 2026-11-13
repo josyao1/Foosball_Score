@@ -25,7 +25,7 @@ it('ranks posters, uses real momentum, and keeps replay, details and formula act
   expect(within(posters[0]).getByText('Josh recovered from 4–9')).toBeTruthy();
   expect(within(posters[0]).getByRole('button', { name: /Play replay/ })).toBeTruthy();
   expect(within(posters[0]).getByText('10:00 AM PST')).toBeTruthy();
-  expect(within(posters[0]).getByRole('img').getAttribute('aria-label')).toContain('3:20');
+  expect(within(posters[0]).getByRole('slider').getAttribute('aria-label')).toContain('3:20');
   const paths = container.querySelectorAll('.hall-trace');
   expect(paths[0].getAttribute('d')).not.toBe(paths[1].getAttribute('d'));
   expect(container.querySelector('a a, a button, button a')).toBeNull();
@@ -188,4 +188,31 @@ it('expands inline replay from a ranked row and collapses back to the final scor
   fireEvent.click(within(match).getByRole('button', {name:/Collapse replay/}));
   expect(match.querySelector('.hc-chart-open')).toBeNull();
   expect(within(match).getByRole('link', {name:/View game/}).getAttribute('aria-label')).toContain('Josh 10, Brooks 0');
+});
+
+it('scrubs every poster by pointer, clamps to the plot and supports keyboard seeking', () => {
+  fixture.games = [game('close', 'ababababbbbbb' + 'aaaaaaa'), game('shutout', 'aaaaaaaaaa')];
+  render(<MemoryRouter><HallOfFame/></MemoryRouter>);
+  for (const poster of screen.getAllByRole('article')) {
+    const svg = poster.querySelector('.hall-momentum > svg')!;
+    vi.spyOn(svg, 'getBoundingClientRect').mockReturnValue({left:0,top:0,width:640,height:180} as DOMRect);
+    const capture=vi.fn(); Object.assign(svg,{setPointerCapture:capture,hasPointerCapture:()=>true,releasePointerCapture:vi.fn()});
+    const pointer=(type:string,x:number)=>fireEvent(svg,Object.assign(new MouseEvent(type,{bubbles:true,clientX:x,clientY:90,button:0}),{pointerId:1,isPrimary:true}));
+    pointer('pointerdown',12);
+    expect(poster.querySelectorAll('.hc-team > strong')[0].textContent).toBe('0');
+    expect(capture).toHaveBeenCalledWith(1);
+    pointer('pointermove',320);
+    expect(Number(poster.querySelectorAll('.hc-team > strong')[0].textContent)).toBeGreaterThan(0);
+    pointer('pointermove',800);
+    expect(poster.querySelector('.hall-win-marker')).toBeTruthy();
+    pointer('pointerup',800);
+    pointer('pointermove',12);
+    expect(poster.querySelector('.hall-win-marker')).toBeTruthy();
+    fireEvent.keyDown(svg,{key:'Home'});
+    expect(poster.querySelectorAll('.hc-team > strong')[0].textContent).toBe('0');
+    fireEvent.keyDown(svg,{key:'ArrowRight'});
+    expect(poster.querySelector('.hall-axis time')?.textContent).toBe('0:10');
+    fireEvent.keyDown(svg,{key:'End'});
+    expect(poster.querySelector('.hall-win-marker')).toBeTruthy();
+  }
 });

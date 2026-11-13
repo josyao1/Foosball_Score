@@ -148,7 +148,7 @@ it('anchors the clicked tab row when shorter panels move a later desktop row upw
  fireEvent.click(within(passport).getByRole('tab',{name:'Scoring'}));
  expect(scroll).toHaveBeenCalledWith({left:0,top:540,behavior:'instant'});
 });
-it('shows each player’s latest five finished games newest first in the fourth tab',()=>{
+it('shows each player’s latest five finished games newest first alongside the chemistry tab',()=>{
  fixture.rivalries=[rivalry];
  fixture.games=Array.from({length:7},(_,i)=>({...game,id:`recent-${i}`,started_at:new Date(Date.parse(game.started_at)+i*86400000).toISOString(),ended_at:new Date(Date.parse(game.ended_at!)+i*86400000).toISOString()}));
  fixture.games.push({...game,id:'live',ended_at:null});
@@ -159,7 +159,7 @@ it('shows each player’s latest five finished games newest first in the fourth 
  expect(rows.map(link=>link.getAttribute('href'))).toEqual(['6','5','4','3','2'].map(i=>`/game/recent-${i}`));
  expect(rows[0].textContent).toContain('Brooks');
  expect(rows[0].textContent).toContain('10:00');
- expect(josh.getAllByRole('tab')).toHaveLength(4);
+ expect(josh.getAllByRole('tab')).toHaveLength(5);
  const brooks=within(screen.getByRole('article',{name:'Brooks passport'}));
  expect(within(brooks.getByRole('list',{name:'Recent games'})).getAllByRole('link')[0].textContent).toContain('Loss');
 });

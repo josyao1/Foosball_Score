@@ -8,6 +8,7 @@ import { rankedClassics, ratingLabel } from '../lib/hallOfFame';
 import type { RankedClassic } from '../lib/hallOfFame';
 import { clock } from '../lib/stats';
 import { gameDate, gameTime } from '../lib/time';
+import { useChartScrub } from '../hooks/useChartScrub';
 import { useMomentumReplay } from '../hooks/useMomentumReplay';
 import { GoalBall } from '../components/GoalBall';
 import { PlayerJersey } from '../components/PlayerJersey';
@@ -17,9 +18,10 @@ import '../hall-of-fame.css';
 import '../hall-featured.css';
 
 /** Time-proportional steps, from kickoff through the actual final goal. */
-export function PosterMomentum({ entry, position = null }: { entry: RankedClassic; position?: number | null }) {
+export function PosterMomentum({ entry, position = null, onSeek }: { entry: RankedClassic; position?: number | null; onSeek: (ms:number)=>void }) {
   const { scores, goals, totalMs, moments } = entry.rating.highlights;
   const playhead = Math.min(totalMs, position ?? totalMs);
+  const scrub = useChartScrub({total:totalMs,position,times:goals.map(g=>g.elapsed_ms),left:12,right:628,width:640,height:180,seek:onSeek});
   const visible = goals.filter(goal => goal.elapsed_ms <= playhead);
   const current = scores[visible.length];
   const limit = Math.max(2, ...scores.map(s => Math.abs(s.a - s.b)));
@@ -35,7 +37,8 @@ export function PosterMomentum({ entry, position = null }: { entry: RankedClassi
   const winner = end.a > end.b ? entry.rivalry.player_a : entry.rivalry.player_b;
   return <figure className="hall-momentum">
     <figcaption><span><i className="hall-side black"/><span className="hall-full-legend">{entry.rivalry.player_a} above</span><span className="hall-mobile-legend">Black ↑</span></span><span><i className="hall-side white"/><span className="hall-full-legend">{entry.rivalry.player_b} below</span><span className="hall-mobile-legend">White ↓</span></span></figcaption>
-    <svg viewBox="0 0 640 180" role="img" aria-label={`${position===null?'Score lead':`Replay at ${clock(playhead)}`} over ${clock(totalMs)}; ${entry.rivalry.player_a} above the tied line, ${entry.rivalry.player_b} below. ${entry.rating.highlights.leadChanges} lead changes.`}>
+    <svg {...scrub} tabIndex={0} viewBox="0 0 640 180" role="slider" aria-roledescription="momentum timeline" aria-valuemin={0} aria-valuemax={totalMs} aria-valuenow={playhead} aria-valuetext={`${clock(playhead)}: ${entry.rivalry.player_a} ${current.a}, ${entry.rivalry.player_b} ${current.b}`} aria-label={`${position===null?'Score lead':`Replay at ${clock(playhead)}`} over ${clock(totalMs)}; ${entry.rivalry.player_a} above the tied line, ${entry.rivalry.player_b} below. ${entry.rating.highlights.leadChanges} lead changes. Drag to seek; use arrow keys for goals.`}>
+      {position !== null && <line className="hall-scrub-line" x1={x(playhead)} x2={x(playhead)} y1="5" y2="175"/>}
       <path className="hall-trace-fill" d={`${path} V90 H12 Z`}/>
       <path className="hall-tie-line" d="M12 90H628"/>
       <path className="hall-trace" d={path}/>
@@ -84,11 +87,11 @@ function RankedMatch({ entry, rank, variant, onRating }: {
     </Link>
     <div className={`hc-chart ${full ? 'hc-chart-open' : 'hc-chart-preview'}`} id={replayId}>
       {variant === 'feature' && <div className="hc-field-markings" aria-hidden="true"><i/><i/><i/></div>}
-      <PosterMomentum entry={entry} position={replay.position}/>
+      <PosterMomentum entry={entry} position={replay.position} onSeek={replay.seek}/>
     </div>
     <p className="hc-highlight">{highlight}</p>
     <div className="hc-actions">
-      <span className="hc-duration"><Timer size={13} aria-hidden="true"/>{clock(rating.highlights.totalMs)}</span>
+      <span className="hc-duration"><Timer size={13} aria-hidden="true"/>{clock(replay.position ?? rating.highlights.totalMs)}</span>
       <button className="hc-play" onClick={toggleReplay} aria-controls={replayId} aria-label={`${replay.playing ? 'Pause' : 'Play'} replay of rank ${rank}: ${rivalry.player_a} versus ${rivalry.player_b}`}>
         {replay.playing ? <Pause size={16}/> : <Play size={16}/>}<span>{replay.playing ? 'Pause' : 'Play'}</span>
       </button>

@@ -1,3 +1,4 @@
+import { useGameColor } from '../lib/GameColors';
 import { duration } from '../lib/stats';
 import { PlayerJersey } from './PlayerJersey';
 import { useState } from 'react';
@@ -5,6 +6,7 @@ import { ArrowLeftRight } from 'lucide-react';
 import type { Game, Rivalry, Side } from '../lib/types';
 import { defaultLineup, sidePlayers } from '../lib/participants';
 export function TeamPositions({game,rivalry,busy,onSave,onlySide}:{game:Game;rivalry:Rivalry;busy:boolean;onSave:(g:Game)=>Promise<unknown>;onlySide?:Side}){
+ const color = useGameColor();
  const [error,setError]=useState(''),[pending,setPending]=useState(false);
  const lineup=game.lineup??defaultLineup(rivalry);
  const teams=(['a','b'] as const).filter(s=>(!onlySide||s===onlySide)&&sidePlayers(rivalry,s).length===2);
@@ -19,7 +21,7 @@ export function TeamPositions({game,rivalry,busy,onSave,onlySide}:{game:Game;riv
   {teams.map(side=>{
    const people = sidePlayers(rivalry, side);
    return <div key={side} className="team-position-row">
-     <span className={`position-side ${side}`}>{side==='a'?'Black':'White'}</span>
+     <span className={`position-side ${color(side)}`}>{color(side)==='a'?'Black':'White'}</span>
      <div className="position-lineup">
        {people.map((person, index) => {
          const onDefense = lineup[side].defense === person.id;
@@ -31,7 +33,7 @@ export function TeamPositions({game,rivalry,busy,onSave,onlySide}:{game:Game;riv
        })}
        <small>Goalie + defender</small><small>Middle + attacker</small>
      </div>
-     <button type="button" className="position-swap" disabled={busy||pending} aria-label={`Swap ${side==='a'?'black':'white'} positions`} onClick={()=>void save(side)}>
+     <button type="button" className="position-swap" disabled={busy||pending} aria-label={`Swap ${color(side)==='a'?'black':'white'} positions`} onClick={()=>void save(side)}>
        <ArrowLeftRight size={16}/><span>Swap</span>
      </button>
    </div>;

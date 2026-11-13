@@ -24,11 +24,17 @@ describe('classic score', () => {
     expect(points(g, 'Match-point drama')).toBe(5);
     expect(rankedClassics([g], [rivalry])[0].captions).toContain('Josh recovered from 4–9');
   });
+  it('caps game-length points at six while retaining the six-minute benchmark', () => {
+    expect(points(game('aaaaaaaaaa', 36000), 'Game length')).toBe(5);
+    expect(points(game('aaaaaaaaaa', 43200), 'Game length')).toBeCloseTo(5.5);
+    expect(points(game('aaaaaaaaaa', 50400), 'Game length')).toBe(6);
+    expect(points(game('aaaaaaaaaa', 360000), 'Game length')).toBe(6);
+  });
   it('awards beyond-benchmark bonuses and counts a dunk-bank combo once, excluding own goals', () => {
     const g = game('abababababababababaa', 120000);
     g.goals.forEach(goal => { goal.flags = ['bank', 'dunk']; });
     expect(points(g, 'Special goals')).toBe(12.5);
-    expect(points(g, 'Game length')).toBeCloseTo(5+(40-6)*5/12);
+    expect(points(g, 'Game length')).toBe(6);
     g.goals.forEach(goal => { goal.flags = []; });
     g.goals[0].flags = ['bank', 'dunk'];
     g.goals[1] = { ...g.goals[1], actor_side: 'a', flags: ['own_goal', 'dunk'] };

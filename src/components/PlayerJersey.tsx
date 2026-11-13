@@ -1,32 +1,14 @@
 import './player-jersey.css';
 
-type Kit = { letters: string; school: string; color: string; trim: string; lettering?: string };
-const northwestern = {school:'Northwestern',color:'#4E2A84',trim:'#FFFFFF'};
-const cornell = {school:'Cornell',color:'#B31B1B',trim:'#5E3920',lettering:'#FFFFFF'};
-const kits: Record<string, Kit> = {
-  josh: {...northwestern,letters:'DME'},
-  joshua: {...northwestern,letters:'DME'},
-  brooks: {...northwestern,letters:'QZ'},
-  andrew: {...cornell,letters:'PM'},
-  frank: {school:'Purdue',color:'#171717',trim:'#CFB991',letters:'AA'},
-  max: {school:'UCLA',color:'#2774AE',trim:'#FFD100',letters:'RSLN'},
-  aiden: {...cornell,letters:'AE'},
-  thomas: {school:'Wisconsin',color:'#C5050C',trim:'#FFFFFF',letters:'SC'},
-  jeremy: {...northwestern,letters:'B2C'},
-  jermey: {...northwestern,letters:'B2C'},
-  drew: {...cornell,letters:'TE'},
-  kevin: {school:'UChicago',color:'#800000',trim:'#FFFFFF',letters:'B2B'},
-  alex: {school:'Michigan',color:'#00274C',trim:'#FFCB05',letters:'CE'},
-};
+import { usePlayerAppearance } from '../lib/PlayerAppearanceContext';
+import type { PlayerAppearance } from '../lib/types';
 
-export function PlayerJersey({name, decorative = false}: {name:string; decorative?:boolean}) {
-  const kit = kits[name.trim().toLowerCase()] ?? {
-    letters:name.trim().slice(0,2).toUpperCase() || 'TT',
-    school:'Table Talk',color:'#5C4030',trim:'#F5E9D6',
-  };
+export function PlayerJersey({name, decorative = false, appearance}: {name:string; decorative?:boolean; appearance?:PlayerAppearance}) {
+  const saved=usePlayerAppearance(name);
+  const kit=appearance??saved;
   return <svg className="player-jersey" viewBox="0 0 100 108" role={decorative ? undefined : 'img'}
     aria-hidden={decorative || undefined} focusable="false"
-    aria-label={decorative ? undefined : `${name}: ${kit.letters} jersey in ${kit.school} colors`}>
+    aria-label={decorative ? undefined : `${name}: ${kit.letters} jersey`}>
     <path fill={kit.color} stroke={kit.color} strokeWidth="2" strokeLinejoin="round"
       d="M33 8L20 14 4 36 20 48 27 39 24 98Q50 104 76 98L73 39 80 48 96 36 80 14 67 8Q50 17 33 8Z"/>
     <path d="M34 9Q50 32 66 9" fill="none" stroke={kit.trim} strokeWidth="4"/>

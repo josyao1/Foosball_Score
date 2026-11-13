@@ -1,3 +1,6 @@
+import { GameResult } from '../components/GameResult';
+import { GameColors, useLocalGameColors } from '../lib/GameColors';
+import { MatchTicketActions } from '../components/MatchTicketActions';
 import { TeamPositions } from '../components/TeamPositions';
 import { sidePlayers } from '../lib/participants';
 import { useEffect, useRef, useState } from "react";
@@ -5,6 +8,7 @@ import { Link, useLocation, useNavigationType, useNavigate, useParams, useSearch
 import {
   ArrowLeft,
   ArrowDownUp,
+  Contrast,
   Flag,
   Undo2,
   Timer,
@@ -15,7 +19,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { WinningGameDialog } from "../components/WinningGameDialog";
-import { GameHighlightTags } from "../components/Records";
 import { selectedMoment } from "../lib/records";
 import { gameTime } from "../lib/time";
 import { useStore } from "../lib/store";
@@ -35,8 +38,6 @@ import type { Game, Goal, Rung, Side } from "../lib/types";
 import { useDesign } from "../components/SiteDesign";
 import { TableScorer } from "../components/TableScorer";
 import { LiveScoringLayout } from "../components/LiveScoringLayout";
-import { TicketAchievements } from "../components/TicketAchievements";
-import { GameScoreboard } from "../components/GameScoreboard";
 import { GoalDialog } from "../components/GoalDialog";
 import { ConfirmDialog } from "../components/Dialog";
 import { Momentum, RungStats, Timeline } from "../components/GameReport";
@@ -62,6 +63,7 @@ export function GamePage() {
     [winningGame,setWinningGame] = useState<Game|null>(null),
     [dismissedWin,setDismissedWin] = useState<string|null>(null);
   const [tableDraft, setTableDraft] = useState(false);
+  const [colorsFlipped, flipColors] = useLocalGameColors(id ?? '');
   const [scoringNear, setScoringNear] = useState<Side>('a');
   const [pauseError, setPauseError] = useState('');
   const [confirmation, setConfirmation] = useState<{gameId: string; goal: Goal} | null>(null);
@@ -167,16 +169,9 @@ export function GamePage() {
           <span className="clock-rule">First to 10 · win by 2</span>
         </div>);
 
-  const scoreboard = <div aria-live="polite" aria-atomic="true"><GameScoreboard
-    key={game.id} kickoff={kickoff} newlyFinished={!live && lastLiveId === game.id}
-    rivalry={r} scores={s} designId={design.id} live={live}
-    rematchFrom={rematch?.gameId === game.id && live && !game.goals.length ? rematch.previous : undefined}
-    achievementStrip={!live && <TicketAchievements gameId={game.id} animate={lastLiveId === game.id}/>}
-    pulse={confirmedGoal && {id: confirmedGoal.id, side: creditedSide(confirmedGoal)}}
-  /></div>;
 
   return (
-    <>
+    <GameColors.Provider value={live && colorsFlipped}>
       <Link className="back-link" to={`/rivalry/${r.id}`}>
         <ArrowLeft size={16} />
         {r.player_a} vs {r.player_b}
@@ -189,6 +184,8 @@ export function GamePage() {
             {gameTime(game.started_at)}
           </p>
         </div>
+        <div className="game-heading-actions">
+        {!live && <MatchTicketActions game={game} rivalry={r} mode="share"/>}
         <span className={`status-pill ${live ? "live" : ""}`}>
           {live ? (
             <>
@@ -202,30 +199,29 @@ export function GamePage() {
             </>
           )}
         </span>
+        </div>
       </div>
-      <section ref={panel} className={`live-score-panel scorer-layout-${design.scorerLayout} ${live ? "is-live" : ""}`}>
-        {live ? <TableScorer key={game.id} game={game} rivalry={r} scores={s} disabled={scoringDisabled}
+      {!live ? <GameResult key={game.id} game={game} rivalry={r} animate={lastLiveId === game.id}/>
+        : <section ref={panel} className={`live-score-panel scorer-layout-${design.scorerLayout} ${live ? "is-live" : ""}`}>
+        {<TableScorer key={game.id} game={game} rivalry={r} scores={s} disabled={scoringDisabled}
           centralClock
+          colorControl={<button type="button" className="table-tool live-color-flip" aria-pressed={colorsFlipped}
+            onClick={flipColors} title="Swap black and white for this game on this device">
+            <Contrast size={15} aria-hidden="true"/><span>Flip colors</span></button>}
           flipControl={<button type="button" className="table-tool live-table-flip"
             onClick={()=>setScoringNear(side=>side === 'a' ? 'b' : 'a')} title="Switch the top and bottom teams">
             <ArrowDownUp size={15} aria-hidden="true"/>Flip sides</button>}
           promptPaused={Boolean(draft || winningGame || confirm || removing)}
           busy={store.busy} onSave={store.saveGame} pauseControl={pauseControl}
-          onGoal={(side, rung) => beginGoal(side, rung, true)}>{gameClock}</TableScorer> : gameClock}
-        {live ? <LiveScoringLayout rivalry={r} lineup={game.lineup} scores={s}
+          onGoal={(side, rung) => beginGoal(side, rung, true)}>{gameClock}</TableScorer>}
+        {<LiveScoringLayout rivalry={r} lineup={game.lineup} scores={s}
             near={scoringNear}
             rematchFrom={rematch?.gameId === game.id && !game.goals.length ? rematch.previous : undefined}
             clock={gameClock}
             whitePositions={<TeamPositions onlySide="b" game={game} rivalry={r} busy={store.busy || Boolean(game.paused_at)} onSave={store.saveGame}/>}
             blackPositions={<TeamPositions onlySide="a" game={game} rivalry={r} busy={store.busy || Boolean(game.paused_at)} onSave={store.saveGame}/>}
             disabled={scoringDisabled} onGoal={beginGoal}
-            pulse={confirmedGoal && {id: confirmedGoal.id, side: creditedSide(confirmedGoal)}}/> : scoreboard}
-        {!live && (
-          <div className="winner-line">
-            <Trophy size={18} />
-            {w ? `${playerName(r, w)} wins.` : "Draw."}
-          </div>
-        )}
+            pulse={confirmedGoal && {id: confirmedGoal.id, side: creditedSide(confirmedGoal)}}/>}
         {live && (
           <>
             {won && (
@@ -255,7 +251,7 @@ export function GamePage() {
             </div>
           </>
         )}
-      </section>
+      </section>}
       {live ? (
         <div className="live-bottom live-feed-layout">
           <Timeline
@@ -301,7 +297,6 @@ export function GamePage() {
         </div>
       ) : (
         <>
-          <GameHighlightTags game={game} rivalry={r} selected={highlight}/>
           <div className="game-report-overview">
             <Momentum key={`${game.id}-${recordKey}`} game={game} rivalry={r} highlight={highlight} watchMoment={watchReplay} />
             <RungStats game={game} rivalry={r} />
@@ -411,6 +406,6 @@ export function GamePage() {
           }}
         />
       )}
-    </>
+    </GameColors.Provider>
   );
 }

@@ -31,17 +31,17 @@ export function classicScore(game: Game) {
     { label: 'Winning comeback', max: 20, points: (comeback?.value ?? 0) * 3 + (late ? 5 : 0), detail: `${comeback?.value ?? 0}-goal deficit recovered × 3; ${late ? '+5' : 'no bonus'} for recovering that deficit with the opponent at 9+. Can exceed 20.` },
     { label: 'Total goals', max: 10, points: benchmarkPoints(goals.length-10,12,10), detail: `${goals.length} goals. Scales from 0 points at 10 goals to 10 at 22. Each goal beyond 22 adds 5/12 of a point.` },
     { label: 'Special goals', max: 5, points: benchmarkPoints(specials,5,5), detail: `${specials} dunk or bank goals. 1 point each up to 5, then 0.5 each. Combos count once; own goals don’t count.` },
-    { label: 'Game length', max: 5, points: benchmarkPoints(totalMs,360000,5), detail: `${clock(totalMs)} through the final goal. 5 points at 6 minutes, then 5/12 of a point per extra minute.` },
+    { label: 'Game length', max: 5, points: Math.min(6, benchmarkPoints(totalMs,360000,5)), detail: `${clock(totalMs)} through the final goal. 5 points at 6 minutes, then 5/12 of a point per extra minute, capped at 6 points.` },
     { label: 'Match-point drama', max: 5, points: bothMatchPoint ? 5 : 0, detail: bothMatchPoint ? 'Both sides were one goal away from a valid win: +5.' : '5 points when both sides hold match point during the game.' },
   ];
   return { total: factors.reduce((sum, f) => sum + f.points, 0), factors, highlights, specials, deficitScore, bothMatchPoint };
 }
 
 export function rankedClassics(games: Game[], rivalries: Rivalry[]) {
-  const byId = new Map(rivalries.map(r => [r.id, r]));
+  const byId = new Map(rivalries.filter(r => !r.deleted_at).map(r => [r.id, r]));
   return games.flatMap(game => {
     const rivalry = byId.get(game.rivalry_id);
-    if (!rivalry) return [];
+    if (!rivalry || game.deleted_at) return [];
     const rating = classicScore(game);
     if (!rating) return [];
     const captions: string[] = [];

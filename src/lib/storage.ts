@@ -1,5 +1,6 @@
+import { validatePlayerSettings } from './playerAppearance';
 import { normalizePlayers, rosterKey, validateRoster, validateLineup, defaultLineup, sidePlayers } from './participants';
-import type { Data, Game, Rivalry, Player, BacklogData } from "./types";
+import type { Data, Game, Rivalry, Player, PlayerSettings, BacklogData } from "./types";
 export interface Repository {
   load(): Promise<Data>;
   loadBacklog(): Promise<BacklogData>;
@@ -8,6 +9,7 @@ export interface Repository {
   restoreRivalry(rivalry: Rivalry, expectedGames: Record<string,number>): Promise<void>;
   purgeRivalry(rivalry: Rivalry, expectedGames: Record<string,number>): Promise<void>;
   createPlayer(name:string):Promise<Player>;
+  updatePlayer(player:Player, settings:PlayerSettings):Promise<void>;
   createTeamRivalry(a:string[],b:string[]):Promise<Rivalry>;
   createRivalry(a: string, b: string): Promise<Rivalry>;
   saveGame(game: Game): Promise<Game>;
@@ -73,6 +75,19 @@ export class LocalRepository implements Repository {
     if(d.players!.some(p=>p.name.toLowerCase()===name.toLowerCase()))throw new Error('This player already exists.');
     const player={id:crypto.randomUUID(),name,created_at:new Date().toISOString()};
     this.write({...d,players:[...d.players!,player]});return player;
+  }
+  async updatePlayer(player:Player, input:PlayerSettings):Promise<void> {
+    const settings=validatePlayerSettings(input),d=this.read();
+    const current=d.players!.find(p=>p.id===player.id);
+    if(!current)throw new Error('Player no longer exists. Refresh and try again.');
+    if((current.settings_revision??0)!==(player.settings_revision??0))throw new Error('This player was edited on another device. Close and reopen the editor to load the latest changes.');
+    if(d.players!.some(p=>p.id!==player.id&&p.name.toLowerCase()===settings.name.toLowerCase()))throw new Error('This player name is already in use.');
+    const updated={...current,...settings,settings_revision:(current.settings_revision??0)+1};
+    const rivalries=d.rivalries.map(r=>{
+      const members={a:sidePlayers(r,'a').map(p=>p.id===player.id?updated:p),b:sidePlayers(r,'b').map(p=>p.id===player.id?updated:p)};
+      return {...r,members,player_a:members.a.map(p=>p.name).join(' and '),player_b:members.b.map(p=>p.name).join(' and ')};
+    });
+    this.write({...d,players:d.players!.map(p=>p.id===player.id?updated:p),rivalries});
   }
   async createTeamRivalry(a:string[],b:string[]):Promise<Rivalry> {
     const d=this.read();

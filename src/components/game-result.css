@@ -1,0 +1,35 @@
+.game-result-panel { width: 100%; max-width: 1080px; margin: 0 auto 28px; min-width: 0; }
+.result-design { --gs-line:var(--line); --gs-muted:var(--muted); border:1px solid var(--line); border-top:4px solid var(--text); border-radius:4px; background:var(--panel); overflow:hidden; }
+.result-meta { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px 24px; }
+.result-final { display:flex; flex-wrap:wrap; align-items:center; gap:12px; font-size:12px; color:var(--muted); }
+.result-duration { display:inline-flex; align-items:center; gap:5px; font-variant-numeric:tabular-nums; }
+.result-team { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; min-width:0; text-align:center; }
+.result-team > strong { font-size:clamp(15px,2.2vw,22px); line-height:1.25; overflow-wrap:anywhere; }
+.result-jerseys { display:flex; justify-content:center; gap:3px; }
+.result-jerseys .player-jersey { width:37px; height:41px; flex:none; }
+.result-digit { font:500 clamp(58px,8vw,96px)/1 Georgia,serif; font-variant-numeric:lining-nums tabular-nums; color:var(--muted); }
+.result-digit.is-winner { color:var(--text); }
+.result-outcome { display:inline-flex; align-items:center; justify-content:center; gap:8px; line-height:1.4; font-size:13px; overflow-wrap:anywhere; }
+.result-outcome svg { flex:none; }
+.result-verdict { text-align:center; padding:14px 20px; border-top:1px dashed var(--line); }
+.result-design .ticket-earns { padding:10px 20px; }
+.result-design .ticket-earner { align-items:center; }
+.result-design .ticket-earner > strong,.result-design .ticket-earner li { font-size:12px; }
+.result-design .ticket-earner ul { align-items:center; }
+/* The result occupies a miniature table, with restrained field markings. */
+.result-table { border:2px solid var(--line); border-radius:24px; padding:0 10px; }
+.result-table-field { position:relative; isolation:isolate; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border:1px solid var(--line); border-radius:22px; margin:0 12px 16px; background:color-mix(in srgb,var(--line) 9%,transparent); }
+.result-table-field::before { content:''; position:absolute; inset:0 50%; border-left:1px solid var(--line); z-index:-1; }
+.result-center-circle { position:absolute; z-index:-1; width:88px; height:88px; border:1px solid var(--line); border-radius:50%; left:50%; top:50%; transform:translate(-50%,-50%); opacity:.6; }
+.result-table-side { min-width:0; display:flex; flex-direction:column; align-items:center; gap:16px; padding:24px 18px; }
+.result-table-side .result-team { min-height:80px; }
+.result-table-net { position:absolute; width:8px; height:60px; top:50%; transform:translateY(-50%); border:1px solid var(--line); background:repeating-linear-gradient(0deg,transparent 0 5px,var(--line) 5px 6px); }
+.result-table-net-left { left:-1px; }.result-table-net-right { right:-1px; }
+@media(max-width:540px) {
+ .result-meta { padding:12px 14px; gap:8px; }
+ .result-jerseys .player-jersey { width:29px; height:33px; }
+ .result-table { padding:0 3px; }
+ .result-table-field { margin:0 9px 12px; }
+ .result-table-side { padding:18px 12px; }
+ .result-design .ticket-earns { padding:9px 12px; }
+}

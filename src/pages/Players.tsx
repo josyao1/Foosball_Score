@@ -1,3 +1,6 @@
+import { Chemistry } from '../components/Chemistry';
+import { playerChemistry } from '../lib/chemistry';
+import type { PlayerChemistry } from '../lib/chemistry';
 import { TabUnderline } from "../components/TabUnderline";
 import { NewPlayer } from '../components/NewPlayer';
 import { useProfile, profileFirst } from "../lib/profile";
@@ -16,6 +19,7 @@ import { Achievements } from '../components/Achievements';
 import { MASTERY, TIERS } from '../lib/mastery';
 import { MasteryBadges } from '../components/MasteryBadges';
 import { PlayerCarousel } from '../components/PlayerCarousel';
+import { usePlayerAppearance } from '../lib/PlayerAppearanceContext';
 import { PlayerJersey } from '../components/PlayerJersey';
 import { ScoutingNote } from '../components/ScoutingNote';
 import { useScoutingNotes } from '../lib/useScoutingNotes';
@@ -25,26 +29,12 @@ import '../players.css';
 const flags: Record<FinishType, GoalFlag[]> = {dunk:['dunk'],bank:['bank'],combo:['dunk','bank'],own_goal:['own_goal']};
 const figures: Record<Rung, number> = {goalie:3,defender:2,middle:5,attacker:3};
 const share = (count: number, total: number) => total ? Math.round(count/total*100) : 0;
-const playerTeams: Record<string, string> = {
-  josh: 'Digital Marketing Enablement',
-  joshua: 'Digital Marketing Enablement',
-  brooks: 'Quizzes/Demo Magic',
-  frank: 'Assessment Analytics',
-  andrew: 'Associate Product Manager',
-  aiden: 'Admin Experience',
-  max: 'Rosetta Stone',
-  thomas: 'Sales Central',
-  jeremy: 'B2C',
-  jermey: 'B2C',
-  drew: 'Teacher Experience',
-  kevin: 'B2B',
-  alex: 'Consumer Experience',
-};
 
-const passportTabs = ['overview','scoring','badges','recent'] as const;
+
+const passportTabs = ['overview','scoring','chemistry','badges','recent'] as const;
 type PassportTab = typeof passportTabs[number];
-function Passport({ player: p, players, tab, setTab, note }: { player: PlayerPassport; players:PlayerPassport[]; tab:PassportTab; setTab:(tab:PassportTab)=>void; note?:Note }) {
-  const team = playerTeams[p.name.trim().toLowerCase()];
+function Passport({ player: p, players, tab, setTab, note, chemistry }: { player: PlayerPassport; players:PlayerPassport[]; tab:PassportTab; setTab:(tab:PassportTab)=>void; note?:Note; chemistry?:PlayerChemistry }) {
+  const team = usePlayerAppearance(p.name).subtitle;
   const stamps=MASTERY.map(b=>({...b,level:p.mastery[b.id].earned.length})).filter(b=>b.level>0).sort((a,b)=>b.level-a.level).slice(0,3);
   const tabId = useId();
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -62,6 +52,12 @@ function Passport({ player: p, players, tab, setTab, note }: { player: PlayerPas
     setTab(next);
   }
   useLayoutEffect(()=>{
+    const tabs=tabsRef.current,active=tabs?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if(tabs&&active){
+      if(active.offsetLeft<tabs.scrollLeft)tabs.scrollLeft=active.offsetLeft;
+      else if(active.offsetLeft+active.offsetWidth>tabs.scrollLeft+tabs.clientWidth)
+        tabs.scrollLeft=active.offsetLeft+active.offsetWidth-tabs.clientWidth;
+    }
     const previous=scrollBeforeSwitch.current;
     if(!previous)return;
     scrollBeforeSwitch.current=null;
@@ -103,7 +99,7 @@ function Passport({ player: p, players, tab, setTab, note }: { player: PlayerPas
       selectPage(next);e.currentTarget.querySelector<HTMLButtonElement>(`[data-page="${next}"]`)?.focus({preventScroll:true});
     }}>
       {passportTabs.map(page=><button key={page} type="button" role="tab" data-page={page} id={`${tabId}-${page}`} aria-controls={`${tabId}-panel-${page}`} aria-selected={tab===page} tabIndex={tab===page?0:-1} onClick={()=>selectPage(page)}>
-        {page==='overview'?'Overview':page==='scoring'?'Scoring':page==='recent'?'Recent games':'Badges'}{page==='badges'&&<span title="Earned mastery badges and achievements">{badgeCount}</span>}
+        {page==='overview'?'Overview':page==='scoring'?'Scoring':page==='recent'?'Recent games':page==='chemistry'?'Chemistry':'Badges'}{page==='badges'&&<span title="Earned mastery badges and achievements">{badgeCount}</span>}
       </button>)}
       <TabUnderline selection={tab} />
     </div>
@@ -140,6 +136,7 @@ function Passport({ player: p, players, tab, setTab, note }: { player: PlayerPas
       </section>
     </div>
       </>}
+      {tab==='chemistry'&&<Chemistry name={p.name} data={chemistry}/>}
       {tab==='badges'&&<>
     <MasteryBadges progress={p.mastery}/>
     <Achievements name={p.name} earned={p.achievements} history={p.achievementHistory} players={players}/>
@@ -161,6 +158,7 @@ export function Players() {
   const profile=useProfile();
   const people = useMemo(()=>playerPassports(games,rivalries,players),[games,rivalries,players]);
   const notes=useScoutingNotes(games,rivalries,!loading);
+  const chemistry=useMemo(()=>playerChemistry(games,rivalries),[games,rivalries]);
   const [creating,setCreating] = useState(false);
   const [tab,setTab] = useState<PassportTab>('overview');
   const pageRef=useRef<HTMLElement>(null);
@@ -183,9 +181,8 @@ export function Players() {
   );
   const visible = profileFirst(ranked, p => p.key === profile || p.name.trim().toLowerCase() === profile);
   return <section ref={pageRef} className="players-page">
-    <header className="players-heading"><div><h1>Players</h1><p>Your table, by player.</p></div><button className="button primary" onClick={()=>setCreating(true)}><Plus size={18}/>New player</button></header>
-    <p className="players-note">Your singles and team games, together.</p>
-    {visible.length ? <PlayerCarousel entries={visible.map(p=>({id:p.key,content:<Passport player={p} players={people} tab={tab} setTab={setTab} note={notes[p.key]}/>}))}/> : <div className="empty-state"><Users size={30}/><h2>No players yet</h2><p>Add your friends, then choose sides in a rivalry.</p></div>}
+    <header className="players-heading"><div><h1>Players</h1></div><button className="button primary" onClick={()=>setCreating(true)}><Plus size={18}/>New player</button></header>
+    {visible.length ? <PlayerCarousel entries={visible.map(p=>({id:p.key,content:<Passport player={p} players={people} tab={tab} setTab={setTab} note={notes[p.key]} chemistry={chemistry[p.key]}/>}))}/> : <div className="empty-state"><Users size={30}/><h2>No players yet</h2><p>Add your friends, then choose sides in a rivalry.</p></div>}
     {creating && <NewPlayer onClose={()=>setCreating(false)}/>}
   </section>;
 }

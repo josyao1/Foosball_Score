@@ -1,3 +1,4 @@
+import { useGameColor } from '../lib/GameColors';
 import type { ReactNode } from 'react';
 import { Dialog } from './Dialog';
 import { ScreenAwake } from './ScreenAwake';
@@ -17,6 +18,7 @@ type Props = {
   children: ReactNode;
   centralClock?: boolean;
   flipControl?: ReactNode;
+  colorControl?: ReactNode;
   promptPaused: boolean;
   busy: boolean;
   onSave: (game: Game) => Promise<unknown>;
@@ -29,7 +31,8 @@ type Props = {
 };
 const farRungs = [...RUNGS].reverse();
 
-export function TableScorer({game, rivalry, scores, disabled, onGoal, children, promptPaused, busy, onSave, pauseControl, centralClock = false, flipControl}: Props) {
+export function TableScorer({game, rivalry, scores, disabled, onGoal, children, promptPaused, busy, onSave, pauseControl, centralClock = false, flipControl, colorControl}: Props) {
+  const color = useGameColor();
   const profile = useProfile();
   const [swapError, setSwapError] = useState('');
   const [swapping, setSwapping] = useState(false);
@@ -125,10 +128,10 @@ export function TableScorer({game, rivalry, scores, disabled, onGoal, children, 
   function pads(side: Side, isFar: boolean) {
     return <div className="table-end" role="group"
       aria-label={`${isFar ? 'Far' : 'Near'} side: ${playerName(rivalry, side)}`}>
-      <header><span><i className={`table-kit kit-${side}`} aria-hidden="true"/>{side==='a'?'Black':'White'} · {playerName(rivalry,side)}</span>
+      <header><span><i className={`table-kit kit-${color(side)}`} aria-hidden="true"/>{color(side)==='a'?'Black':'White'} · {playerName(rivalry,side)}</span>
         {sidePlayers(rivalry,side).length===2 && <button type="button" className="table-tool table-swap"
           disabled={busy || swapping || Boolean(game.paused_at)} onClick={()=>void swap(side)}
-          aria-label={`Swap ${side==='a'?'black':'white'} rungs: ${playerName(rivalry,side)}`}>
+          aria-label={`Swap ${color(side)==='a'?'black':'white'} rungs: ${playerName(rivalry,side)}`}>
           <ArrowLeftRight size={15}/><span>Swap rungs</span>
         </button>}
       </header>
@@ -144,6 +147,7 @@ export function TableScorer({game, rivalry, scores, disabled, onGoal, children, 
       {!centralClock && children}
       <div className="live-pause-control">{pauseControl}</div>
       {flipControl}
+      {colorControl}
       <ScreenAwake {...lock}/>
       <button type="button" className="table-launch" onClick={open} disabled={busy}
       aria-haspopup="dialog" aria-label="Full screen" title="Full screen"><Maximize size={16} aria-hidden="true"/><span>Full screen</span></button>
@@ -154,10 +158,10 @@ export function TableScorer({game, rivalry, scores, disabled, onGoal, children, 
         {active && <>
           {pads(far, true)}
           <div className="table-midfield">
-            <div className="table-pause-controls">{pauseControl}</div>
+            <div className="table-pause-controls">{pauseControl}{colorControl}</div>
             <div className="table-score-center"><div className="table-score" role="status" aria-label="Current score">
               {[near, far].map(side => <span key={side} className="table-team-score">
-                <span className={`table-kit kit-${side}`} aria-label={side === 'a' ? 'Black' : 'White'}/>
+                <span className={`table-kit kit-${color(side)}`} aria-label={color(side) === 'a' ? 'Black' : 'White'}/>
                 <span className="table-team-name">{playerName(rivalry, side)}</span>
                 <MatchPointNumber active={point === side}><strong>{scores[side]}</strong></MatchPointNumber>
                 {point === side && <small className="match-point-label">Match point</small>}

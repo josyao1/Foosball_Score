@@ -14,6 +14,7 @@ type Props = {
   kickoff?: boolean;
   newlyFinished?: boolean;
   achievementStrip?: React.ReactNode;
+  headerActions?: React.ReactNode;
 };
 const SIDES: Side[] = ['a', 'b'];
 
@@ -25,7 +26,7 @@ function Person({ side }: { side: Side }) {
 }
 
 /** Score presentations intentionally use different document structures, not palette swaps. */
-export function GameScoreboard({ rivalry, scores, designId, live, pulse, rematchFrom, achievementStrip, kickoff, newlyFinished }: Props) {
+export function GameScoreboard({ rivalry, scores, designId, live, pulse, rematchFrom, achievementStrip, kickoff, newlyFinished, headerActions }: Props) {
   const name = (side: Side) => side === 'a' ? rivalry.player_a : rivalry.player_b;
   const status = live ? 'Current score' : 'Final score';
   const label = `${status}: ${rivalry.player_a}, black, ${scores.a}; ${rivalry.player_b}, white, ${scores.b}`;
@@ -57,7 +58,7 @@ export function GameScoreboard({ rivalry, scores, designId, live, pulse, rematch
       break;
     case 'clay': {
       const point = live ? matchPointSide(scores) : null;
-      content = <div className="gs-ticket"><header><span>{status}</span><span className="gs-ticket-mark" aria-hidden="true">▥</span></header><div className="gs-ticket-body">
+      content = <div className="gs-ticket"><header><span>{status}</span>{headerActions ?? <span className="gs-ticket-mark" aria-hidden="true">▥</span>}</header><div className="gs-ticket-body">
         {SIDES.map(side => <div key={side}>
           <span className="gs-ticket-kit"><Kit side={side}/>
             {point === side && <small className="match-point-label">Match point</small>}

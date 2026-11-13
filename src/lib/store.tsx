@@ -1,3 +1,5 @@
+import { PlayerAppearanceContext } from './PlayerAppearanceContext';
+import { useProfile, selectProfile } from './profile';
 import { defaultLineup } from './participants';
 import {
   createContext,
@@ -8,7 +10,7 @@ import {
   useState,
 } from "react";
 import type { ReactNode } from "react";
-import type { Data, Game, Rivalry } from "./types";
+import type { Data, Game, Rivalry, Player, PlayerSettings } from "./types";
 import { LocalRepository } from "./storage";
 import type { Repository } from "./storage";
 import { cloudConfigured, createCloudRepository } from "./supabase";
@@ -99,6 +101,7 @@ function useDataStore() {
     error,
     cloud: cloudConfigured,
     refresh,
+    updatePlayer:(player:Player,settings:PlayerSettings)=>backlogMutation(r=>r.updatePlayer(player,settings)),
     createPlayer:(name:string)=>mutate(r=>r.createPlayer(name),(d,p)=>({...d,players:[...(d.players??[]),p]})),
     createTeamRivalry:(a:string[],b:string[])=>mutate(r=>r.createTeamRivalry(a,b),(d,r)=>({...d,rivalries:[...d.rivalries,r]})),
     createRivalry: (a: string, b: string) =>
@@ -137,7 +140,12 @@ function useDataStore() {
 const Context = createContext<ReturnType<typeof useDataStore> | null>(null);
 export function StoreProvider({ children }: { children: ReactNode }) {
   const store = useDataStore();
-  return <Context.Provider value={store}>{children}</Context.Provider>;
+  const profile=useProfile();
+  useEffect(()=>{
+    const player=store.players?.find(p=>p.name.trim().toLowerCase()===profile);
+    if(player&&profile!==player.id)selectProfile(player.id);
+  },[profile,store.players]);
+  return <Context.Provider value={store}><PlayerAppearanceContext.Provider value={store.players??[]}>{children}</PlayerAppearanceContext.Provider></Context.Provider>;
 }
 export function useStore() {
   const context = useContext(Context);

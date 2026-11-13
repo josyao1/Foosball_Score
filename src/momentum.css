@@ -42,3 +42,7 @@
 .momentum-time-label.first{transform:none}.momentum-time-label.last{transform:translateX(-100%)}
 .momentum-lead-label{left:calc(7.5% - 7px);transform:translate(-100%,-50%)}
 @media(max-width:420px){.momentum-axis-labels{font-size:10px}.momentum-lead-label{left:calc(7.5% - 5px)}}
+
+.momentum-plot { cursor:crosshair; -webkit-user-select:none; user-select:none; }
+.momentum-plot { outline:none; }
+.momentum-plot:focus-visible { outline:2px solid var(--text); outline-offset:3px; }

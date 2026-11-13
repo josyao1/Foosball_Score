@@ -1,5 +1,5 @@
 import { hasDistinctSides, allPlayers, goalCredit, goalPlayer, sidePlayers } from './participants';
-import { earnedAchievements, hardCarryWinner, lunchBreakPlayers } from './achievements';
+import { earnedAchievements, wrongWayPlayers, hardCarryWinner, lunchBreakPlayers } from './achievements';
 import type { AchievementHistory, PlayerAchievements } from './achievements';
 import { emptyMastery, advanceMastery } from './mastery';
 import type { PlayerMastery } from './mastery';
@@ -46,6 +46,7 @@ export function playerPassports(games: Game[], rivalries: Rivalry[], registry:Pl
     const rivalry = byRivalry.get(game.rivalry_id);
     if (!rivalry || !hasDistinctSides(rivalry)) continue;
     const highlights = gameHighlights(game), final = score(game.goals);
+    const wrongWay = wrongWayPlayers(game, rivalry, highlights);
     const carry = hardCarryWinner(game, rivalry, highlights);
     const runs = {a:0,b:0}, bestRuns = {a:0,b:0};
     for (const goal of highlights.goals) {
@@ -79,7 +80,7 @@ export function playerPassports(games: Game[], rivalries: Rivalry[], registry:Pl
         const type = goal.flags.includes('dunk') ? goal.flags.includes('bank') ? 'combo' : 'dunk' : goal.flags.includes('bank') ? 'bank' : null;
         if (type) p.types[type]+=credit;
       }
-      const earned = earnedAchievements(game,side,highlights,rivalry);
+      const earned = earnedAchievements(game,side,highlights,rivalry).filter(id=>id !== 'wrongWay' || wrongWay.some(p=>p.player.id === member.id));
       if (carry?.player.id === member.id) earned.push('hardCarry');
       for (const achievement of earned) {
         p.achievements[achievement] ??= game;

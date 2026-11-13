@@ -174,3 +174,7 @@ html[data-design] dialog.hall-rating-dialog { width: min(520px, calc(100% - 32px
   .hall-poster-footer a { font-size: 11px; }
   .hall-intro { margin-bottom: 16px; }
 }
+
+.hall-momentum > svg { touch-action:pan-y; cursor:crosshair; -webkit-user-select:none; user-select:none; outline:none; }
+.hall-momentum > svg:focus-visible { outline:2px solid var(--text); outline-offset:3px; border-radius:4px; }
+.hall-scrub-line { stroke:var(--muted); stroke-width:1; stroke-dasharray:3 4; vector-effect:non-scaling-stroke; }
