@@ -2,11 +2,11 @@ import { CarouselTrack, updateCarouselProgress } from './CarouselTrack';
 import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, ChevronLeft, ChevronRight, Radio } from "lucide-react";
-import { displayTeams, type DisplayTeams } from "../lib/participants";
+import { displayTeams, sidePlayers, matchesProfile, type DisplayTeams } from "../lib/participants";
+import { PlayerJersey } from './PlayerJersey';
 import { Avatar } from "./Scoreboard";
 import { MatchupTicket } from './MatchupTicket';
 import { rivalryStats, score } from "../lib/stats";
-import { gameDate } from "../lib/time";
 import type { Game, Rivalry } from "../lib/types";
 import "../rivalry-layouts.css";
 
@@ -274,34 +274,49 @@ function RivalryTable({ entries }: { entries: Entry[] }) {
   );
 }
 
-function OtherRivalries({ entries, featured }: { entries: Entry[]; featured: boolean }) {
-  const rows = <ul className="rc-directory-list">
-    {entries.map(({ rivalry, stats, latest, live, teams: [first, second] }) => <li key={rivalry.id}>
-      <Link className="rc-directory-row" to={`/rivalry/${rivalry.id}`}>
-        <span className="rc-directory-match">{first.name} <small>vs</small> {second.name}</span>
-        <strong aria-label={`Head to head: ${stats.wins[first.side]} to ${stats.wins[second.side]}`}>{stats.wins[first.side]}–{stats.wins[second.side]}</strong>
-        <span className="rc-directory-date">{live ? 'Live' : latest ? gameDate(latest.started_at) : 'Unplayed'}</span>
-        <ChevronRight size={15} aria-hidden="true"/>
-      </Link>
-    </li>)}
-  </ul>;
-  if (!featured) return <section className="rc-directory" aria-label="All rivalries">{rows}</section>;
-  return <details className="rc-directory">
-    <summary>Other rivalries <span>{entries.length}</span><ChevronRight size={16} aria-hidden="true"/></summary>
-    {rows}
-  </details>;
+function RivalryDirectory({ entries, profile }: { entries: Entry[]; profile: string | null }) {
+  return <section aria-label="All rivalries">
+    <ul className="rivalry-mini-grid">
+      {entries.map(({ rivalry, teams, stats, live }) => <li key={rivalry.id}>
+        <Link className="rivalry-mini-card" to={`/rivalry/${rivalry.id}`}
+          aria-label={`${teams[0].name} vs ${teams[1].name}, ${stats.wins[teams[0].side]}–${stats.wins[teams[1].side]} wins${live ? ', live game' : ''}`}>
+          <div className="rivalry-mini-teams">
+            {teams.map(team => {
+              const members = [...sidePlayers(rivalry, team.side)].sort((a, b) =>
+                Number(matchesProfile(b, profile)) - Number(matchesProfile(a, profile)));
+              return <div className="rivalry-mini-team" key={team.side}>
+                <span className="rivalry-mini-jerseys">{members.map(player =>
+                  <PlayerJersey key={player.id} name={player.name} decorative/>)}</span>
+                <span className="rivalry-mini-name">{members.map(player => <span key={player.id}>{player.name}</span>)}</span>
+                <strong>{stats.wins[team.side]}</strong>
+              </div>;
+            })}
+          </div>
+          <div className="rivalry-mini-footer">
+            <span>{stats.completed} {stats.completed === 1 ? 'game' : 'games'}</span>
+            {live ? <span className="rivalry-mini-live"><Radio size={12} aria-hidden="true"/>Live</span>
+              : <ArrowUpRight size={14} aria-hidden="true"/>}
+          </div>
+        </Link>
+      </li>)}
+    </ul>
+  </section>;
 }
 
-function FeaturedRivalries({ entries, profile }: { entries: Entry[]; profile: string | null }) {
+function orderEntries(entries: Entry[]) {
   const winRate = (entry: Entry) => entry.teams[0].mine && entry.stats.completed > 0
     ? entry.stats.wins[entry.teams[0].side] / entry.stats.completed : 0;
   const recency = (entry: Entry) => Date.parse(entry.latest?.started_at ?? entry.rivalry.created_at) || 0;
-  const ordered = [...entries].sort((a, b) =>
+  return [...entries].sort((a, b) =>
     Number(b.teams[0].mine) - Number(a.teams[0].mine)
     || b.stats.completed - a.stats.completed
     || winRate(b) - winRate(a)
     || recency(b) - recency(a)
     || a.rivalry.id.localeCompare(b.rivalry.id));
+}
+
+function FeaturedRivalries({ entries, profile }: { entries: Entry[]; profile: string | null }) {
+  const ordered = orderEntries(entries);
   const featured = ordered.filter(entry =>
     entry.live || entry.teams[0].mine || entry.stats.completed >= 3
   )
@@ -310,7 +325,9 @@ function FeaturedRivalries({ entries, profile }: { entries: Entry[]; profile: st
   const others = ordered.filter(entry => !selected.has(entry.rivalry.id));
   return <>
     {featured.length > 0 && <TicketCollection key={profile} entries={featured}/>}
-    {others.length > 0 && <OtherRivalries entries={others} featured={featured.length > 0}/>}
+    {others.length > 0 && (featured.length > 0
+      ? <Link className="rivalry-directory-link" to="/rivalries">Other rivalries <span>{others.length}</span><ChevronRight size={18} aria-hidden="true"/></Link>
+      : <RivalryDirectory entries={ordered} profile={profile}/>)}
   </>;
 }
 
@@ -329,6 +346,7 @@ export function RivalryCollection({ rivalries, games, layout, profile = null }: 
     return { rivalry, teams: displayTeams(rivalry, profile), stats: rivalryStats(rivalryGames), live: Boolean(liveGame), latest, recent: ordered.filter(game => game.ended_at).slice(0, 2), history: rivalryGames };
   });
   if (!entries.length) return null;
+  if (layout === "directory") return <RivalryDirectory entries={orderEntries(entries)} profile={profile}/>;
   if (layout === "tickets") return <FeaturedRivalries entries={entries} profile={profile} />;
   if (layout === "table") return <RivalryTable entries={entries} />;
   const presentation = ["cards", "list", "forest", "pitch", "versus", "tickets", "matrix", "tiles", "broadcast"].includes(layout) ? layout : "cards";

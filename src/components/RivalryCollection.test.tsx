@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { RivalryCollection } from "./RivalryCollection";
@@ -100,14 +100,22 @@ it('features personal then frequent matchups and keeps live matchups accessible'
     {...rivalries[1], id:'five', player_a:'Guest'}];
   const games = items.flatMap((item,i) => finishedGames(item, [1,4,5,1,1][i]));
   games.push({...games[0], id:'live', rivalry_id:'five', ended_at:null});
-  render(<MemoryRouter><RivalryCollection rivalries={items} games={games} profile="player 1" layout="tickets"/></MemoryRouter>);
+  render(<MemoryRouter><Routes>
+    <Route path="/" element={<RivalryCollection rivalries={items} games={games} profile="player 1" layout="tickets"/>}/>
+    <Route path="/rivalries" element={<RivalryCollection rivalries={items} games={games} profile="player 1" layout="directory"/>}/>
+  </Routes></MemoryRouter>);
   const tickets = screen.getAllByRole('article');
   expect(tickets.map(card=>card.getAttribute('aria-label'))).toEqual(['Player 1 vs Player 2','Player 5 vs Player 6','Player 3 vs Player 4']);
   expect(within(within(tickets[2]).getByRole('region',{name:'Recent games'})).getAllByRole('link')).toHaveLength(2);
-  const details = screen.getByText('Other rivalries').closest('details')!;
-  expect(details.open).toBe(false);
-  fireEvent.click(details.querySelector('summary')!);
-  expect(within(details).getAllByRole('link').map(link=>link.getAttribute('href'))).toEqual(['/rivalry/five','/rivalry/four']);
+  const more = screen.getByRole('link', {name: 'Other rivalries 2'});
+  expect(more.getAttribute('href')).toBe('/rivalries');
+  expect(document.querySelector('details')).toBeNull();
+  fireEvent.click(more);
+  const directory = screen.getByRole('region', {name:'All rivalries'});
+  expect(within(directory).getAllByRole('link').map(link=>link.getAttribute('href'))).toEqual([
+    '/rivalry/one', '/rivalry/three', '/rivalry/two', '/rivalry/five', '/rivalry/four',
+  ]);
+  expect(within(directory).getByRole('link', {name:/Guest vs Player 4.*live game/})).toBeTruthy();
 });
 
 it('keeps every matchup directly accessible when none qualifies for a ticket', () => {
@@ -131,13 +139,17 @@ it('puts the profile and their team first with the corresponding jerseys, wins a
   expect(within(ticket).getByRole('link',{name:/Aiden and Andrew 1, Max 0/})).toBeTruthy();
   expect(within(ticket).getByText('Aiden and Andrew · 1-win streak')).toBeTruthy();
   view.rerender(page(null));
-  expect(screen.getByRole('link',{name:/Max vs Andrew and Aiden/}).textContent).toContain('0–1');
+  expect(screen.getByRole('link',{name:/Max vs Andrew and Aiden/}).getAttribute('aria-label')).toContain('0–1 wins');
   // With three busier personal rivals, this same team moves into the directory.
   const busier = [1,2,3].map(n=>({...team,id:'busy'+n,player_a:'Opponent '+n}));
   view.rerender(<MemoryRouter><RivalryCollection rivalries={[team,...busier]} games={[...games,...busier.flatMap(item=>finishedGames(item,3))]} layout="tickets" profile={aiden.id}/></MemoryRouter>);
-  fireEvent.click(screen.getByText('Other rivalries'));
+  expect(screen.getByRole('link', {name:'Other rivalries 1'}).getAttribute('href')).toBe('/rivalries');
+  view.rerender(<MemoryRouter><RivalryCollection rivalries={[team,...busier]} games={[...games,...busier.flatMap(item=>finishedGames(item,3))]} layout="directory" profile={aiden.id}/></MemoryRouter>);
   const row = screen.getByRole('link',{name:/Aiden and Andrew vs Max/});
-  expect(row.textContent).toContain('1–0');
+  expect(row.getAttribute('aria-label')).toContain('1–0 wins');
+  expect(row.querySelector('.rivalry-mini-team strong')?.textContent).toBe('1');
+  expect(row.querySelector('.rivalry-mini-name')?.textContent).toBe('AidenAndrew');
+  expect(row.querySelectorAll('.rivalry-mini-team:first-child .player-jersey')).toHaveLength(2);
 });
 
 it('ranks personal matchups by completed games, selected-side win rate, then recency in cards and directory', () => {
@@ -157,13 +169,12 @@ it('ranks personal matchups by completed games, selected-side win rate, then rec
     goals:[{id:game.id+'-goal', actor_side:i < spec.wins ? 'b' as const : 'a' as const,
       rung:'attacker' as const, flags:[], elapsed_ms:1000, occurred_at:game.started_at}],
   })));
-  render(<MemoryRouter><RivalryCollection rivalries={items} games={games} profile={thomas.id} layout="tickets"/></MemoryRouter>);
+  const view = render(<MemoryRouter><RivalryCollection rivalries={items} games={games} profile={thomas.id} layout="tickets"/></MemoryRouter>);
   expect(screen.getAllByRole('article').map(card=>card.getAttribute('aria-label'))).toEqual([
     'thomas vs busy', 'thomas vs win-new', 'thomas vs win-middle',
   ]);
-  const details = screen.getByText('Other rivalries').closest('details')!;
-  fireEvent.click(details.querySelector('summary')!);
-  expect(within(details).getAllByRole('link').map(link=>link.getAttribute('href'))).toEqual([
-    '/rivalry/win-old', '/rivalry/loss-new', '/rivalry/loss-old',
+  view.rerender(<MemoryRouter><RivalryCollection rivalries={items} games={games} profile={thomas.id} layout="directory"/></MemoryRouter>);
+  expect(within(screen.getByRole('region', {name:'All rivalries'})).getAllByRole('link').map(link=>link.getAttribute('href'))).toEqual([
+    '/rivalry/busy', '/rivalry/win-new', '/rivalry/win-middle', '/rivalry/win-old', '/rivalry/loss-new', '/rivalry/loss-old',
   ]);
 });

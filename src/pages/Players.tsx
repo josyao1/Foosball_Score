@@ -74,7 +74,6 @@ function Passport({ player: p, players, tab, setTab, note, chemistry }: { player
     if(window.scrollY!==targetY||window.scrollX!==previous.x)
       window.scrollTo({left:previous.x,top:targetY,behavior:'instant'});
   },[tab]);
-  const badgeCount = Object.values(p.mastery).filter(b=>b.earned.length>0).length + Object.keys(p.achievements).length;
   const bests = [
     {label:'Biggest run',record:p.bestRun,value:`${p.bestRun?.value} straight`},
     {label:'Winning comeback',record:p.bestComeback,value:`${p.bestComeback?.value} goals down`},
@@ -99,7 +98,7 @@ function Passport({ player: p, players, tab, setTab, note, chemistry }: { player
       selectPage(next);e.currentTarget.querySelector<HTMLButtonElement>(`[data-page="${next}"]`)?.focus({preventScroll:true});
     }}>
       {passportTabs.map(page=><button key={page} type="button" role="tab" data-page={page} id={`${tabId}-${page}`} aria-controls={`${tabId}-panel-${page}`} aria-selected={tab===page} tabIndex={tab===page?0:-1} onClick={()=>selectPage(page)}>
-        {page==='overview'?'Overview':page==='scoring'?'Scoring':page==='recent'?'Recent games':page==='chemistry'?'Chemistry':'Badges'}{page==='badges'&&<span title="Earned mastery badges and achievements">{badgeCount}</span>}
+        {page==='overview'?'Overview':page==='scoring'?'Scoring':page==='recent'?'Recent games':page==='chemistry'?'Chemistry':'Badges'}
       </button>)}
       <TabUnderline selection={tab} />
     </div>

@@ -4,6 +4,7 @@ import { Link, Route, Routes, useLocation, useMatch } from "react-router-dom";
 import { ArrowUpRight, RefreshCw, Wifi, AlertCircle } from "lucide-react";
 import { useStore } from "./lib/store";
 import { SiteDesign } from "./components/SiteDesign";
+import { Rivalries } from "./pages/Rivalries";
 import { Home } from "./pages/Home";
 import { Scorigami } from "./pages/Scorigami";
 import { HallOfFame } from "./pages/HallOfFame";
@@ -93,6 +94,7 @@ export function App() {
         ) : (
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/rivalries" element={<Rivalries />} />
             <Route path="/scorigami" element={<Scorigami />} />
             <Route path="/hall-of-fame" element={<HallOfFame />} />
             <Route path="/backlog" element={<Backlog />} />

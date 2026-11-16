@@ -233,22 +233,46 @@
 .rc-ticket-stub-heading > .rc-ticket-stats-link { flex-shrink: 0; white-space: nowrap; }
 
 .rc-ticket-resume { position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-right: auto; font-weight: 650; font-size: 13px; }
-.rc-directory { border-block: 1px solid var(--line); }
-.rc-ticket-carousel + .rc-directory { margin-top: 18px; }
-.rc-directory summary { display: flex; align-items: center; gap: 8px; padding: 10px 4px; min-height: 48px; cursor: pointer; font-weight: 600; list-style: none; }
-.rc-directory summary::-webkit-details-marker { display: none; }
-.rc-directory summary span { font-size: 12px; font-weight: 450; color: var(--muted); }
-.rc-directory summary svg { margin-left: auto; }
-.rc-directory[open] summary svg { transform: rotate(90deg); }
-.rc-directory-list { list-style: none; padding: 0; margin: 0; }
-.rc-directory[open] .rc-directory-list, .rc-directory-list li + li { border-top: 1px solid var(--line); }
-.rc-directory-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 100px 16px; align-items: center; gap: 12px; min-height: 48px; padding: 8px 4px; }
-.rc-directory-row:hover, .rc-directory summary:hover { background: var(--panel); }
-.rc-directory-match { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
-.rc-directory-match small, .rc-directory-date { color: var(--muted); font-weight: 450; }
-.rc-directory-date { text-align: right; font-size: 12px; }
-.rc-directory-row strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rivalry-directory-link { display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 10px 4px; margin-top: 18px; border-block: 1px solid var(--line); font-weight: 600; }
+.rivalry-directory-link span { font-size: 12px; font-weight: 450; color: var(--muted); }
+.rivalry-directory-link svg { margin-left: auto; }
+.rivalry-directory-link:hover { background: var(--panel); }
+.rivalry-directory-back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--muted); font-size: 13px; }
+.rivalry-directory-heading { display: flex; align-items: baseline; gap: 12px; margin: 10px 0 24px; }
+.rivalry-directory-heading h1 { margin: 0; }
+.rivalry-directory-heading > span { font-size: 14px; color: var(--muted); }
+.rivalry-directory-filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+html[data-design] .rivalry-directory-search { display: flex; align-items: center; gap: 8px; flex: 1 1 220px; max-width: 440px; min-width: 0; padding-left: 12px; background: var(--panel); color: var(--muted); border: 1px solid var(--line); border-radius: 6px; }
+html[data-design] .rivalry-directory-filters .rivalry-directory-search input { width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px 8px 0; border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; font-size: 16px; box-shadow: none; }
+.rivalry-directory-search > svg { flex-shrink: 0; }
+html[data-design] .rivalry-directory-search:focus-within { outline: 2px solid var(--text); outline-offset: 2px; }
+html[data-design] .rivalry-directory-filters .rivalry-directory-search input:focus-visible { outline: none; }
+.rivalry-directory-search input::-webkit-search-cancel-button { display: none; }
+html[data-design] .rivalry-directory-search button { display: grid; place-items: center; flex: 0 0 44px; min-height: 44px; padding: 0; background: transparent; border: 0; color: var(--muted); }
+html[data-design] .rivalry-directory-filters > select.rivalry-directory-format { width: auto; min-height: 44px; margin: 0; border: 1px solid var(--line); border-radius: 6px; padding: 8px 30px 8px 12px; background-color: var(--panel); color: var(--text); font-size: 16px; }
+.rivalry-directory-empty { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; padding-block: 24px; color: var(--muted); }
+.rivalry-directory-empty button { min-height: 44px; }
+.rivalry-mini-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; list-style: none; margin: 0; padding: 0; }
+.rivalry-mini-grid > li { min-width: 0; }
+.rivalry-mini-card { display: flex; flex-direction: column; height: 100%; min-height: 190px; padding: 16px 12px 10px; border: 1px solid var(--line); border-top: 3px solid var(--muted); border-radius: 3px; background: var(--panel); }
+.rivalry-mini-card:hover { border-color: var(--text); }
+.rivalry-mini-card:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+.rivalry-mini-teams { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); flex: 1; }
+.rivalry-mini-team { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; padding-inline: 4px; text-align: center; }
+.rivalry-mini-team + .rivalry-mini-team { border-left: 1px solid var(--line); }
+.rivalry-mini-jerseys { display: flex; justify-content: center; gap: 2px; }
+.rivalry-mini-jerseys .player-jersey { width: 25px; }
+.rivalry-mini-name { display: flex; flex-direction: column; min-height: 34px; font-size: 13px; font-weight: 650; line-height: 1.3; overflow-wrap: anywhere; max-width: 100%; }
+.rivalry-mini-team > strong { margin-top: auto; font: 700 36px/1 var(--score-font, Georgia, serif); font-variant-numeric: lining-nums tabular-nums; }
+.rivalry-mini-footer { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--line); color: var(--muted); font-size: 11px; }
+.rivalry-mini-live { display: inline-flex; align-items: center; gap: 4px; font-weight: 650; color: var(--text); }
+@media(max-width: 900px) { .rivalry-mini-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media(max-width: 600px) {
-  .rc-directory-row { grid-template-columns: minmax(0, 1fr) auto 78px 12px; gap: 6px; }
-  .rc-directory-date { font-size: 10px; }
+  .rivalry-mini-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .rivalry-mini-card { min-height: 174px; padding: 12px 7px 8px; }
+  .rivalry-mini-team { padding-inline: 3px; gap: 7px; }
+  .rivalry-mini-jerseys .player-jersey { width: 22px; }
+  .rivalry-mini-name { font-size: 12px; min-height: 32px; }
+  .rivalry-mini-team > strong { font-size: 30px; }
+  .rivalry-directory-heading { margin-bottom: 18px; }
 }
