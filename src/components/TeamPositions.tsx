@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { ArrowLeftRight } from 'lucide-react';
 import type { Game, Rivalry, Side } from '../lib/types';
 import { defaultLineup, sidePlayers } from '../lib/participants';
-export function TeamPositions({game,rivalry,busy,onSave,onlySide}:{game:Game;rivalry:Rivalry;busy:boolean;onSave:(g:Game)=>Promise<unknown>;onlySide?:Side}){
+export function TeamPositions({game,rivalry,busy,onSave,onlySide,defenseFirst=true}:{game:Game;rivalry:Rivalry;busy:boolean;onSave:(g:Game)=>Promise<unknown>;onlySide?:Side;defenseFirst?:boolean}){
  const color = useGameColor();
  const [error,setError]=useState(''),[pending,setPending]=useState(false);
  const lineup=game.lineup??defaultLineup(rivalry);
@@ -25,13 +25,14 @@ export function TeamPositions({game,rivalry,busy,onSave,onlySide}:{game:Game;riv
      <div className="position-lineup">
        {people.map((person, index) => {
          const onDefense = lineup[side].defense === person.id;
-         const shift = (onDefense ? 0 : 1) - index;
+         const shift = (onDefense === defenseFirst ? 0 : 1) - index;
          return <strong key={person.id} className={`position-name shift-${shift}`}
            style={{gridColumn: index + 1}} aria-label={`${person.name}, ${onDefense ? 'goalie and defender' : 'middle and attacker'}`}>
            <PlayerJersey name={person.name} decorative/><span>{person.name}</span>
          </strong>;
        })}
-       <small>Goalie + defender</small><small>Middle + attacker</small>
+       <small>{defenseFirst ? 'Goalie + defender' : 'Middle + attacker'}</small>
+       <small>{defenseFirst ? 'Middle + attacker' : 'Goalie + defender'}</small>
      </div>
      <button type="button" className="position-swap" disabled={busy||pending} aria-label={`Swap ${color(side)==='a'?'black':'white'} positions`} onClick={()=>void save(side)}>
        <ArrowLeftRight size={16}/><span>Swap</span>

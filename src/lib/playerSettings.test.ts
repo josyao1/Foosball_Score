@@ -11,6 +11,21 @@ async function setup(){
  return {repo,j,b,r,game,raw:()=>JSON.parse(raw)};
 }
 describe('player settings',()=>{
+ it('shares scouting picks independently of jerseys and rejects stale scouting edits',async()=>{
+  const {repo,j,r,game,raw}=await setup();
+  const override={noteId:'outing',scores:{outing:20,other:50}};
+  await repo.updateScoutingOverride(j,override);
+  const saved=(await repo.load()).players!.find(p=>p.id===j.id)!;
+  expect(saved.scouting_override).toEqual(override);
+  expect(saved.scouting_revision).toBe(1);
+  expect((await repo.load()).rivalries.find(item=>item.id===r.id)?.members?.a[0].scouting_override).toEqual(override);
+  await expect(repo.updateScoutingOverride(j,null)).rejects.toThrow(/another device/);
+  await repo.updatePlayer(j,{name:j.name,appearance:defaultAppearance(j.name)});
+  expect((await repo.load()).players!.find(p=>p.id===j.id)?.scouting_override).toEqual(override);
+  await repo.updateScoutingOverride(saved,null);
+  expect((await repo.load()).players!.find(p=>p.id===j.id)?.scouting_override).toBeNull();
+  expect(raw().games[0]).toEqual(game);
+ });
  it('renames by ID and keeps archived games, goal attribution, and roster identity intact',async()=>{
   const {repo,j,r,game,raw}=await setup();
   await repo.deleteRivalry(r.id,{[game.id]:game.revision});

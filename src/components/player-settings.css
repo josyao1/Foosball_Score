@@ -1,5 +1,5 @@
-.backlog-tabs{display:flex;gap:24px;border-bottom:1px solid var(--line);margin-bottom:24px}
-.backlog-tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:12px 2px;color:var(--text);font:inherit;cursor:pointer;min-height:44px}
+.backlog-tabs{display:flex;gap:clamp(12px,3vw,24px);border-bottom:1px solid var(--line);margin-bottom:24px;overflow-x:auto}
+.backlog-tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:12px 2px;color:var(--text);font:inherit;cursor:pointer;min-height:44px;white-space:nowrap}
 .backlog-tabs button[aria-current=page]{border-bottom-color:var(--text);font-weight:700}
 .player-settings>p{font-size:.9rem;margin:0 0 20px}
 .player-settings-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}

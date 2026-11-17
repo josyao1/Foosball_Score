@@ -22,7 +22,7 @@ import { PlayerCarousel } from '../components/PlayerCarousel';
 import { usePlayerAppearance } from '../lib/PlayerAppearanceContext';
 import { PlayerJersey } from '../components/PlayerJersey';
 import { ScoutingNote } from '../components/ScoutingNote';
-import { useScoutingNotes } from '../lib/useScoutingNotes';
+import { useScoutingManager } from '../lib/useScoutingManager';
 import type { ScoutingNote as Note } from '../lib/scouting';
 import '../players.css';
 
@@ -153,10 +153,10 @@ function Passport({ player: p, players, tab, setTab, note, chemistry }: { player
 }
 
 export function Players() {
-  const {games,rivalries,players,loading} = useStore();
+  const {games,rivalries,players} = useStore();
   const profile=useProfile();
   const people = useMemo(()=>playerPassports(games,rivalries,players),[games,rivalries,players]);
-  const notes=useScoutingNotes(games,rivalries,!loading);
+  const {notes}=useScoutingManager();
   const chemistry=useMemo(()=>playerChemistry(games,rivalries),[games,rivalries]);
   const [creating,setCreating] = useState(false);
   const [tab,setTab] = useState<PassportTab>('overview');

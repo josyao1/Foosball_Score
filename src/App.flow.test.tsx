@@ -8,6 +8,7 @@ import { StoreProvider } from './lib/store';
 import { LocalRepository, STORAGE_KEY } from './lib/storage';
 import { score } from './lib/stats';
 import { defaultLineup } from './lib/participants';
+import { makeScoutingOverride, scoutingCandidates } from './lib/scouting';
 import { GoalDialog } from './components/GoalDialog';
 import { ConfirmDialog } from './components/Dialog';
 import type { Data, Game, Goal, Rivalry } from './lib/types';
@@ -54,6 +55,80 @@ it('uses the permanent table layout and preserves attribution and pause state wh
   expect((screen.getByRole('button', {name:'Ada attacker goal'}) as HTMLButtonElement).disabled).toBe(true);
   fireEvent.click(screen.getByRole('button', {name:'Flip sides'}));
   expect((screen.getByRole('button', {name:'Ada attacker goal'}) as HTMLButtonElement).disabled).toBe(true);
+});
+
+it('keeps each position assignment over its rungs after side flips, color flips and player swaps', async () => {
+  const people=['Josh','Brooks','Andrew','Max'].map(name=>({id:name.toLowerCase(),name,created_at:''}));
+  const team={...rivalry,player_a:'Josh and Brooks',player_b:'Andrew and Max',members:{a:people.slice(0,2),b:people.slice(2)}};
+  seed({rivalries:[team],games:[{...baseGame,lineup:defaultLineup(team),goals:[{...goal,lineup:defaultLineup(team)}]}]});
+  openApp('/game/g');
+  await screen.findByRole('heading',{name:'Live game'});
+  function checkAssignments(expected:string[][]){
+    const rows=screen.getAllByRole('region',{name:'Team positions'});
+    const pads=screen.getAllByRole('group',{name:/scoring rungs/});
+    rows.forEach((row,i)=>{
+      const names=[...row.querySelectorAll<HTMLElement>('.position-name')].sort((a,b)=>{
+        const column=(node:HTMLElement)=>Number(node.style.gridColumn)+Number(node.className.match(/shift-(-?\d+)/)![1]);
+        return column(a)-column(b);
+      }).map(node=>node.querySelector('span')!.textContent);
+      expect(names).toEqual(expected[i]);
+      const buttons=within(pads[i]).getAllByRole('button');
+      expect(within(buttons[0]).getByText(expected[i][0])).toBeTruthy();
+      expect(within(buttons[3]).getByText(expected[i][1])).toBeTruthy();
+      expect([...row.querySelectorAll('.position-lineup small')].map(label=>label.textContent)).toEqual(i===0
+        ? ['Middle + attacker','Goalie + defender'] : ['Goalie + defender','Middle + attacker']);
+    });
+  }
+  checkAssignments([['Max','Andrew'],['Josh','Brooks']]);
+  fireEvent.click(screen.getByRole('button',{name:'Flip sides'}));
+  checkAssignments([['Brooks','Josh'],['Andrew','Max']]);
+  fireEvent.click(screen.getByRole('button',{name:'Flip colors'}));
+  checkAssignments([['Brooks','Josh'],['Andrew','Max']]);
+  fireEvent.click(screen.getByRole('button',{name:'Swap white positions'}));
+  await waitFor(()=>expect(stored().games[0].lineup?.a.defense).toBe('brooks'));
+  checkAssignments([['Josh','Brooks'],['Andrew','Max']]);
+  expect(stored().games[0].goals[0].lineup?.a.defense).toBe('josh');
+  fireEvent.click(screen.getByRole('button',{name:'Flip sides'}));
+  checkAssignments([['Max','Andrew'],['Brooks','Josh']]);
+});
+
+it('selects a shared scouting note in Backlog, keeps it after reload, and returns to automatic',async()=>{
+  const goals=Array.from({length:10},(_,i)=>({...goal,id:`scout${i}`,rung:'goalie' as const,flags:i<6?['bank' as const]:[],elapsed_ms:1000+i}));
+  seed({rivalries:[rivalry],games:[{...baseGame,ended_at:'2026-01-01T00:05:00Z',goals}]});
+  const view=openApp('/backlog?tab=scouting');
+  await screen.findByRole('region',{name:'Scouting notes'});
+  fireEvent.click(screen.getByText('Ada',{selector:'summary strong'}).closest('summary')!);
+  fireEvent.click(screen.getByRole('button',{name:'Use First chapter for Ada'}));
+  await screen.findByText('Ada: scouting note updated for everyone.');
+  expect(stored().players!.find(p=>p.name==='Ada')?.scouting_override?.noteId).toBe('outing');
+  view.unmount();
+  const profile=openApp('/players');
+  expect(await screen.findByRole('button',{name:/Scouting note for Ada: First chapter/})).toBeTruthy();
+  profile.unmount();
+  openApp('/backlog?tab=scouting');
+  await screen.findByRole('region',{name:'Scouting notes'});
+  fireEvent.click(screen.getByText('Ada',{selector:'summary strong'}).closest('summary')!);
+  fireEvent.click(screen.getByRole('button',{name:'Use automatic selection for Ada'}));
+  await screen.findByText('Ada: automatic selection restored.');
+  expect(stored().players!.find(p=>p.name==='Ada')?.scouting_override).toBeNull();
+  expect(screen.getByText('Bank branch · Automatic')).toBeTruthy();
+});
+
+it('clears an ineligible shared pick so restoring old game data cannot revive it',async()=>{
+  const ada={id:'ada',name:'Ada',created_at:''},bea={id:'bea',name:'Bea',created_at:''};
+  const r={...rivalry,members:{a:[ada],b:[bea]}};
+  const first={...baseGame,ended_at:'2026-01-01T00:05:00Z',goals:Array.from({length:10},(_,i)=>({...goal,id:`bank${i}`,flags:['bank' as const]}))};
+  const override=makeScoutingOverride('outing',scoutingCandidates([first],[r]).ada);
+  seed({players:[{...ada,scouting_override:override,scouting_revision:1},bea],rivalries:[r],games:[first,{...first,id:'second'}]});
+  const view=openApp('/players');
+  await screen.findByRole('button',{name:/Scouting note for Ada: Bank branch/});
+  await waitFor(()=>expect(stored().players!.find(p=>p.id==='ada')?.scouting_override).toBeNull());
+  expect(stored().players!.find(p=>p.id==='ada')?.scouting_revision).toBe(2);
+  view.unmount();
+  const data=stored();seed({...data,games:[first]});
+  openApp('/players');
+  await screen.findByRole('button',{name:/Scouting note for Ada: Bank branch/});
+  expect(stored().players!.find(p=>p.id==='ada')?.scouting_override).toBeNull();
 });
 
 it('creates, resumes, scores, finishes early, corrects, removes, and deletes a rivalry through the app', async () => {

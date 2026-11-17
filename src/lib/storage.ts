@@ -1,6 +1,7 @@
 import { validatePlayerSettings } from './playerAppearance';
 import { normalizePlayers, rosterKey, validateRoster, validateLineup, defaultLineup, sidePlayers } from './participants';
-import type { Data, Game, Rivalry, Player, PlayerSettings, BacklogData } from "./types";
+import type { Data, Game, Rivalry, Player, PlayerSettings, BacklogData, ScoutingOverride } from "./types";
+import { validateScoutingOverride } from './scouting';
 export interface Repository {
   load(): Promise<Data>;
   loadBacklog(): Promise<BacklogData>;
@@ -10,6 +11,7 @@ export interface Repository {
   purgeRivalry(rivalry: Rivalry, expectedGames: Record<string,number>): Promise<void>;
   createPlayer(name:string):Promise<Player>;
   updatePlayer(player:Player, settings:PlayerSettings):Promise<void>;
+  updateScoutingOverride(player:Player, override:ScoutingOverride|null):Promise<void>;
   createTeamRivalry(a:string[],b:string[]):Promise<Rivalry>;
   createRivalry(a: string, b: string): Promise<Rivalry>;
   saveGame(game: Game): Promise<Game>;
@@ -88,6 +90,16 @@ export class LocalRepository implements Repository {
       return {...r,members,player_a:members.a.map(p=>p.name).join(' and '),player_b:members.b.map(p=>p.name).join(' and ')};
     });
     this.write({...d,players:d.players!.map(p=>p.id===player.id?updated:p),rivalries});
+  }
+  async updateScoutingOverride(player:Player, override:ScoutingOverride|null):Promise<void> {
+    validateScoutingOverride(override);
+    const d=this.read(),current=d.players!.find(p=>p.id===player.id);
+    if(!current)throw new Error('Player no longer exists. Refresh and try again.');
+    if((current.scouting_revision??0)!==(player.scouting_revision??0))throw new Error('This scouting choice changed on another device. Refresh and try again.');
+    const updated={...current,scouting_override:override,scouting_revision:(current.scouting_revision??0)+1};
+    this.write({...d,players:d.players!.map(p=>p.id===player.id?updated:p),rivalries:d.rivalries.map(r=>({...r,
+      members:{a:sidePlayers(r,'a').map(p=>p.id===player.id?updated:p),b:sidePlayers(r,'b').map(p=>p.id===player.id?updated:p)},
+    }))});
   }
   async createTeamRivalry(a:string[],b:string[]):Promise<Rivalry> {
     const d=this.read();

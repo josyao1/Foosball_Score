@@ -218,8 +218,8 @@ export function GamePage() {
             near={scoringNear}
             rematchFrom={rematch?.gameId === game.id && !game.goals.length ? rematch.previous : undefined}
             clock={gameClock}
-            whitePositions={<TeamPositions onlySide="b" game={game} rivalry={r} busy={store.busy || Boolean(game.paused_at)} onSave={store.saveGame}/>}
-            blackPositions={<TeamPositions onlySide="a" game={game} rivalry={r} busy={store.busy || Boolean(game.paused_at)} onSave={store.saveGame}/>}
+            whitePositions={<TeamPositions onlySide="b" defenseFirst={scoringNear === 'b'} game={game} rivalry={r} busy={store.busy || Boolean(game.paused_at)} onSave={store.saveGame}/>}
+            blackPositions={<TeamPositions onlySide="a" defenseFirst={scoringNear === 'a'} game={game} rivalry={r} busy={store.busy || Boolean(game.paused_at)} onSave={store.saveGame}/>}
             disabled={scoringDisabled} onGoal={beginGoal}
             pulse={confirmedGoal && {id: confirmedGoal.id, side: creditedSide(confirmedGoal)}}/>}
         {live && (

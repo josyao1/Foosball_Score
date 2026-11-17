@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Game, Data, BacklogData } from "./types";
 import type { Repository } from "./storage";
 import { validatePlayerSettings } from './playerAppearance';
+import { validateScoutingOverride } from './scouting';
 import { validateNames } from "./storage";
 const url = import.meta.env.VITE_SUPABASE_URL?.trim();
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
@@ -56,6 +57,11 @@ export function createCloudRepository(): Repository {
     },
     async createTeamRivalry(a,b){
       const {data,error}=await client.rpc('foos_create_team_rivalry',{p_a:a,p_b:b});fail(error);return data;
+    },
+    async updateScoutingOverride(player,override){
+      validateScoutingOverride(override);
+      const {error}=await client.rpc('foos_set_scouting_override',{p_id:player.id,p_expected_revision:player.scouting_revision??0,p_override:override});
+      fail(error);
     },
     async createRivalry(a, b) {
       validateNames(a, b);

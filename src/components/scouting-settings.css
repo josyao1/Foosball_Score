@@ -1,0 +1,30 @@
+.scout-settings-intro { display: flex; flex-wrap: wrap; align-items: end; gap: 16px 24px; margin-bottom: 20px; }
+.scout-settings-intro > p { flex: 1 1 300px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+.scout-settings-intro > label { display: grid; gap: 5px; font-size: 12px; min-width: 160px; }
+html[data-design] .scout-settings .scout-settings-intro select { width: 100%; min-height: 44px; font-size: 16px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+.scout-settings-notice { margin-bottom: 16px; font-size: 13px; }
+.scout-settings-players { display: grid; gap: 12px; }
+.scout-settings-player { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); min-width: 0; }
+.scout-settings-player > summary { display: flex; align-items: center; gap: 12px; padding: 16px; min-height: 70px; cursor: pointer; list-style: none; }
+.scout-settings-player > summary::-webkit-details-marker { display: none; }
+.scout-settings-player > summary > span:first-of-type { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.scout-settings-player summary strong,.scout-settings-player summary small { display: block; }
+.scout-settings-player summary small { color: var(--muted); margin-top: 4px; font-size: 12px; }
+.scout-settings-count { font-size: 12px; white-space: nowrap; color: var(--muted); }
+.scout-settings-player > summary > svg:last-child { flex-shrink: 0; }
+.scout-settings-player[open] > summary > svg:last-child { transform: rotate(180deg); }
+.scout-settings-body { padding: 0 16px 16px; }
+.scout-settings-options { list-style: none; padding: 0; margin: 0; }
+.scout-settings-options > li { padding-top: 16px; border-top: 1px solid var(--line); }
+.scout-settings-options > li + li { margin-top: 16px; }
+.scout-settings-option-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+.scout-settings-option-heading strong { color: var(--text); font-weight: 600; }
+.scout-settings-options .scouting-note { margin: 0; width: 100%; }
+html[data-design] .scout-settings .scout-settings-choose { display: flex; margin: 10px 0 0 auto; min-height: 44px; padding: 8px 12px; font-size: 13px; }
+.scout-settings-auto { min-height: 44px; margin-bottom: 12px; text-align: left; }
+@media(max-width:540px) {
+ .scout-settings-player > summary { padding: 12px; gap: 8px; }
+ .scout-settings-body { padding: 0 12px 12px; }
+ .scout-settings-intro > label { flex: 1; }
+ .scout-settings-count { font-size: 11px; }
+}

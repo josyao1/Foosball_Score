@@ -1,13 +1,41 @@
 import { goalCredit, goalPlayer, hasDistinctSides, sidePlayers } from './participants';
 import { creditedSide, orderedGoals, score } from './stats';
 import { otherSide, RUNGS } from './types';
-import type { Game, Goal, Rivalry, Side } from './types';
+import type { Game, Goal, Rivalry, Side, ScoutingOverride } from './types';
 
 export type ScoutKind = 'chemistry' | 'reaction' | 'habit' | 'story';
 export interface ScoutEvidence { game: Game; matchup: string; result: string; detail: string }
 export interface ScoutingNote {
   id: string; family: string; kind: ScoutKind; title: string; text: string;
   explanation: string; sample: number; weight: number; evidence: ScoutEvidence[];
+}
+export type { ScoutingOverride } from './types';
+export const SCOUTING_REPLACEMENT_MARGIN = 8;
+
+export function validateScoutingOverride(value: ScoutingOverride|null) {
+  if(value === null)return;
+  if(!value || typeof value.noteId !== 'string' || !value.noteId.trim() || value.noteId.length > 128
+    || !value.scores || typeof value.scores !== 'object' || Array.isArray(value.scores)
+    || Object.keys(value.scores).length > 100 || !Object.hasOwn(value.scores,value.noteId)
+    || Object.entries(value.scores).some(([id,weight]) => !id.trim() || id.length > 128 || !Number.isFinite(weight) || weight < 0 || weight > 200)) {
+    throw new Error('Invalid scouting choice. Refresh and try again.');
+  }
+}
+
+export function makeScoutingOverride(noteId: string, options: ScoutingNote[]): ScoutingOverride {
+  if (!options.some(note => note.id === noteId)) throw new Error('This note is no longer available. Choose another.');
+  return {noteId, scores: Object.fromEntries(options.map(note => [note.id, note.weight]))};
+}
+
+/** Existing stronger alternatives must not immediately undo an intentional manual pick. */
+export function activeScoutingOverride(options: ScoutingNote[], override?: ScoutingOverride | null) {
+  if (!override) return undefined;
+  const selected = options.find(note => note.id === override.noteId);
+  if (!selected) return undefined;
+  const surpassed = options.some(note => note.id !== selected.id
+    && note.weight >= selected.weight + SCOUTING_REPLACEMENT_MARGIN
+    && (override.scores[note.id] === undefined || note.weight >= override.scores[note.id] + SCOUTING_REPLACEMENT_MARGIN));
+  return surpassed ? undefined : selected;
 }
 interface Appearance {
   game: Game; rivalry: Rivalry; side: Side; won: boolean; solo: boolean;
@@ -100,6 +128,39 @@ export function scoutingCandidates(games:Game[],rivalries:Rivalry[]):Record<stri
         }
       }
     }
+    const recorded = history.filter(h => h.personal.length > 0);
+    const fullTable = recorded.filter(h => RUNGS.every(rung => h.personal.some(g => g.rung === rung)));
+    if(recorded.length >= 3 && known.length >= 20 && fullTable.length >= 2){
+      add({id:'rung:full-table',family:'rung-spread',kind:'habit',title:'Whole table',
+        text:`Scored from all four rungs in ${fullTable.length} of ${recorded.length} games.`,
+        explanation:'Each qualifying game includes at least one personally attributed goal from goalie, defender, middle and attacker. Own goals and unassigned team goals are excluded. Games without any recorded personal goals are not in the comparison.',
+        sample:recorded.length},fullTable,35,fullTable.length/recorded.length*16);
+    }
+    const goalieGoals = known.filter(g => g.rung === 'goalie').length;
+    const defenderGoals = known.filter(g => g.rung === 'defender').length;
+    const backGoals = goalieGoals + defenderGoals;
+    if(recorded.length >= 3 && known.length >= 20 && goalieGoals >= 3 && defenderGoals >= 3 && backGoals/known.length >= .55){
+      add({id:'rung:back-row',family:'rung-spread',kind:'habit',title:'From the back',
+        text:`${backGoals} of your ${known.length} recorded goals came from the back rows: ${goalieGoals} goalie, ${defenderGoals} defender.`,
+        explanation:'At least 20 personally attributed goals across 3 games, with 55% or more from goalie and defender combined and at least 3 from each. Own goals and unassigned team goals are excluded. Team positions can influence this distribution.',
+        sample:recorded.length},recorded,33,backGoals/known.length*16);
+    }
+    if(history.length >= 10){
+      const recent = history.slice(-5), before = history.slice(-10,-5);
+      const recentGoals = recent.flatMap(h => h.personal), beforeGoals = before.flatMap(h => h.personal);
+      if(recentGoals.length >= 15 && beforeGoals.length >= 15){
+        for(const rung of RUNGS){
+          const now = recentGoals.filter(g => g.rung === rung).length;
+          const then = beforeGoals.filter(g => g.rung === rung).length;
+          const change = now/recentGoals.length - then/beforeGoals.length;
+          if(change < .2 || now/recentGoals.length < .35)continue;
+          add({id:`rung:shift:${rung}`,family:'rung-shift',kind:'habit',title:'Changing lanes',
+            text:`${pct(now,recentGoals.length)}% of your goals in your last 5 games came from ${rung}, up from ${pct(then,beforeGoals.length)}% in the previous 5.`,
+            explanation:`${now} of ${recentGoals.length} recorded personal goals in the latest 5 games, compared with ${then} of ${beforeGoals.length} in the previous 5. Each window needs at least 15 attributed goals and a rise of 20 percentage points. Own goals and unknown scorers are excluded; teammate assignments may change the mix.`,
+            sample:10},[...before,...recent],39,change*25);
+        }
+      }
+    }
     const behind:Goal[]=[],ahead:Goal[]=[];
     for(const h of history){
       const s={a:0,b:0};
@@ -129,29 +190,32 @@ export function scoutingCandidates(games:Game[],rivalries:Rivalry[]):Record<stri
           explanation:'Counts the next recorded goal in the same 1v1 game, including points received from an opponent’s own goal. Events at the end of a game have no next-goal opportunity and are excluded.',sample:events.length},events.map(e=>e.h),35,(replies/events.length-.5)*25);
       }
     }
-    // A factual outing gives new players something personal without claiming a trend.
-    const outing=[...history].filter(h=>h.estimated>0).sort((a,b)=>b.personal.length-a.personal.length||Number(b.won)-Number(a.won)||newest(a,b))[0];
-    const n=outing.personal.length,s=score(outing.goals),mate=sidePlayers(outing.rivalry,outing.side).filter(p=>p.id!==id).map(p=>p.name).join(' and ');
-    const unknown=n===0,sideScore=s[outing.side],against=s[otherSide(outing.side)];
-    const text=unknown?`Your side scored ${sideScore} in a ${sideScore}–${against} game; individual scorers were not recorded.`:
-      `${plural(n,'goal')}${outing.own.length?` and ${plural(outing.own.length,'own goal')}`:''} in ${outing.won?'a win':'a game'}${mate?` alongside ${mate}`:''}, ${sideScore}–${against}.`;
-    add({id:'outing',family:'outing',kind:'story',title:history.length===1?'First chapter':mate?'Shared spotlight':'Standout outing',text,
-      explanation:unknown?'This historical team game has no personal scoring assignments. No estimated goal split is presented as a personal fact.':`Your highest personally attributed goal total in a finished game. ${mate?`Team total: ${sideScore}; your goals: ${n}. `:''}Own goals are reported separately and credited to the opponent.`,sample:1},[outing],12,Math.min(10,n));
+    // First games and team outings are low-priority fallbacks, never a solo career highlight.
+    const outing=[...history].filter(h=>h.estimated>0&&(history.length===1||sidePlayers(h.rivalry,h.side).length>1)).sort((a,b)=>b.personal.length-a.personal.length||Number(b.won)-Number(a.won)||newest(a,b))[0];
+    if(outing){
+      const n=outing.personal.length,s=score(outing.goals),mate=sidePlayers(outing.rivalry,outing.side).filter(p=>p.id!==id).map(p=>p.name).join(' and ');
+      const unknown=n===0,sideScore=s[outing.side],against=s[otherSide(outing.side)];
+      const text=unknown?`Your side scored ${sideScore} in a ${sideScore}–${against} game; individual scorers were not recorded.`:
+        `${plural(n,'goal')}${outing.own.length?` and ${plural(outing.own.length,'own goal')}`:''} in ${outing.won?'a win':'a game'}${mate?` alongside ${mate}`:''}, ${sideScore}–${against}.`;
+      add({id:'outing',family:'outing',kind:'story',title:history.length===1?'First chapter':'Shared spotlight',text,
+        explanation:unknown?'This historical team game has no personal scoring assignments. No estimated goal split is presented as a personal fact.':`Your highest personally attributed goal total in a finished ${mate?'team ':''}game. ${mate?`Team total: ${sideScore}; your goals: ${n}. `:''}Own goals are reported separately and credited to the opponent.`,sample:1},[outing],history.length === 1 ? 12 : 0,Math.min(10,n));
+    }
     result[id]=notes.sort((a,b)=>b.weight-a.weight||a.id.localeCompare(b.id));
   }
   return result;
 }
 
 /** Persist IDs only: numbers, eligibility and evidence always come from the current snapshot. */
-export function chooseScoutingNotes(candidates:Record<string,ScoutingNote[]>,previous:Record<string,string>={}):Record<string,ScoutingNote>{
+export function chooseScoutingNotes(candidates:Record<string,ScoutingNote[]>,previous:Record<string,string>={},overrides:Record<string,ScoutingOverride>={}):Record<string,ScoutingNote>{
   const selected:Record<string,ScoutingNote>={},used=new Map<string,number>();
   const ids=Object.keys(candidates).sort((a,b)=>(candidates[b][0]?.weight??0)-(candidates[a][0]?.weight??0)||a.localeCompare(b));
   for(const id of ids){
     const options=candidates[id];if(!options.length)continue;
     const adjusted=(n:ScoutingNote)=>n.weight-Math.min(6,(used.get(n.family)??0)*3);
     const best=[...options].sort((a,b)=>adjusted(b)-adjusted(a)||a.id.localeCompare(b.id))[0];
-    const prior=options.find(n=>n.id===previous[id]);
-    const note=prior&&best.weight<prior.weight+8?prior:best;
+    const manual=activeScoutingOverride(options,overrides[id]);
+    const prior=overrides[id]&&!manual?undefined:options.find(n=>n.id===previous[id]);
+    const note=manual??(prior&&best.weight<prior.weight+SCOUTING_REPLACEMENT_MARGIN?prior:best);
     selected[id]=note;used.set(note.family,(used.get(note.family)??0)+1);
   }
   return selected;
