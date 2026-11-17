@@ -3,12 +3,13 @@
 Thanksgiving was approved on November 16, 2026 and saved in commit `891daaf`.
 Its leaves, pumpkin illustrations, and harvest sprigs remain available unchanged.
 
-Christmas is a local preview: snowfall, evergreen branches, holly berries, and gold
+Christmas uses snowfall, evergreen branches, holly berries, and gold
 ornaments. The main cream-and-brown design, jerseys, scores, and controls stay intact.
 
 ## Local previews
 
-- `/` shows Christmas by default in the development server.
+- `/` follows the seasonal calendar, including in the development server.
+- `/?season=christmas` previews Christmas early.
 - `/?season=thanksgiving` shows the saved Thanksgiving design.
 - `/?season=auto` follows the production calendar.
 

@@ -10,5 +10,5 @@ export function scheduledSeason(now: number): SeasonalTheme | null {
 export function seasonalPreview(development: boolean, search: string): SeasonalTheme | "auto" | undefined {
   if (!development) return undefined;
   const requested = new URLSearchParams(search).get("season");
-  return requested === "thanksgiving" || requested === "auto" ? requested : "christmas";
+  return requested === "thanksgiving" || requested === "christmas" ? requested : "auto";
 }

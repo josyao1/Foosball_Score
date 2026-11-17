@@ -47,7 +47,8 @@ it("previews Christmas without losing the approved Thanksgiving option", () => {
 });
 
 it("keeps local preview overrides out of production", () => {
-  expect(seasonalPreview(true, "")).toBe("christmas");
+  expect(seasonalPreview(true, "")).toBe("auto");
+  expect(seasonalPreview(true, "?season=christmas")).toBe("christmas");
   expect(seasonalPreview(true, "?season=thanksgiving")).toBe("thanksgiving");
   expect(seasonalPreview(true, "?season=auto")).toBe("auto");
   expect(seasonalPreview(false, "?season=christmas")).toBeUndefined();
