@@ -1,0 +1,106 @@
+/* A light wash across the page; every control remains clickable underneath. */
+.seasonal-leaves {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.seasonal-leaf {
+  position: absolute;
+  top: -48px;
+  left: var(--leaf-x);
+  width: var(--leaf-size);
+  height: calc(var(--leaf-size) * 1.2);
+  animation: seasonal-leaf-fall var(--leaf-duration) linear var(--leaf-delay) infinite;
+}
+
+.seasonal-leaf svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: seasonal-leaf-sway 7s ease-in-out var(--leaf-delay) infinite alternate;
+}
+
+@keyframes seasonal-leaf-fall {
+  0% { transform: translateY(0); opacity: 0; }
+  12%, 85% { opacity: .34; }
+  100% { transform: translateY(calc(100vh + 96px)); opacity: 0; }
+}
+
+@keyframes seasonal-leaf-sway {
+  from { transform: translateX(-12px) rotate(-28deg); }
+  to { transform: translateX(12px) rotate(35deg); }
+}
+
+@media (max-width: 700px) {
+  .seasonal-leaf:nth-child(n + 8) { display: none; }
+  .seasonal-leaf {
+    width: calc(var(--leaf-size) * .85);
+    height: calc(var(--leaf-size) * 1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce), print {
+  .seasonal-leaves { display: none; }
+}
+
+/* Seasonal illustrations stay in the cards' top inset, clear of names and actions. */
+html[data-harvest][data-design="clay"] .rtp-ticket {
+  border-top-color: #a96e42;
+}
+
+html[data-harvest][data-design="clay"] .rtp-body {
+  padding-top: 28px;
+}
+
+html[data-harvest][data-design="clay"] .passport-header {
+  position: relative;
+  padding-top: 28px;
+}
+
+html[data-harvest][data-design="clay"] .hc-feature {
+  position: relative;
+}
+
+html[data-harvest][data-design="clay"] .rtp-ticket::before,
+html[data-harvest][data-design="clay"] .passport-header::after,
+html[data-harvest][data-design="clay"] .hc-feature::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  width: 86px;
+  height: 28px;
+  top: 0;
+  right: 6px;
+  background: url("/harvest-sprig.svg") center / contain no-repeat;
+  opacity: .8;
+}
+
+html[data-harvest][data-design="clay"] .rtp-ticket::before {
+  background-image: url("/harvest-pumpkin.svg");
+  right: calc(50% - 40px);
+  width: 80px;
+  height: 26px;
+}
+
+html[data-harvest][data-design="clay"] .passport-header::after {
+  width: 72px;
+  height: 23px;
+  right: 10px;
+}
+
+html[data-harvest][data-design="clay"] .hc-feature::after {
+  background-image: url("/harvest-pumpkin.svg");
+  right: calc(50% - 48px);
+  width: 96px;
+  height: 32px;
+}
+
+@media print {
+  html[data-harvest] .rtp-ticket::before,
+  html[data-harvest] .passport-header::after,
+  html[data-harvest] .hc-feature::after { display: none; }
+}

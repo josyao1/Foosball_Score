@@ -15,6 +15,7 @@ import { GamePage } from "./pages/Game";
 import { ConfirmDialog } from "./components/Dialog";
 import { ProfilePicker } from "./components/ProfilePicker";
 import { GameAchievementProvider } from "./components/GameAchievements";
+import { SeasonalLeaves } from "./components/SeasonalLeaves";
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -33,6 +34,7 @@ export function App() {
   return (
     <GameAchievementProvider games={store.games} rivalries={store.rivalries}>
       <ScrollToTop />
+      <SeasonalLeaves />
       <a href="#main" className="skip-link">
         Skip to content
       </a>
