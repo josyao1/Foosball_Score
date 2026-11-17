@@ -15,7 +15,8 @@ import { GamePage } from "./pages/Game";
 import { ConfirmDialog } from "./components/Dialog";
 import { ProfilePicker } from "./components/ProfilePicker";
 import { GameAchievementProvider } from "./components/GameAchievements";
-import { SeasonalLeaves } from "./components/SeasonalLeaves";
+import { SeasonalDecorations } from "./components/SeasonalDecorations";
+import { seasonalPreview } from "./lib/seasonalTheme";
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -24,7 +25,7 @@ function ScrollToTop() {
   return null;
 }
 export function App() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const isScorigami = !!useMatch("/scorigami");
   const isHallOfFame = !!useMatch("/hall-of-fame");
   const isBacklog = !!useMatch("/backlog");
@@ -34,7 +35,7 @@ export function App() {
   return (
     <GameAchievementProvider games={store.games} rivalries={store.rivalries}>
       <ScrollToTop />
-      <SeasonalLeaves />
+      <SeasonalDecorations preview={seasonalPreview(import.meta.env.DEV, search)} />
       <a href="#main" className="skip-link">
         Skip to content
       </a>

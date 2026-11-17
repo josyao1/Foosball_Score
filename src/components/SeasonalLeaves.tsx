@@ -1,12 +1,5 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { type CSSProperties } from "react";
 import "./seasonal-leaves.css";
-
-const START = Date.parse("2026-11-16T00:00:00-08:00");
-const END = Date.parse("2026-12-01T00:00:00-08:00");
-
-export function isLeafSeason(now: number) {
-  return now >= START && now < END;
-}
 
 const leaves = [
   { x: "3%", size: 28, duration: 27, delay: -7, color: "#a55e37" },
@@ -24,26 +17,6 @@ const leaves = [
 ];
 
 export function SeasonalLeaves() {
-  const [active, setActive] = useState(() => isLeafSeason(Date.now()));
-
-  useEffect(() => {
-    document.documentElement.toggleAttribute("data-harvest", active);
-    return () => document.documentElement.removeAttribute("data-harvest");
-  }, [active]);
-
-  useEffect(() => {
-    // Recheck after sleep as well as at the seasonal boundary.
-    const update = () => setActive(isLeafSeason(Date.now()));
-    const interval = window.setInterval(update, 60_000);
-    document.addEventListener("visibilitychange", update);
-    return () => {
-      window.clearInterval(interval);
-      document.removeEventListener("visibilitychange", update);
-    };
-  }, []);
-
-  if (!active) return null;
-
   return (
     <div className="seasonal-leaves" aria-hidden="true">
       {leaves.map((leaf, index) => (
