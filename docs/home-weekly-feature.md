@@ -30,6 +30,12 @@ it; a manually selected matchup stays selected until the following week.
 Backlog gains a shared Weekly feature tab: enable/disable, feature weekday (Friday
 by default), and optional matchup/game overrides for the current week. Overrides
 expire next week. Deleted or invalid overrides fall back to automatic selection.
+The matchup picker presents ten ranked suggestions, reserving at least four
+places for eligible singles rivalries when available. The strongest singles are
+reserved, remaining places go to the highest scores, and the final list stays
+in score order. This changes the picker only, not the automatic recommendation.
+Selecting a row stages the shared pick until Save; Automatic recommendation
+clears just that override. A saved pick outside the shortlist remains visible.
 Settings follow the app's existing shared league access model and use optimistic
 concurrency to prevent silently overwriting another device's edit.
 

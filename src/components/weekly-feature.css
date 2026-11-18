@@ -69,3 +69,33 @@ html[data-design] .weekly-enabled input { width:18px;height:18px;min-height:18px
   .weekly-settings-fields { grid-template-columns:1fr; }
   html[data-design] dialog.weekly-popup { padding:16px; }
 }
+.weekly-matchup-picker { min-width:0;margin:26px 0 0;padding:0;border:0; }
+.weekly-matchup-picker > legend { padding:0;font-size:18px;font-weight:650; }
+.weekly-matchup-picker > p { font-size:13px;line-height:1.6;color:var(--muted);margin:10px 0 14px; }
+.weekly-matchup-picker .weekly-pick-auto { display:flex;flex-direction:row;align-items:center;gap:10px;min-height:44px;margin:0;padding:10px 0;font-size:14px;cursor:pointer; }
+.weekly-pick-auto small { display:block;color:var(--muted);font-size:12px;margin-top:4px; }
+html[data-design] .weekly-matchup-picker input[type="radio"] { appearance:auto;accent-color:var(--text);width:18px;height:18px;min-height:18px;margin:0;padding:0;flex-shrink:0;cursor:inherit; }
+.weekly-suggestions-heading { display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;padding:16px 0 10px;font-size:13px; }
+.weekly-suggestions-heading > span { color:var(--muted); }
+.weekly-suggestions { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;list-style:none;margin:0;padding:0; }
+.weekly-suggestions > li { min-width:0; }
+.weekly-suggestions .weekly-pick-option { display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:12px;align-items:center;height:100%;box-sizing:border-box;margin:0;padding:14px;border:1px solid var(--line);border-radius:4px;background:var(--panel);cursor:pointer; }
+.weekly-pick-option.is-selected { border-color:var(--text);box-shadow:inset 3px 0 var(--text);background:var(--panel-light); }
+.weekly-pick-option:focus-within,.weekly-pick-auto:focus-within { outline:2px solid var(--text);outline-offset:2px; }
+.weekly-pick-details { min-width:0;display:grid;gap:8px; }
+.weekly-pick-rank { font-size:12px;font-weight:650; }
+.weekly-pick-rank > span { font-weight:400;color:var(--muted); }
+.weekly-pick-teams { display:grid;gap:5px; }
+.weekly-pick-teams > span { display:flex;gap:8px;align-items:center;min-width:0; }
+.weekly-pick-teams strong { font-size:14px;line-height:1.35;overflow-wrap:anywhere; }
+.weekly-pick-jerseys { display:flex;gap:1px;flex-shrink:0; }
+.weekly-pick-jerseys .player-jersey { width:20px;height:23px; }
+.weekly-pick-details > small { font-size:11px;line-height:1.5;color:var(--muted); }
+.weekly-pick-score { align-self:start;display:grid;gap:3px;text-align:right; }
+.weekly-pick-score strong { font-size:18px;font-variant-numeric:tabular-nums; }
+.weekly-pick-score small { font-size:10px;color:var(--muted); }
+.weekly-matchup-picker:disabled label { cursor:wait;opacity:.65; }
+@media(max-width:700px) {
+  .weekly-suggestions { grid-template-columns:minmax(0,1fr); }
+  .weekly-suggestions .weekly-pick-option { gap:10px;padding:12px; }
+}

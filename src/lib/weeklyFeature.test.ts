@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { DEFAULT_WEEKLY_SETTINGS, leagueWeek, pacificMidnight, weeklyFeature } from './weeklyFeature';
+import { DEFAULT_WEEKLY_SETTINGS, leagueWeek, pacificMidnight, weeklyFeature, matchupShortlist } from './weeklyFeature';
 import { LocalRepository } from './storage';
 import type { Game, Rivalry } from './types';
 const now = Date.parse('2026-11-20T20:00:00Z');
@@ -75,4 +75,27 @@ it('persists shared local settings and rejects stale writes and invalid picks', 
   await expect(repo.updateWeeklySettings(settings)).rejects.toThrow('another device');
   await expect(repo.updateWeeklySettings({...settings,revision:1,weekday:8})).rejects.toThrow('valid feature day');
   await expect(repo.updateWeeklySettings({...settings,revision:1,game_id:'missing'})).rejects.toThrow('qualifying game');
+});
+
+function candidate(id:string,rating:number,singles:boolean) {
+ const base=weeklyFeature([game('sample')],[r],DEFAULT_WEEKLY_SETTINGS,now).candidates[0];
+ const person=(suffix:string)=>({id:id+suffix,name:id+suffix,created_at:''});
+ return {...base,rating,rivalry:{...r,id,members:{a:[person('a')],b:singles?[person('b')]:[person('b'),person('c')]}}};
+}
+it('reserves four singles places without disrupting score order or changing the candidates',()=>{
+ const candidates=[...Array.from({length:9},(_,i)=>candidate(`team-${i}`,100-i,false)),...Array.from({length:6},(_,i)=>candidate(`single-${i}`,50-i,true))];
+ const before=candidates.map(c=>c.rivalry.id);
+ expect(matchupShortlist(candidates).map(c=>c.rivalry.id)).toEqual([...before.slice(0,6),...before.slice(9,13)]);
+ expect(candidates.map(c=>c.rivalry.id)).toEqual(before);
+ expect(matchupShortlist([...candidates].reverse())).toEqual(matchupShortlist(candidates));
+});
+it('keeps more than four singles if they score well and fills remaining places when singles are scarce',()=>{
+ const singles=Array.from({length:7},(_,i)=>candidate(`single-${i}`,100-i,true));
+ const teams=Array.from({length:12},(_,i)=>candidate(`team-${i}`,50-i,false));
+ expect(matchupShortlist([...singles,...teams]).filter(c=>c.rivalry.id.startsWith('single'))).toHaveLength(7);
+ const sparse=matchupShortlist([...teams,...singles.slice(0,2)]);
+ expect(sparse).toHaveLength(10);
+ expect(sparse.filter(c=>c.rivalry.id.startsWith('single'))).toHaveLength(2);
+ expect(matchupShortlist(singles.slice(0,2))).toHaveLength(2);
+ expect(matchupShortlist([])).toEqual([]);
 });

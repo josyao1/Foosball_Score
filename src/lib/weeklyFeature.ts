@@ -101,3 +101,15 @@ export function weeklyFeature(games: Game[], rivalries: Rivalry[], settings = DE
   const evidence = matchup ? candidates.find(c => c.rivalry.id === matchup.id) ?? null : null;
   return { week, best, weekGames, candidates, matchup, evidence, manualMatchup: !!manualRivalry, manualGame: !!best && overrides && settings.game_id === best.game.id };
 }
+
+/** Keep score order while reserving four of ten suggestions for singles. */
+export function matchupShortlist(candidates: ReturnType<typeof weeklyFeature>['candidates']) {
+  const ranked = [...candidates].sort((a,b) => b.rating-a.rating || a.rivalry.id.localeCompare(b.rivalry.id));
+  const singles = ranked.filter(c => sidePlayers(c.rivalry,'a').length === 1 && sidePlayers(c.rivalry,'b').length === 1);
+  const selected = new Set(singles.slice(0,4).map(c => c.rivalry.id));
+  for (const candidate of ranked) {
+    if (selected.size >= 10) break;
+    selected.add(candidate.rivalry.id);
+  }
+  return ranked.filter(c => selected.has(c.rivalry.id));
+}

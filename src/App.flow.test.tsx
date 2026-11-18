@@ -829,17 +829,20 @@ it('separates the home dashboard from rivalries with Home as the first navigatio
 });
 
 it('saves the weekly feature day for everyone through Backlog', async () => {
-  seed({rivalries:[rivalry],games:[]});
+  const ended=new Date(Date.now()-3000000).toISOString();
+  const finished={...baseGame,started_at:new Date(Date.now()-3600000).toISOString(),ended_at:ended,
+    goals:[...'ab'.repeat(8)+'aa'].map((side,i)=>({...goal,id:`weekly-${i}`,actor_side:side as Goal['actor_side'],elapsed_ms:(i+1)*20000,occurred_at:ended}))};
+  seed({rivalries:[rivalry],games:[finished]});
   openApp('/backlog?tab=weekly');
   const settings=await screen.findByRole('region',{name:'Weekly feature settings'});
   fireEvent.change(within(settings).getByLabelText('Feature day'),{target:{value:'3'}});
-  fireEvent.change(within(settings).getByLabelText('Matchup to play'),{target:{value:'r'}});
+  fireEvent.click(within(settings).getByRole('radio',{name:'Ada vs Bea'}));
   fireEvent.click(within(settings).getByRole('button',{name:'Save weekly feature'}));
   await screen.findByText('Weekly feature updated for everyone.');
   expect(stored().weekly_settings).toMatchObject({weekday:3,rivalry_id:'r',revision:1});
   fireEvent.click(screen.getAllByRole('link',{name:'Home'})[0]);
   await screen.findByRole('heading',{name:'Home'});
-  expect(screen.getByText('Wednesday matchup')).toBeTruthy();
+  expect(screen.getAllByText('Wednesday matchup').length).toBeGreaterThan(0);
 });
 
 it('selects a player from the personal Home prompt and replaces it with their summary', async () => {

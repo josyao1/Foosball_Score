@@ -4,6 +4,7 @@ import { useWeeklyFeature } from '../lib/useWeeklyFeature';
 import { WEEKDAYS, type WeeklySettings as Settings } from '../lib/weeklyFeature';
 import { score } from '../lib/stats';
 import { WeeklyFeatureCards } from './WeeklyFeature';
+import { WeeklyMatchupPicker } from './WeeklyMatchupPicker';
 import { gameDate, gameTime } from '../lib/time';
 
 export function WeeklySettings() {
@@ -27,13 +28,13 @@ export function WeeklySettings() {
     <div className="weekly-settings-fields">
       <label className="weekly-enabled"><input type="checkbox" checked={current.enabled} disabled={store.busy} onChange={e => edit({enabled:e.target.checked})}/>Show the weekly feature</label>
       <label>Feature day<select aria-label="Feature day" value={current.weekday} disabled={store.busy} onChange={e => edit({weekday:Number(e.target.value)})}>{WEEKDAYS.map((day, index) => <option key={day} value={index}>{day}</option>)}</select><small>The banner stays on Home; the popup appears once on this day.</small></label>
-      <label>Matchup to play<select value={currentOverride ? current.rivalry_id ?? '' : ''} disabled={store.busy} onChange={e => choose({rivalry_id:e.target.value || null})}>
-        <option value="">Automatic recommendation</option>{store.rivalries.map(r => <option key={r.id} value={r.id}>{r.player_a} vs {r.player_b}</option>)}
-      </select></label>
       <label>Game of the week<select value={currentOverride ? current.game_id ?? '' : ''} disabled={store.busy} onChange={e => choose({game_id:e.target.value || null})}>
         <option value="">Highest intensity this week</option>{feature.weekGames.map(({game, rivalry, rating}) => {const s=score(game.goals);return <option key={game.id} value={game.id}>{rivalry.player_a} {s.a}–{s.b} {rivalry.player_b} · {gameDate(game.ended_at!)} {gameTime(game.ended_at!)} · {rating.total.toFixed(1)}</option>;})}
       </select></label>
     </div>
+    <WeeklyMatchupPicker candidates={feature.candidates} selected={currentOverride?current.rivalry_id:null}
+      savedRivalry={currentOverride?store.rivalries.find(r=>r.id===current.rivalry_id):undefined}
+      disabled={store.busy} onChange={id=>choose({rivalry_id:id})}/>
     {(error || store.error) && <p role="alert" className="form-error">{error || store.error}</p>}
     {notice && <p role="status">{notice}</p>}
     <div className="weekly-settings-actions"><button className="button primary" disabled={!draft || store.busy} onClick={() => void save()}>{store.busy ? 'Saving…' : 'Save weekly feature'}</button>
@@ -42,7 +43,6 @@ export function WeeklySettings() {
     </div>
     <h3>Current feature</h3><WeeklyFeatureCards feature={feature}/>
     <details className="weekly-method"><summary>How the matchup is picked</summary><p>Ranked games contribute intensity, close finishes and even win records. A larger sample counts more than a one-off result. Players must have played in the last 30 days. Rivalries lose 45 points after a meeting in the last day, 30 within three days, or 15 within a week. Live matchups are excluded. Game-quality evidence is fixed on Monday; the recent-play penalty updates so a played recommendation can make room for another matchup. Near-equal contenders rotate weekly.</p>
-      <ol>{feature.candidates.slice(0,5).map(c => <li key={c.rivalry.id}><span>{c.rivalry.player_a} vs {c.rivalry.player_b}<small>{c.close}/{c.count} close finishes · {c.winsA}–{c.winsB} in the sample{c.cooldownPenalty > 0 ? ` · −${c.cooldownPenalty} for recent play` : ''}</small></span><strong>{c.rating.toFixed(1)}</strong></li>)}</ol>
     </details>
   </section>;
 }
