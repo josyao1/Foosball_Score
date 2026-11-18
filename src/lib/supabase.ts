@@ -4,6 +4,7 @@ import type { Repository } from "./storage";
 import { validatePlayerSettings } from './playerAppearance';
 import { validateScoutingOverride } from './scouting';
 import { validateNames } from "./storage";
+import { DEFAULT_WEEKLY_SETTINGS, validateWeeklySettings } from './weeklyFeature';
 const url = import.meta.env.VITE_SUPABASE_URL?.trim();
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
 export const cloudConfigured = Boolean(url && key);
@@ -25,9 +26,22 @@ export function createCloudRepository(): Repository {
   }
   return {
     async load() {
-      const { data, error } = await client.rpc("foos_load_state");
+      const [{data, error}, settings] = await Promise.all([
+        client.rpc("foos_load_state"),
+        client.from('foos_weekly_settings').select('revision,enabled,weekday,override_week,rivalry_id,game_id').eq('id',true).maybeSingle(),
+      ]);
       fail(error);
-      return data as Data;
+      fail(settings.error);
+      return {...data as Data, weekly_settings: settings.data ?? DEFAULT_WEEKLY_SETTINGS};
+    },
+    async updateWeeklySettings(settings) {
+      validateWeeklySettings(settings);
+      const {data,error}=await client.from('foos_weekly_settings').update({
+        enabled:settings.enabled,weekday:settings.weekday,override_week:settings.override_week,
+        rivalry_id:settings.rivalry_id,game_id:settings.game_id,revision:settings.revision+1,
+      }).eq('id',true).eq('revision',settings.revision).select('revision').maybeSingle();
+      fail(error);
+      if(!data)throw new Error('The weekly feature changed on another device. Reload settings and try again.');
     },
     async loadBacklog() {
       const {data,error}=await client.rpc('foos_load_backlog');fail(error);return data as BacklogData;

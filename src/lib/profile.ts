@@ -3,6 +3,8 @@ import { useSyncExternalStore } from 'react';
 import type { Rivalry, Player } from './types';
 export const PROFILE_KEY='tabletalk.profile.v1';
 const PROFILE_EVENT='tabletalk-profile-change';
+export const OPEN_PROFILE_EVENT='tabletalk-open-profile';
+export function openProfilePicker(){window.dispatchEvent(new Event(OPEN_PROFILE_EVENT));}
 let fallback:string|null=null;
 let sessionOverride=false;
 export const profileKey=(name:string)=>name.trim().toLowerCase();

@@ -6,6 +6,7 @@ import { useStore } from "./lib/store";
 import { SiteDesign } from "./components/SiteDesign";
 import { Rivalries } from "./pages/Rivalries";
 import { Home } from "./pages/Home";
+import { Dashboard } from "./pages/Dashboard";
 import { Scorigami } from "./pages/Scorigami";
 import { HallOfFame } from "./pages/HallOfFame";
 import { Backlog } from "./pages/Backlog";
@@ -28,7 +29,6 @@ export function App() {
   const { pathname, search } = useLocation();
   const isScorigami = !!useMatch("/scorigami");
   const isHallOfFame = !!useMatch("/hall-of-fame");
-  const isBacklog = !!useMatch("/backlog");
   const isPlayers = !!useMatch("/players");
   const store = useStore(),
     [clear, setClear] = useState(false);
@@ -50,13 +50,14 @@ export function App() {
           </Link>
           <a className="ixl-league" href="https://www.ixl.com/" aria-label="IXL League"><svg viewBox="0 0 116 38" aria-hidden="true"><path d="M1 1h15v36H1zM22 1h16l10 11L58 1h16L56 19l18 18H58L48 26 38 37H22l18-18zM79 1h15v25h18v11H79z" fill="currentColor"/></svg><span>League</span></a>
           <nav className="tab-underline-row" aria-label="Main navigation">
-            <Link to="/" aria-current={!isScorigami && !isHallOfFame && !isPlayers && !isBacklog ? "page" : undefined}>Rivalries</Link>
+            <Link to="/" aria-current={pathname === '/' ? "page" : undefined}>Home</Link>
+            <Link to="/rivalries" aria-current={pathname.startsWith('/rivalr') || pathname.startsWith('/game/') ? "page" : undefined}>Rivalries</Link>
             <Link to="/scorigami" aria-current={isScorigami ? "page" : undefined}>Scorigami</Link>
             <Link to="/hall-of-fame" aria-current={isHallOfFame ? "page" : undefined}>Hall of Fame</Link>
             <Link to="/players" aria-current={isPlayers ? "page" : undefined}>Players</Link>
             <TabUnderline selection={pathname} />
           </nav>
-          <ProfilePicker rivalries={store.rivalries} players={store.players}/>
+          <div className="header-tools"><ProfilePicker rivalries={store.rivalries} players={store.players} showPrompt={pathname !== '/'}/></div>
         </div>
       </header>
       <SiteDesign/>
@@ -96,8 +97,9 @@ export function App() {
           </div>
         ) : (
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/rivalries" element={<Rivalries />} />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/rivalries" element={<Home />} />
+            <Route path="/rivalries/all" element={<Rivalries />} />
             <Route path="/scorigami" element={<Scorigami />} />
             <Route path="/hall-of-fame" element={<HallOfFame />} />
             <Route path="/backlog" element={<Backlog />} />

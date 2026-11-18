@@ -14,7 +14,7 @@ beforeEach(()=>{
 });
 afterEach(()=>{cleanup();vi.restoreAllMocks();selectProfile(null);sessionStorage.clear();});
 it('invites an unselected visitor to choose a profile and disappears after selection',()=>{
- render(<MemoryRouter><App/></MemoryRouter>);
+ render(<MemoryRouter initialEntries={['/rivalries']}><App/></MemoryRouter>);
  const prompt=screen.getByRole('complementary',{name:'Choose your profile'});
  expect(prompt.textContent).toContain('prioritize your rivalries');
  fireEvent.click(within(prompt).getByRole('button',{name:'Choose profile'}));
@@ -23,10 +23,10 @@ it('invites an unselected visitor to choose a profile and disappears after selec
  expect(screen.getByRole('button',{name:/Your profile: Josh/})).toBeTruthy();
 });
 it('lets visitors dismiss the reminder for the session while keeping the profile picker available',()=>{
- const view=render(<MemoryRouter><App/></MemoryRouter>);
+ const view=render(<MemoryRouter initialEntries={['/rivalries']}><App/></MemoryRouter>);
  fireEvent.click(screen.getByRole('button',{name:'Dismiss profile reminder'}));
  view.unmount();
- render(<MemoryRouter><App/></MemoryRouter>);
+ render(<MemoryRouter initialEntries={['/rivalries']}><App/></MemoryRouter>);
  expect(screen.queryByRole('complementary',{name:'Choose your profile'})).toBeNull();
  fireEvent.click(screen.getByRole('button',{name:'Select profile'}));
  expect(screen.getByRole('dialog')).toBeTruthy();
@@ -47,7 +47,7 @@ it('persists a selection, prioritizes its passport, and allows clearing the devi
 });
 it('prioritizes matching rivalries including team memberships',()=>{
  selectProfile('JOSH');
- render(<MemoryRouter><App/></MemoryRouter>);
+ render(<MemoryRouter initialEntries={['/rivalries']}><App/></MemoryRouter>);
  expect(screen.queryByRole('complementary',{name:'Choose your profile'})).toBeNull();
  const cards = within(screen.getByRole('region',{name:'Rivalry cards'})).getAllByRole('link');
  expect(cards.map(card=>card.getAttribute('href'))).toEqual(['/rivalry/jb','/rivalry/team']);

@@ -102,13 +102,13 @@ it('features personal then frequent matchups and keeps live matchups accessible'
   games.push({...games[0], id:'live', rivalry_id:'five', ended_at:null});
   render(<MemoryRouter><Routes>
     <Route path="/" element={<RivalryCollection rivalries={items} games={games} profile="player 1" layout="tickets"/>}/>
-    <Route path="/rivalries" element={<RivalryCollection rivalries={items} games={games} profile="player 1" layout="directory"/>}/>
+    <Route path="/rivalries/all" element={<RivalryCollection rivalries={items} games={games} profile="player 1" layout="directory"/>}/>
   </Routes></MemoryRouter>);
   const tickets = screen.getAllByRole('article');
   expect(tickets.map(card=>card.getAttribute('aria-label'))).toEqual(['Player 1 vs Player 2','Player 5 vs Player 6','Player 3 vs Player 4']);
   expect(within(within(tickets[2]).getByRole('region',{name:'Recent games'})).getAllByRole('link')).toHaveLength(2);
   const more = screen.getByRole('link', {name: 'Other rivalries 2'});
-  expect(more.getAttribute('href')).toBe('/rivalries');
+  expect(more.getAttribute('href')).toBe('/rivalries/all');
   expect(document.querySelector('details')).toBeNull();
   fireEvent.click(more);
   const directory = screen.getByRole('region', {name:'All rivalries'});
@@ -143,7 +143,7 @@ it('puts the profile and their team first with the corresponding jerseys, wins a
   // With three busier personal rivals, this same team moves into the directory.
   const busier = [1,2,3].map(n=>({...team,id:'busy'+n,player_a:'Opponent '+n}));
   view.rerender(<MemoryRouter><RivalryCollection rivalries={[team,...busier]} games={[...games,...busier.flatMap(item=>finishedGames(item,3))]} layout="tickets" profile={aiden.id}/></MemoryRouter>);
-  expect(screen.getByRole('link', {name:'Other rivalries 1'}).getAttribute('href')).toBe('/rivalries');
+  expect(screen.getByRole('link', {name:'Other rivalries 1'}).getAttribute('href')).toBe('/rivalries/all');
   view.rerender(<MemoryRouter><RivalryCollection rivalries={[team,...busier]} games={[...games,...busier.flatMap(item=>finishedGames(item,3))]} layout="directory" profile={aiden.id}/></MemoryRouter>);
   const row = screen.getByRole('link',{name:/Aiden and Andrew vs Max/});
   expect(row.getAttribute('aria-label')).toContain('1–0 wins');

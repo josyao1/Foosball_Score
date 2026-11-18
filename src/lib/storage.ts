@@ -2,7 +2,9 @@ import { validatePlayerSettings } from './playerAppearance';
 import { normalizePlayers, rosterKey, validateRoster, validateLineup, defaultLineup, sidePlayers } from './participants';
 import type { Data, Game, Rivalry, Player, PlayerSettings, BacklogData, ScoutingOverride } from "./types";
 import { validateScoutingOverride } from './scouting';
+import { DEFAULT_WEEKLY_SETTINGS, validateWeeklySettings, weeklyFeature, type WeeklySettings } from './weeklyFeature';
 export interface Repository {
+  updateWeeklySettings(settings: import('./weeklyFeature').WeeklySettings): Promise<void>;
   load(): Promise<Data>;
   loadBacklog(): Promise<BacklogData>;
   restoreGame(game: Game): Promise<void>;
@@ -69,6 +71,14 @@ export class LocalRepository implements Repository {
     const rivalries = d.rivalries.filter(r => !r.deleted_at);
     const ids = new Set(rivalries.map(r => r.id));
     return {...d, rivalries, games: d.games.filter(g => !g.deleted_at && ids.has(g.rivalry_id))};
+  }
+  async updateWeeklySettings(settings: WeeklySettings): Promise<void> {
+    validateWeeklySettings(settings);
+    const d = this.read();
+    if ((d.weekly_settings ?? DEFAULT_WEEKLY_SETTINGS).revision !== settings.revision) throw new Error('The weekly feature changed on another device. Reload settings and try again.');
+    if (settings.rivalry_id && !d.rivalries.some(r => r.id === settings.rivalry_id && !r.deleted_at)) throw new Error('This rivalry is no longer available.');
+    if (settings.game_id && !weeklyFeature(d.games, d.rivalries, settings).weekGames.some(e => e.game.id === settings.game_id)) throw new Error('Choose a qualifying game from this week.');
+    this.write({...d, weekly_settings: {...settings, revision: settings.revision + 1}});
   }
   async createPlayer(name:string):Promise<Player> {
     name=name.trim();

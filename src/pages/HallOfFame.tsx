@@ -165,7 +165,7 @@ export function HallOfFame() {
     <p className="hall-intro">Top {topEntries.length} of {entries.length} ranked {entries.length === 1 ? 'game' : 'games'}. Tap a rating to see why.</p>
     {entries.length ? <div className="hc-gallery hc-layout-featured">{topEntries.map((entry, i) =>
       <RankedMatch key={`${scopeKey}:${entry.game.id}:${entry.game.revision}`} entry={entry} rank={i + 1} variant={i === 0 ? 'feature' : 'row'} onRating={() => setRatingId(entry.game.id)}/>)}</div>
-      : <div className="empty-state"><Trophy size={32}/><h2>No ranked games yet</h2><p>{filter.kind === 'all' ? 'Finish a first-to-10, win-by-two game at its first winning score to enter the rankings.' : 'No qualifying finished games for this selection.'}</p>{filter.kind !== 'all' ? <button className="button primary" onClick={() => setFilter({kind:'all'})}>Show all games</button> : <Link className="button primary" to="/">Go to rivalries</Link>}</div>}
+      : <div className="empty-state"><Trophy size={32}/><h2>No ranked games yet</h2><p>{filter.kind === 'all' ? 'Finish a first-to-10, win-by-two game at its first winning score to enter the rankings.' : 'No qualifying finished games for this selection.'}</p>{filter.kind !== 'all' ? <button className="button primary" onClick={() => setFilter({kind:'all'})}>Show all games</button> : <Link className="button primary" to="/rivalries">Go to rivalries</Link>}</div>}
     {selected && <RatingBreakdown entry={selected} onClose={() => setRatingId(null)}/>}
   </section>;
 }

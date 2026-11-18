@@ -48,11 +48,11 @@ it('handles empty and unplayed profiles without made-up favorites or percentages
   expect(within(passport).getByText('No finished games')).toBeTruthy();
   expect(within(passport).queryByRole('link')).toBeNull();
 });
-it.each(['/players','/Players/'])('selects only the fourth tab at %s',path=>{
+it.each(['/players','/Players/'])('selects only the Players tab at %s',path=>{
   vi.spyOn(window,'scrollTo').mockImplementation(()=>{});
   render(<MemoryRouter initialEntries={[path]}><App/></MemoryRouter>);
   const nav=screen.getByRole('navigation',{name:'Main navigation'});
-  expect(within(nav).getAllByRole('link')).toHaveLength(4);
+  expect(within(nav).getAllByRole('link')).toHaveLength(5);
   expect(within(nav).getByRole('link',{name:'Players'}).getAttribute('aria-current')).toBe('page');
   expect(nav.querySelectorAll('[aria-current]')).toHaveLength(1);
   fireEvent.click(within(nav).getByRole('link',{name:'Hall of Fame'}));

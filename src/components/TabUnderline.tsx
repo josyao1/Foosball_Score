@@ -8,7 +8,8 @@ export function TabUnderline({ selection }: { selection: string }) {
     const line = ref.current;
     const row = line?.parentElement;
     const active = row?.querySelector<HTMLElement>('[aria-current="page"], [aria-selected="true"]');
-    if (!line || !row || !active) return;
+    if (!line || !row) return;
+    if (!active) { line.style.width = '0px'; return; }
 
     const align = () => {
       line.style.width = active.offsetWidth + 'px';

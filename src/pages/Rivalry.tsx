@@ -21,7 +21,7 @@ export function RivalryPage() {
     return (
       <div className="empty-state">
         <h1>Rivalry not found</h1>
-        <Link to="/" className="button primary">
+        <Link to="/rivalries" className="button primary">
           All rivalries
         </Link>
       </div>
@@ -52,7 +52,7 @@ export function RivalryPage() {
   }
   return (
     <>
-      <Link className="back-link" to="/">
+      <Link className="back-link" to="/rivalries">
         <ArrowLeft size={16} />
         All rivalries
       </Link>
@@ -76,7 +76,7 @@ export function RivalryPage() {
       <GameHistory key={r.id} games={games} rivalry={r} onStart={() => void start()} busy={store.busy}/>
       <RecordBook games={games} rivalry={r}/>
       <div className="danger-actions"><button className="text-button muted" disabled={store.busy} onClick={()=>setDeleteSnapshot(Object.fromEntries(games.map(g=>[g.id,g.revision])))}><Trash2 size={15}/>Delete rivalry</button></div>
-      {deleteSnapshot&&<ConfirmDialog title="Delete rivalry?" description={`Delete ${r.player_a} vs ${r.player_b} and its ${Object.keys(deleteSnapshot).length} active games? They’ll move to the backlog, where you can restore them.`} confirm="Delete rivalry" danger onClose={()=>setDeleteSnapshot(null)} onConfirm={async()=>{await store.deleteRivalry(r.id,deleteSnapshot);navigate('/')}}/>}
+      {deleteSnapshot&&<ConfirmDialog title="Delete rivalry?" description={`Delete ${r.player_a} vs ${r.player_b} and its ${Object.keys(deleteSnapshot).length} active games? They’ll move to the backlog, where you can restore them.`} confirm="Delete rivalry" danger onClose={()=>setDeleteSnapshot(null)} onConfirm={async()=>{await store.deleteRivalry(r.id,deleteSnapshot);navigate('/rivalries')}}/>}
     </>
   );
 }

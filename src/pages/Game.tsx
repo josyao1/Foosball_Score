@@ -113,7 +113,7 @@ export function GamePage() {
     return (
       <div className="empty-state">
         <h1>Game not found</h1>
-        <Link className="button primary" to="/">
+        <Link className="button primary" to="/rivalries">
           All rivalries
         </Link>
       </div>

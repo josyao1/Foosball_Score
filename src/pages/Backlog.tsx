@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { PlayerSettings } from '../components/PlayerSettings';
 import { ScoutingSettings } from '../components/ScoutingSettings';
+import { WeeklySettings } from '../components/WeeklySettings';
 import { Archive, ArrowLeft, RotateCcw, Trash2 } from 'lucide-react';
 import { useStore } from '../lib/store';
 import type { BacklogData, Game, Rivalry } from '../lib/types';
@@ -22,14 +23,15 @@ export function Backlog() {
  const [params,setParams]=useSearchParams();
  const tab=params.get('tab');
  return <div className="backlog-page">
-  <Link className="back-link" to="/"><ArrowLeft size={16}/>Rivalries</Link>
+  <Link className="back-link" to="/"><ArrowLeft size={16}/>Home</Link>
   <div className="page-heading"><h1>Backlog</h1></div>
   <nav className="backlog-tabs" aria-label="Backlog sections">
-   <button aria-current={tab!=='players'&&tab!=='scouting'?'page':undefined} onClick={()=>setParams({})}>Trash</button>
+   <button aria-current={!['players','scouting','weekly'].includes(tab??'')?'page':undefined} onClick={()=>setParams({})}>Trash</button>
    <button aria-current={tab==='players'?'page':undefined} onClick={()=>setParams({tab:'players'})}>Player settings</button>
    <button aria-current={tab==='scouting'?'page':undefined} onClick={()=>setParams({tab:'scouting'})}>Scouting notes</button>
+   <button aria-current={tab==='weekly'?'page':undefined} onClick={()=>setParams({tab:'weekly'})}>Weekly feature</button>
   </nav>
-  {tab==='players'?<PlayerSettings/>:tab==='scouting'?<ScoutingSettings/>:<BacklogTrash/>}
+  {tab==='players'?<PlayerSettings/>:tab==='scouting'?<ScoutingSettings/>:tab==='weekly'?<WeeklySettings/>:<BacklogTrash/>}
  </div>;
 }
 function BacklogTrash() {

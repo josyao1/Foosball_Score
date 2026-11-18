@@ -1,7 +1,5 @@
 import { allPlayers, orderRivalries, rosterKey, sidePlayers } from '../lib/participants';
-import { RecentGames } from "../components/RecentGames";
 import { PlayerJersey } from '../components/PlayerJersey';
-import { AchievementFeed } from "../components/AchievementFeed";
 import { GameAchievementMarker } from "../components/GameAchievements";
 import { useProfile } from "../lib/profile";
 import { useState } from "react";
@@ -32,7 +30,6 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
   const [newName, setNewName] = useState('');
   const players = allPlayers(store.rivalries, store.players);
   const sides = ['Black', 'White'] as const;
-  const [attempted, setAttempted] = useState(false);
   const [archivedExisting,setArchivedExisting]=useState<Rivalry|null>(null);
   const matchup = rosterKey(
     players.filter(player => rosters.Black.includes(player.id)),
@@ -43,7 +40,7 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
   );
 
   function togglePlayer(side: typeof sides[number], id: string) {
-    setAttempted(false);
+    setError('');
     setArchivedExisting(null);
     setRosters(previous => {
       const members = previous[side];
@@ -62,8 +59,11 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
         setNewName('');
         return;
       }
-      setAttempted(true);
-      if (existing) return;
+      if (existing) {
+        navigate(`/rivalry/${existing.id}`);
+        onClose();
+        return;
+      }
       const rivalry = await store.createTeamRivalry(rosters.Black, rosters.White);
       navigate(`/rivalry/${rivalry.id}`);
       onClose();
@@ -81,21 +81,12 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
 
   if(archivedExisting) return <Dialog title="Rivalry is in the backlog" onClose={onClose}>
     <p>{archivedExisting.player_a} vs {archivedExisting.player_b}</p><p className="muted">Restore it to keep its original games and history.</p>
-    <div className="dialog-actions"><button className="button secondary" onClick={()=>{setArchivedExisting(null);setAttempted(false);}}>Change players</button>
+    <div className="dialog-actions"><button className="button secondary" onClick={()=>setArchivedExisting(null)}>Change players</button>
     <span className="muted">Manage it at /backlog</span></div>
   </Dialog>;
-  if (attempted && existing) {
-    return <Dialog key="duplicate" title="Rivalry already exists" onClose={onClose}>
-      <p>{existing.player_a} vs {existing.player_b}</p>
-      <div className="dialog-actions">
-        <button type="button" className="button secondary" onClick={() => {setAttempted(false); setError('');}}>Change players</button>
-        <Link className="button primary" to={`/rivalry/${existing.id}`} onClick={onClose}>Open rivalry</Link>
-      </div>
-    </Dialog>;
-  }
-
-  return <Dialog className={`roster-dialog${adding ? ' player-create-dialog' : ''}`} title={adding ? 'Add player' : 'New rivalry'} onClose={onClose} dismissible={!store.busy}>
+  return <Dialog className={`roster-dialog${adding ? ' player-create-dialog' : ''}`} title={adding ? 'Add player' : 'Find or create rivalry'} onClose={onClose} dismissible={!store.busy}>
     <form onSubmit={submit}>
+      {!adding && <p className="roster-help">Choose sides to open an existing rivalry or create a new one.</p>}
       {!adding && (players.length > 0 ? <div className="roster-scroll">
         <table className="roster-table" aria-label="Choose players for each side">
           <thead><tr><th scope="col">Player</th>{sides.map(side =>
@@ -123,13 +114,14 @@ export function NewRivalry({ onClose }: { onClose: () => void }) {
           onChange={event => setNewName(event.target.value)} />
       </label>}
       {error && <p role="alert" className="form-error">{error}</p>}
+      {!adding && rosters.Black.length > 0 && rosters.White.length > 0 && <p className="roster-match-status" role="status">{existing ? <><Check size={15} aria-hidden="true"/>Rivalry found</> : 'New matchup'}</p>}
       <div className="roster-footer">
         {adding ? <button type="button" className="text-button" disabled={store.busy}
           onClick={() => {setAdding(false); setError('');}}>Cancel</button> :
           <button type="button" className="text-button" disabled={store.busy}
             onClick={() => {setError(''); setNewName(''); setAdding(true);}}><Plus size={15}/>Add player</button>}
         <button className="button primary" disabled={store.busy || (!adding && (!rosters.Black.length || !rosters.White.length))}>
-          {store.busy ? 'Saving…' : adding ? 'Save player' : 'Create rivalry'}
+          {store.busy ? 'Saving…' : adding ? 'Save player' : existing ? 'Open rivalry' : 'Create rivalry'}
         </button>
       </div>
     </form>
@@ -208,8 +200,8 @@ export function Home() {
           </div>
         </div>
         <button className="button primary" onClick={() => setCreating(true)}>
-          <Plus size={18} />
-          New rivalry
+          <Swords size={18} />
+          Find or create
         </button>
       </div>
       <div className="overview-strip">
@@ -251,8 +243,6 @@ export function Home() {
           </div>
         )}
       </section>
-      <RecentGames games={games} rivalries={rivalries}/>
-      <AchievementFeed games={games} rivalries={rivalries}/>
       {creating && <NewRivalry onClose={() => setCreating(false)} />}
     </>
   );

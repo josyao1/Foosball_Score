@@ -21,7 +21,7 @@ export function Rivalries() {
   });
   const filtering = terms.length > 0 || format !== 'all';
   return <>
-    <Link className="rivalry-directory-back" to="/"><ArrowLeft size={16} aria-hidden="true"/>Featured rivalries</Link>
+    <Link className="rivalry-directory-back" to="/rivalries"><ArrowLeft size={16} aria-hidden="true"/>Featured rivalries</Link>
     <div className="rivalry-directory-heading"><h1>All rivalries</h1><span role="status">{filtering ? `${filtered.length} of ${rivalries.length}` : rivalries.length}</span></div>
     {rivalries.length > 0 && <div className="rivalry-directory-filters">
       <div className="rivalry-directory-search">

@@ -38,6 +38,7 @@ export interface Rivalry {
   created_at: string;
 }
 export interface Data {
+  weekly_settings?: import('./weeklyFeature').WeeklySettings;
   players?: Player[];
   rivalries: Rivalry[];
   games: Game[];

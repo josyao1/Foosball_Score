@@ -326,7 +326,7 @@ function FeaturedRivalries({ entries, profile }: { entries: Entry[]; profile: st
   return <>
     {featured.length > 0 && <TicketCollection key={profile} entries={featured}/>}
     {others.length > 0 && (featured.length > 0
-      ? <Link className="rivalry-directory-link" to="/rivalries">Other rivalries <span>{others.length}</span><ChevronRight size={18} aria-hidden="true"/></Link>
+      ? <Link className="rivalry-directory-link" to="/rivalries/all">Other rivalries <span>{others.length}</span><ChevronRight size={18} aria-hidden="true"/></Link>
       : <RivalryDirectory entries={ordered} profile={profile}/>)}
   </>;
 }

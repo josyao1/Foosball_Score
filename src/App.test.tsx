@@ -29,7 +29,7 @@ it("loads and unmounts when scrollTo returns a Promise in newer browsers", async
     </StrictMode>,
   );
   expect(
-    await screen.findByRole("heading", { name: "Rivalries" }),
+    await screen.findByRole("heading", { name: "Home" }),
   ).toBeTruthy();
   expect(() => unmount()).not.toThrow();
 });

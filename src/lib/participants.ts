@@ -18,7 +18,7 @@ export function validateRoster(a:Player[],b:Player[]){
   const ids=[...a,...b].map(p=>p.id);
   if(new Set(ids).size!==ids.length)throw new Error('Each player can appear on only one side, once.');
 }
-export function rosterKey(a:Player[],b:Player[]){return [a.map(p=>p.id).sort().join(','),b.map(p=>p.id).sort().join(',')].sort().join('|');}
+export function rosterKey(a:Pick<Player,'id'>[],b:Pick<Player,'id'>[]){return [a.map(p=>p.id).sort().join(','),b.map(p=>p.id).sort().join(',')].sort().join('|');}
 export function defaultLineup(r:Rivalry):Lineup{
   const position=(s:Side)=>{const members=sidePlayers(r,s);return {defense:members[0]?.id ?? '',attack:members.at(-1)?.id ?? ''};};
   return {a:position('a'),b:position('b')};

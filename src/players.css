@@ -207,6 +207,8 @@ html[data-design] .achievement-others h3 { font:500 12px var(--body-font);color:
 @media(max-width:480px){.team-position-row{gap:8px}.team-position-row>div{gap:8px}.position-swap span{display:inline}.team-position-row strong{font-size:13px}.players-heading>.button{font-size:13px;padding:10px 12px}}
 html[data-design] dialog.roster-dialog { width: min(420px, calc(100% - 32px)); padding: 18px; }
 .roster-dialog .dialog-head { margin-bottom: 10px; }
+.roster-help { font-size:13px;line-height:1.5;color:var(--muted);margin:0 0 12px; }
+.roster-match-status { display:flex;align-items:center;gap:6px;font-size:13px;min-height:20px;margin:10px 0; }
 .roster-scroll { max-height: min(48dvh, 330px); overflow-y: auto; overscroll-behavior: contain; }
 .roster-table { width: 100%; table-layout: fixed; border-collapse: collapse; }
 .roster-table th { text-align: left; }

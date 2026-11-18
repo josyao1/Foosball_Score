@@ -53,7 +53,7 @@ it('shows regular and overtime distributions with one shared frequency scale',()
 });
 it('adds a working second navigation tab with only the active tab marked',()=>{
  vi.spyOn(window,'scrollTo').mockImplementation(()=>{});
- render(<MemoryRouter><App/></MemoryRouter>);
+ render(<MemoryRouter initialEntries={['/rivalries']}><App/></MemoryRouter>);
  const nav=screen.getByRole('navigation',{name:'Main navigation'});
  const rivalry=within(nav).getByRole('link',{name:'Rivalries'}), sc=within(nav).getByRole('link',{name:'Scorigami'});
  expect(rivalry.getAttribute('aria-current')).toBe('page');expect(sc.hasAttribute('aria-current')).toBe(false);

@@ -1,6 +1,6 @@
 import { PlayerAppearanceContext } from './PlayerAppearanceContext';
 import { useProfile, selectProfile } from './profile';
-import { defaultLineup } from './participants';
+import { defaultLineup, rosterKey, sidePlayers } from './participants';
 import {
   createContext,
   useCallback,
@@ -103,8 +103,19 @@ function useDataStore() {
     refresh,
     updatePlayer:(player:Player,settings:PlayerSettings)=>backlogMutation(r=>r.updatePlayer(player,settings)),
     updateScoutingOverride:(player:Player,override:ScoutingOverride|null)=>backlogMutation(r=>r.updateScoutingOverride(player,override)),
+    updateWeeklySettings:(settings:import('./weeklyFeature').WeeklySettings)=>backlogMutation(r=>r.updateWeeklySettings(settings)),
     createPlayer:(name:string)=>mutate(r=>r.createPlayer(name),(d,p)=>({...d,players:[...(d.players??[]),p]})),
-    createTeamRivalry:(a:string[],b:string[])=>mutate(r=>r.createTeamRivalry(a,b),(d,r)=>({...d,rivalries:[...d.rivalries,r]})),
+    createTeamRivalry:(a:string[],b:string[])=>mutate(async repo=>{
+      try { return {rivalry:await repo.createTeamRivalry(a,b),snapshot:null as Data|null}; }
+      catch (error) {
+        // Another device may have created the same matchup, or its save response was lost.
+        const key=rosterKey(a.map(id=>({id})),b.map(id=>({id})));
+        const fresh=await repo.load().catch(()=>null);
+        const existing=fresh?.rivalries.find(r=>!r.deleted_at&&rosterKey(sidePlayers(r,'a'),sidePlayers(r,'b'))===key);
+        if(existing)return {rivalry:existing,snapshot:fresh};
+        throw error;
+      }
+    },(d,{rivalry,snapshot})=>snapshot??({...d,rivalries:[...d.rivalries.filter(old=>old.id!==rivalry.id),rivalry]})).then(result=>result.rivalry),
     createRivalry: (a: string, b: string) =>
       mutate(
         (r) => r.createRivalry(a, b),

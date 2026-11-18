@@ -1,0 +1,55 @@
+.header-tools { display:flex;align-items:center;gap:8px;margin-left:auto;min-width:0;flex-shrink:0; }
+.league-home { min-width:0; }
+.league-home-heading { display:flex;align-items:center;justify-content:space-between;gap:16px;margin:12px 0 28px; }
+.league-home-heading h1 { margin:0 0 6px; }
+.league-home-heading > div > span { font-size:13px;color:var(--muted); }
+.home-live { display:grid;gap:8px;margin-bottom:24px; }
+.home-live > a { display:flex;align-items:center;gap:14px;padding:14px 18px;border:1px solid var(--line);border-left:3px solid #55734b;background:var(--panel); }
+.home-live > a > span { flex:1;min-width:0;overflow-wrap:anywhere; }
+.home-live small { display:block;color:var(--muted);margin-top:5px; }
+.home-live b { font-size:22px;white-space:nowrap; }
+.home-first-game { margin-block:32px;color:var(--muted);font-size:14px;line-height:1.6; }
+@media(max-width:1100px) { html[data-design="clay"] .header-inner > .header-tools { grid-column:3;grid-row:1; } }
+@media(max-width:700px) {
+  .league-home-heading { gap:10px;margin-bottom:18px; }
+  .league-home-heading .button { font-size:12px;padding:10px; }
+  .home-live > a { gap:8px;padding:12px;font-size:13px; }
+}
+@media(max-width:600px) {
+  html[data-design="clay"] .header-inner > .header-tools { grid-column:2;gap:5px; }
+  html[data-design="clay"] .header-tools .profile-picker { max-width:116px; }
+}
+@media(max-width:380px) {
+  html[data-design="clay"] .header-tools .profile-picker { max-width:90px; }
+}
+.home-personal { display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,1fr) minmax(0,1fr);gap:24px;align-items:center;border-block:1px solid var(--line);padding:20px 0;margin-bottom:28px; }
+.home-personal-identity { display:flex;align-items:center;gap:14px;min-width:0; }
+.home-personal-identity > .player-jersey { width:44px;flex-shrink:0; }
+.home-personal h2 { font:600 24px/1.2 var(--heading-font);margin:0 0 5px;overflow-wrap:anywhere; }
+.home-personal-identity span,.home-personal small { color:var(--muted);font-size:12px; }
+.home-personal-records { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px; }
+.home-personal-records > div { display:grid;gap:5px;border-left:1px solid var(--line);padding-left:16px; }
+.home-personal-records span { font-size:12px;color:var(--muted); }
+.home-personal-records strong { font-size:20px;white-space:nowrap; }
+.home-personal-latest { display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;min-height:44px; }
+.home-personal-latest > div { display:grid;gap:5px;min-width:0; }
+.home-personal-latest strong { font-size:17px; }
+.home-personal-latest span { font-size:12px;color:var(--muted);overflow-wrap:anywhere; }
+.home-personal-latest > svg { flex-shrink:0; }
+.home-personal-latest p,.home-profile-prompt p { font-size:13px;color:var(--muted);line-height:1.5;margin:0; }
+.home-profile-prompt { grid-template-columns:auto minmax(0,1fr) auto;gap:16px; }
+.home-profile-prompt .button { min-height:44px;font-size:13px; }
+.home-profile-prompt h2 { font-size:22px; }
+@media(max-width:700px) {
+  .home-personal { grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px 12px;padding-block:16px;margin-bottom:24px; }
+  .home-personal-identity { grid-column:1/-1; }
+  .home-personal h2 { font-size:22px; }
+  .home-personal-records { grid-column:1/-1;gap:18px 24px; }
+  .home-personal-records > div { padding-left:0;border-left:0; }
+  .home-personal-records strong { font-size:17px; }
+  .home-personal-latest { grid-column:1/-1;border-left:0;border-top:1px solid var(--line);padding:14px 0 0; }
+  .home-personal-latest > div { grid-template-columns:auto minmax(0,1fr);gap:6px 12px;align-items:baseline; }
+  .home-personal-latest small { grid-column:1/-1; }
+  .home-profile-prompt { grid-template-columns:auto minmax(0,1fr); }
+  .home-profile-prompt .button { grid-column:1/-1;justify-self:start; }
+}

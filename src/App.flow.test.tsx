@@ -134,7 +134,7 @@ it('clears an ineligible shared pick so restoring old game data cannot revive it
 it('creates, resumes, scores, finishes early, corrects, removes, and deletes a rivalry through the app', async () => {
   seed({rivalries:[],games:[],players:[{id:'ada',name:'Ada',created_at:''},{id:'bea',name:'Bea',created_at:''}]});
   openApp();
-  fireEvent.click(await screen.findByRole('button', { name: 'New rivalry' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Find or create' }));
   let dialog = await screen.findByRole('dialog');
   fireEvent.click(within(dialog).getByRole('checkbox',{name:'Ada on Black'}));
   fireEvent.click(within(dialog).getByRole('checkbox',{name:'Bea on White'}));
@@ -264,7 +264,7 @@ it('keeps rivalry creation open and its names fixed while saving', async () => {
   vi.spyOn(LocalRepository.prototype, 'createTeamRivalry').mockImplementation(() => new Promise(r => { resolve = r; }));
   seed({rivalries:[],games:[],players:[{id:'ada',name:'Ada',created_at:''},{id:'bea',name:'Bea',created_at:''}]});
   openApp();
-  fireEvent.click(await screen.findByRole('button', { name: 'New rivalry' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Find or create' }));
   const dialog = await screen.findByRole('dialog');
   fireEvent.click(within(dialog).getByRole('checkbox',{name:'Ada on Black'}));
   fireEvent.click(within(dialog).getByRole('checkbox',{name:'Bea on White'}));
@@ -314,7 +314,7 @@ it('rejects an old edit after another tab changes that goal', async () => {
 
 it('prevents selecting the same player on both sides', async () => {
   seed({rivalries:[],games:[],players:[{id:'ada',name:'Ada',created_at:''},{id:'bea',name:'Bea',created_at:''}]});
-  openApp();fireEvent.click(await screen.findByRole('button',{name:'New rivalry'}));
+  openApp();fireEvent.click(await screen.findByRole('button',{name:'Find or create'}));
   const dialog=await screen.findByRole('dialog');
   fireEvent.click(within(dialog).getByRole('checkbox',{name:'Ada on Black'}));
   expect((within(dialog).getByRole('checkbox',{name:'Ada on White'}) as HTMLInputElement).disabled).toBe(true);
@@ -526,9 +526,9 @@ it('does not create a rematch or pull the user back after leaving during a pendi
  fireEvent.click(within(await winningPopup()).getByRole('button',{name:'Finish & rematch'}));
  // Simulate a browser history action, which is available outside the modal.
  fireEvent.click(screen.getByRole('button',{name:'Browser back'}));
- await screen.findByRole('heading',{name:'Rivalries'});
+ await screen.findByRole('heading',{name:'Home'});
  await act(async()=>resolve());
- expect(screen.getByRole('heading',{name:'Rivalries'})).toBeTruthy();
+ expect(screen.getByRole('heading',{name:'Home'})).toBeTruthy();
  expect(stored().games).toHaveLength(1);
  expect(stored().games[0].ended_at).not.toBeNull();
 });
@@ -566,7 +566,7 @@ it('records team goals against individual positions and preserves attribution af
 
 it('adds a player inside rivalry creation without losing selected sides or leaving the popup',async()=>{
  seed({rivalries:[],games:[],players:[{id:'ada',name:'Ada',created_at:''},{id:'bea',name:'Bea',created_at:''}]});
- openApp();fireEvent.click(await screen.findByRole('button',{name:'New rivalry'}));
+ openApp();fireEvent.click(await screen.findByRole('button',{name:'Find or create'}));
  const dialog=await screen.findByRole('dialog');
  fireEvent.click(within(dialog).getByRole('checkbox',{name:'Ada on Black'}));
  fireEvent.click(within(dialog).getByRole('button',{name:'Add player'}));
@@ -580,28 +580,31 @@ it('adds a player inside rivalry creation without losing selected sides or leavi
  expect(stored().rivalries[0]).toMatchObject({player_a:'Ada',player_b:'Cy'});
 });
 
-it.each([false, true])('offers to open a reversed team rivalry (created concurrently: %s)', async concurrent => {
+it.each([false, true])('opens a reversed team rivalry directly (created concurrently: %s)', async concurrent => {
   const players = ['Ada','Bea','Cy'].map(name => ({id:name, name, created_at:''}));
   const existing: Rivalry = {...rivalry, player_a:'Ada and Bea', player_b:'Cy',
     members:{a:[players[0],players[1]], b:[players[2]]}};
   seed({players, rivalries:concurrent ? [] : [existing], games:[]});
+  const create=vi.spyOn(LocalRepository.prototype,'createTeamRivalry');
   openApp();
-  fireEvent.click(await screen.findByRole('button',{name:'New rivalry'}));
-  const picker = within(await screen.findByRole('dialog'));
+  fireEvent.click(await screen.findByRole('button',{name:'Find or create'}));
+  const picker = within(await screen.findByRole('dialog',{name:'Find or create rivalry'}));
   fireEvent.click(picker.getByRole('checkbox',{name:'Cy on Black'}));
   fireEvent.click(picker.getByRole('checkbox',{name:'Bea on White'}));
   fireEvent.click(picker.getByRole('checkbox',{name:'Ada on White'}));
   if (concurrent) seed({players, rivalries:[existing], games:[]});
-  fireEvent.click(picker.getByRole('button',{name:'Create rivalry'}));
-  const alert = within(await screen.findByRole('dialog',{name:'Rivalry already exists'}));
-  expect(alert.getByRole('link',{name:'Open rivalry'}).getAttribute('href')).toBe('/rivalry/r');
-  fireEvent.click(alert.getByRole('button',{name:'Change players'}));
-  const retry = within(await screen.findByRole('dialog',{name:'New rivalry'}));
-  expect((retry.getByRole('checkbox',{name:'Cy on Black'}) as HTMLInputElement).checked).toBe(true);
-  fireEvent.click(retry.getByRole('button',{name:'Create rivalry'}));
-  fireEvent.click(within(await screen.findByRole('dialog')).getByRole('link',{name:'Open rivalry'}));
+  else {
+    expect(picker.getByRole('status').textContent).toBe('Rivalry found');
+    fireEvent.click(picker.getByRole('checkbox',{name:'Ada on White'}));
+    expect(picker.getByRole('button',{name:'Create rivalry'})).toBeTruthy();
+    fireEvent.click(picker.getByRole('checkbox',{name:'Ada on White'}));
+  }
+  fireEvent.click(picker.getByRole('button',{name:concurrent ? 'Create rivalry' : 'Open rivalry'}));
   await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
-  expect(stored().rivalries).toHaveLength(1);
+  expect(await screen.findByRole('button',{name:'Start a game'})).toBeTruthy();
+  expect(create).toHaveBeenCalledTimes(concurrent ? 1 : 0);
+  expect(stored().rivalries).toEqual([existing]);
+  expect(screen.queryByRole('alert')).toBeNull();
 });
 
 it('keeps repeat achievements and the removed highlight pills out of the result', async () => {
@@ -747,7 +750,7 @@ it('shows saved games inside a deleted rivalry and returns a duplicate creation 
  seed({rivalries:[rivalry],games:[{...baseGame,ended_at:'2026-01-01T00:01:00Z',goals:[goal]}]});
  const repo=new LocalRepository(localStorage);await repo.load();await repo.deleteRivalry(rivalry.id,{g:1});
  openApp();
- fireEvent.click(await screen.findByRole('button',{name:'New rivalry'}));
+ fireEvent.click(await screen.findByRole('button',{name:'Find or create'}));
  const dialog=await screen.findByRole('dialog');
  fireEvent.click(within(dialog).getByRole('checkbox',{name:'Bea on Black'}));
  fireEvent.click(within(dialog).getByRole('checkbox',{name:'Ada on White'}));
@@ -806,4 +809,48 @@ it('swaps only the chosen fullscreen team and snapshots the new scorer',async()=
  await waitFor(()=>expect((table.getByRole('button',{name:'Swap white rungs: Andrew and Max'}) as HTMLButtonElement).disabled).toBe(true));
  fireEvent.click(table.getByRole('button',{name:'Resume game'}));
  await waitFor(()=>expect((table.getByRole('button',{name:'Josh and Brooks goalie goal'}) as HTMLButtonElement).disabled).toBe(false));
+});
+
+it('separates the home dashboard from rivalries with Home as the first navigation tab', async () => {
+  seed({rivalries:[rivalry],games:[]});
+  openApp();
+  await screen.findByRole('heading',{name:'Home'});
+  expect(screen.getByRole('region',{name:'Your home'})).toBeTruthy();
+  expect(screen.queryByRole('region',{name:'Explore the league'})).toBeNull();
+  const home=screen.getByRole('link',{name:'Home'});
+  expect(home.getAttribute('aria-current')).toBe('page');
+  expect(within(screen.getByRole('navigation',{name:'Main navigation'})).getAllByRole('link').map(link => link.textContent)).toEqual(['Home','Rivalries','Scorigami','Hall of Fame','Players']);
+  fireEvent.click(within(screen.getByRole('navigation',{name:'Main navigation'})).getByRole('link',{name:'Rivalries'}));
+  await screen.findByRole('heading',{name:'Rivalries'});
+  expect(screen.queryByRole('region',{name:'Explore the league'})).toBeNull();
+  fireEvent.click(screen.getByRole('link',{name:'Home'}));
+  await screen.findByRole('heading',{name:'Home'});
+  expect(home.getAttribute('aria-current')).toBe('page');
+});
+
+it('saves the weekly feature day for everyone through Backlog', async () => {
+  seed({rivalries:[rivalry],games:[]});
+  openApp('/backlog?tab=weekly');
+  const settings=await screen.findByRole('region',{name:'Weekly feature settings'});
+  fireEvent.change(within(settings).getByLabelText('Feature day'),{target:{value:'3'}});
+  fireEvent.change(within(settings).getByLabelText('Matchup to play'),{target:{value:'r'}});
+  fireEvent.click(within(settings).getByRole('button',{name:'Save weekly feature'}));
+  await screen.findByText('Weekly feature updated for everyone.');
+  expect(stored().weekly_settings).toMatchObject({weekday:3,rivalry_id:'r',revision:1});
+  fireEvent.click(screen.getAllByRole('link',{name:'Home'})[0]);
+  await screen.findByRole('heading',{name:'Home'});
+  expect(screen.getByText('Wednesday matchup')).toBeTruthy();
+});
+
+it('selects a player from the personal Home prompt and replaces it with their summary', async () => {
+  seed({rivalries:[rivalry],games:[]});
+  openApp();
+  const personal=await screen.findByRole('region',{name:'Your home'});
+  expect(screen.queryByRole('complementary',{name:'Choose your profile'})).toBeNull();
+  fireEvent.click(within(personal).getByRole('button',{name:'Choose your player'}));
+  fireEvent.click(within(screen.getByRole('dialog',{name:'Your profile'})).getByRole('button',{name:'Ada'}));
+  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
+  expect(within(personal).getByRole('heading',{name:'Ada'})).toBeTruthy();
+  expect(within(personal).queryByRole('button',{name:'Choose your player'})).toBeNull();
+  expect(within(personal).getByText('Your first result goes here.')).toBeTruthy();
 });

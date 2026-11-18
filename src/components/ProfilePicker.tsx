@@ -1,23 +1,28 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Check, ChevronDown, Sparkles, X } from 'lucide-react';
 import { PlayerJersey } from './PlayerJersey';
 import { Dialog } from './Dialog';
-import { profileChoices, selectProfile, useProfile } from '../lib/profile';
+import { OPEN_PROFILE_EVENT, profileChoices, selectProfile, useProfile } from '../lib/profile';
 import type { Rivalry, Player } from '../lib/types';
 const NUDGE_KEY='tabletalk.profile-prompt.dismissed';
-export function ProfilePicker({rivalries,players=[]}:{rivalries:Rivalry[];players?:Player[]}){
+export function ProfilePicker({rivalries,players=[],showPrompt=true}:{rivalries:Rivalry[];players?:Player[];showPrompt?:boolean}){
   const selected=useProfile(),choices=profileChoices(rivalries,players);
   const current=choices.find(p=>(p.key===selected||p.name.trim().toLowerCase()===selected));
   const [open,setOpen]=useState(false),[warning,setWarning]=useState(false);
   const [dismissed,setDismissed]=useState(()=>{try{return sessionStorage.getItem(NUDGE_KEY)==='1';}catch{return false;}});
   function dismissPrompt(){setDismissed(true);try{sessionStorage.setItem(NUDGE_KEY,'1');}catch{/* Keep dismissal for this visit if storage is blocked. */}}
   function openPicker(){dismissPrompt();setOpen(true);}
+  useEffect(()=>{
+    const open=()=>{setDismissed(true);setOpen(true);};
+    window.addEventListener(OPEN_PROFILE_EVENT,open);
+    return ()=>window.removeEventListener(OPEN_PROFILE_EVENT,open);
+  },[]);
   function choose(key:string|null){
     if(selectProfile(key)){setOpen(false);setWarning(false);}else setWarning(true);
   }
   return <div className="profile-picker-anchor">
     <button type="button" className={`profile-picker${current ? '' : ' needs-profile'}`} aria-haspopup="dialog" aria-label={current ? `Your profile: ${current.name}. Change profile` : 'Select profile'} onClick={openPicker}>{current ? <PlayerJersey name={current.name} decorative/> : <Sparkles className="profile-sparkle" size={16} aria-hidden="true"/>}<span>{current?.name ?? 'Select profile'}</span><ChevronDown size={13} aria-hidden="true"/></button>
-    {!current && choices.length>0 && !open && !dismissed && <aside className="profile-nudge" aria-label="Choose your profile">
+    {showPrompt && !current && choices.length>0 && !open && !dismissed && <aside className="profile-nudge" aria-label="Choose your profile">
       <button type="button" className="profile-nudge-close" aria-label="Dismiss profile reminder" onClick={dismissPrompt}><X size={16}/></button>
       <strong><Sparkles size={16} aria-hidden="true"/>Put your games first</strong>
       <p>Select your profile to prioritize your rivalries and player stats.</p>
