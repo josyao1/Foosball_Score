@@ -100,17 +100,17 @@ it.each(['/hall-of-fame', '/Hall-of-Fame/'])('selects only the third tab at %s',
   expect(within(nav).getByRole('link', { name: 'Scorigami' }).getAttribute('aria-current')).toBe('page');
 });
 
-it('shows only ten posters and reranks within the selected rivalry', () => {
-  fixture.games = Array.from({ length: 12 }, (_, i) => game(`g-${i}`, 'aaaaaaaaaa'));
+it('shows only twenty posters and reranks within the selected rivalry', () => {
+  fixture.games = Array.from({ length: 22 }, (_, i) => game(`g-${i}`, 'aaaaaaaaaa'));
   fixture.games.push({ ...game('other-best', 'ababababbbbbb' + 'aaaaaaa'), rivalry_id: 'other' });
   render(<MemoryRouter><HallOfFame/></MemoryRouter>);
-  expect(screen.getAllByRole('article')).toHaveLength(10);
-  expect(screen.getByText(/Top 10 of 13 ranked games/)).toBeTruthy();
+  expect(screen.getAllByRole('article')).toHaveLength(20);
+  expect(screen.getByText(/Top 20 of 23 ranked games/)).toBeTruthy();
   expect(screen.getAllByRole('article')[0].getAttribute('aria-label')).toContain('Andrew versus Alex');
   fireEvent.change(screen.getByLabelText('Rivalry'), { target: { value: 'r' } });
-  expect(screen.getAllByRole('article')).toHaveLength(10);
+  expect(screen.getAllByRole('article')).toHaveLength(20);
   expect(screen.getAllByRole('article')[0].getAttribute('aria-label')).toBe('Rank 1: Josh versus Brooks');
-  expect(screen.getByText(/Top 10 of 12 ranked games/)).toBeTruthy();
+  expect(screen.getByText(/Top 20 of 22 ranked games/)).toBeTruthy();
   fireEvent.change(screen.getByLabelText('Rivalry'), { target: { value: 'other' } });
   expect(screen.getAllByRole('article')).toHaveLength(1);
   expect(screen.getByText(/Top 1 of 1 ranked game/)).toBeTruthy();
@@ -161,12 +161,12 @@ it('uses Featured classic permanently and filters solo and team games by exact p
   fireEvent.change(rivalry, {target:{value:''}});
   expect(screen.getAllByRole('article')).toHaveLength(4);
 });
-it('caps player rankings at ten and resets rating details when changing filters', () => {
-  fixture.games = Array.from({length:12}, (_,i) => game(`g-${i}`, 'aaaaaaaaaa'));
+it('caps player rankings at twenty and resets rating details when changing filters', () => {
+  fixture.games = Array.from({length:22}, (_,i) => game(`g-${i}`, 'aaaaaaaaaa'));
   render(<MemoryRouter><HallOfFame/></MemoryRouter>);
   fireEvent.change(screen.getByLabelText('Player'), {target:{value:'josh'}});
-  expect(screen.getAllByRole('article')).toHaveLength(10);
-  expect(screen.getByText(/Top 10 of 12/)).toBeTruthy();
+  expect(screen.getAllByRole('article')).toHaveLength(20);
+  expect(screen.getByText(/Top 20 of 22/)).toBeTruthy();
   fireEvent.click(screen.getAllByRole('button',{name:/Classic score/})[0]);
   expect(screen.getByRole('dialog')).toBeTruthy();
   fireEvent.change(screen.getByLabelText('Player'), {target:{value:'alex'}});
@@ -174,7 +174,7 @@ it('caps player rankings at ten and resets rating details when changing filters'
   expect(screen.getByText('No ranked games yet')).toBeTruthy();
   fireEvent.click(screen.getByRole('button',{name:'Show all games'}));
   expect((screen.getByLabelText('Player') as HTMLSelectElement).value).toBe('');
-  expect(screen.getAllByRole('article')).toHaveLength(10);
+  expect(screen.getAllByRole('article')).toHaveLength(20);
 });
 it('expands inline replay from a ranked row and collapses back to the final score', () => {
   vi.stubGlobal('requestAnimationFrame', () => 1);

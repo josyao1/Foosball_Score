@@ -2,14 +2,24 @@
 .recent-results > header { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:16px; }
 .recent-results h2 { margin:0; font-size:24px; }
 .recent-results > header > span { color:var(--muted); font-size:11px; }
+.recent-see-all { display:inline-flex;align-items:center;gap:5px;min-height:44px;font-size:13px;white-space:nowrap; }
+.recent-see-all:focus-visible { outline:2px solid var(--text);outline-offset:3px; }
+.game-history { margin-top:20px; }
+.game-history-heading { flex-wrap:wrap; }
+.game-history-heading > span { white-space:nowrap; }
 .recent-results ol { list-style:none; padding:0; margin:0; border-block:1px solid var(--line); }
 .recent-results li + li { border-top:1px solid var(--line); }
-.recent-results li > a { display:grid; grid-template-columns:140px minmax(0,1fr) 60px 16px; gap:20px; align-items:center; padding:18px 12px; color:var(--text); text-decoration:none; transition:background 150ms ease; }
+.recent-results li > a { display:grid; grid-template-columns:140px minmax(0,1fr) 130px 16px; gap:20px; align-items:center; padding:18px 12px; color:var(--text); text-decoration:none; transition:background 150ms ease; }
 .recent-results li > a:hover { background:var(--panel); }
 .recent-results li > a:focus-visible { outline:2px solid var(--text); outline-offset:-2px; }
 .recent-results time { display:grid; gap:4px; font-size:11px; color:var(--muted); }
 .recent-results time small { font-size:11px; }
-.recent-result-match { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:18px; font-size:13px; }
+.recent-result-match { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:18px; font-size:13px;container-type:inline-size; }
+.recent-result-team { display:flex;align-items:center;gap:7px;min-width:0; }
+.recent-result-team:first-child { justify-content:flex-end; }
+.recent-result-team > span:last-child { min-width:0;overflow-wrap:anywhere; }
+.recent-result-jerseys { display:flex;align-items:center;gap:1px;flex-shrink:0; }
+.recent-result-jerseys .player-jersey { width:22px;height:24px; }
 .recent-result-match > span { overflow-wrap:anywhere; }
 .recent-result-match > span:first-child { text-align:right; }
 .recent-result-match > strong { display:flex; align-items:baseline; gap:9px; white-space:nowrap; font-size:23px; font-variant-numeric:tabular-nums; }
@@ -17,13 +27,25 @@
 .recent-result-match .is-winner { color:var(--text); font-weight:700; }
 .recent-result-match i { font-style:normal; font-size:14px; color:var(--muted); }
 .recent-result-duration { display:flex; gap:5px; align-items:center; justify-content:flex-end; color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; white-space:nowrap; }
-@media(max-width:600px) {
+.recent-result-meta { display:flex;align-items:center;justify-content:flex-end;gap:12px; }
+.recent-rank-stamp { display:inline-flex;flex-direction:column;align-items:center;gap:1px;padding:2px 5px;border:3px double currentColor;border-radius:2px;color:var(--muted);transform:rotate(-4deg);white-space:nowrap;line-height:1.1; }
+.recent-rank-stamp > span { font-size:7px;font-weight:650; }
+.recent-rank-stamp > b { font:700 13px/1.1 var(--heading-font); }
+.recent-rank-stamp[data-rank="1"] { color:#82621d; }
+.recent-rank-stamp[data-rank="2"] { color:#666b6b; }
+.recent-rank-stamp[data-rank="3"] { color:#8a5835; }
+.recent-rank-stamp-subtle { border:1px solid var(--line);padding:4px 7px;transform:none; }
+.recent-rank-stamp-subtle > span { font-weight:400; }
+.recent-rank-stamp-subtle > b { font-weight:400; }
+@media(max-width:760px) {
   .recent-results li > a { grid-template-columns:minmax(0,1fr) auto; gap:10px; padding:14px 4px; }
   .recent-results time { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px; grid-column:1; grid-row:1; font-size:11px; }
-  .recent-result-duration { grid-column:2; grid-row:1; }
+  .recent-result-meta { grid-column:2; grid-row:1;gap:8px; }
   .recent-result-match { grid-column:1/-1; grid-row:2; gap:12px; font-size:13px; }
   .recent-result-match > strong { font-size:22px; }
   .recent-result-arrow { display:none; }
 }
 
 @media(max-width:400px) { .recent-results h2 { font-size:21px; } }
+@container(max-width:420px) { .recent-result-jerseys { display:none; } }
+@media(max-width:480px) { .recent-result-jerseys { display:none; } }

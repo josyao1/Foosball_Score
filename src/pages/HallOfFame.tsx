@@ -147,7 +147,7 @@ export function HallOfFame() {
     const filteredGames = games.filter(game => filter.kind === 'all' || (filter.kind === 'rivalry' ? game.rivalry_id === filter.id : eligibleRivalries!.has(game.rivalry_id)));
     return rankedClassics(filteredGames, rivalries);
   }, [games, rivalries, filter]);
-  const topEntries = entries.slice(0, 10);
+  const topEntries = entries.slice(0, 20);
   const selected = entries.find(entry => entry.game.id === ratingId);
   const changeFilter = (kind: 'rivalry' | 'player', id: string) => {
     setFilter(id ? { kind, id } : { kind: 'all' });

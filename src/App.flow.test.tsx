@@ -854,3 +854,17 @@ it('selects a player from the personal Home prompt and replaces it with their su
   expect(within(personal).queryByRole('button',{name:'Choose your player'})).toBeNull();
   expect(within(personal).getByText('Your first result goes here.')).toBeTruthy();
 });
+
+it('opens every finished game from the recent-games See all link', async () => {
+  const games=Array.from({length:7},(_,i)=>({...baseGame,id:`history-${i}`,ended_at:`2026-11-10T20:0${i}:00Z`,goals:[goal]}));
+  seed({rivalries:[rivalry],games:[...games,{...baseGame,id:'still-live'}]});
+  openApp();
+  const recent=within(await screen.findByRole('region',{name:'Recent games'}));
+  expect(within(recent.getByRole('list')).getAllByRole('listitem')).toHaveLength(5);
+  fireEvent.click(recent.getByRole('link',{name:'See all'}));
+  await screen.findByRole('heading',{name:'Game history'});
+  const history=within(screen.getByRole('region',{name:'All games'}));
+  expect(history.getAllByRole('link').map(link=>link.getAttribute('href'))).toEqual([6,5,4,3,2,1,0].map(i=>`/game/history-${i}`));
+  fireEvent.click(history.getAllByRole('link')[6]);
+  expect(await screen.findByRole('heading',{name:'Game result'})).toBeTruthy();
+});
