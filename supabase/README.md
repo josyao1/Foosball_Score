@@ -86,3 +86,7 @@ Apply `player-settings.sql` after the existing upgrades above. `/backlog?tab=pla
 `foos_update_player` checks `settings_revision`, validates the name and appearance, and updates display labels in active and archived rivalries without changing any player IDs, membership IDs, games, goals, or attribution snapshots. Rivalry JSON also derives labels directly from memberships to cover concurrent rivalry creation. Duplicate names are rejected case-insensitively; stale edits must be reopened before retrying. There is no player deletion or identity merge in this editor.
 
 The function intentionally permits anonymous execution, matching the site's shared editing model. Direct UPDATE remains unavailable to public clients; the function uses an empty search path and qualified objects. Supabase's public SECURITY DEFINER advisory is expected for this explicitly shared mutation, as for the other scoring RPCs. Other application tables are untouched.
+
+## Slack final scores
+
+See [slack-notifications.md](slack-notifications.md) for the transactional outbox, backend sender, scheduler, setup order, activation, disable switch, and delivery recovery. Apply both timestamped Slack migrations after all earlier setup files. Notifications start disabled.

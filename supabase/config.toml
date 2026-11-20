@@ -1,0 +1,4 @@
+[functions.foosball-slack-notify]
+# The handler checks a private scheduler token via a service-only RPC before
+# claiming work. This is NOT an anonymously callable sender.
+verify_jwt = false

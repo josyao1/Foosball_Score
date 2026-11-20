@@ -1,0 +1,235 @@
+Foosball → Slack: High-Level Design and Execution Plan
+Prepared November 19, 2026, for implementation after work.
+
+The goal is to post a short final score and game link in #foosball whenever a new game is finalized. Use the Slack workflow already drafted, without Zapier or a new workspace app.
+
+1. Current setup
+
+Component	Status
+Slack workflow	Drafted: From a webhook → Send a message to #foosball
+Workflow name	Currently “Untitled Workflow”; rename to Foosball final scores
+Slack variables	Intended keys: message and game_url, both Text. Confirm whether the actual second key is gameurl.
+Workflow publication	Not confirmed
+Supabase project	iqiffravpddrvpwqbrkm
+Database	Existing foosball game, goal, player, and rivalry tables
+Notification backend	Not implemented; no Edge Functions were present when checked
+Webhook secret	Planned name: SLACK_FOOSBALL_WEBHOOK_URL; saving it is not confirmed
+Repository	josyao1/Foosball_Score
+Production branch	Last verified as master, commit 41ac0df; refresh before editing
+Website	https://foosball-score.vercel.app
+This is an implementation plan. It does not mean automatic notifications are already enabled.
+
+2. Intended behavior
+
+The flow is:
+
+Player selects Finish game or Finish & rematch
+                    ↓
+Supabase saves the completed result
+and records a pending notification
+                    ↓
+Background sender picks up the notification
+                    ↓
+Sender calls the existing Slack workflow webhook
+                    ↓
+Workflow posts in #foosball
+Example message:
+
+⚽ Final: Josh & Brooks 11–8 Alex & Andrew
+https://foosball-score.vercel.app/game/<game-id>
+Trigger only when the game is successfully saved as finished. Cover:
+
+Finish game
+Finish & rematch
+Early finishes
+Draws
+Reaching a winning score alone must not trigger a notification because players can choose Keep playing.
+
+Situation	Version-one behavior
+Newly finalized game after activation	Announce the result
+Starting the rematch	No second announcement for the previous game
+Refreshing or viewing from another device	No additional announcement
+Historical game already finished before activation	No announcement
+Restoring a game from the backlog	No new announcement
+Correcting an already announced score	No automatic second post or Slack edit; the result link shows current data
+Deleting a game before delivery	Skip its pending notification
+Deleting a game after delivery	Slack message remains
+Slack unavailable	Preserve the saved result and retry delivery separately
+3. Refresh the repository first
+
+On the home laptop:
+
+Preserve any uncommitted work.
+Fetch the current GitHub branches.
+Confirm which commit is currently deployed.
+Create a feature branch from the latest master.
+Verify push access early.
+GitHub writes from this chat were previously rejected despite the account reporting admin permissions. Do not assume that access is fixed.
+
+Keep the function source and database migration in GitHub so the backend can be reproduced and maintained from the laptop.
+
+4. Finish the private configuration
+
+In Slack:
+
+Rename the workflow Foosball final scores.
+Confirm that the destination is #foosball.
+Confirm that the message step inserts the incoming variables using Slack’s variable picker.
+Confirm their exact keys: message and either game_url or gameurl.
+In Supabase:
+
+Open Edge Functions → Secrets.
+Add:
+Name: SLACK_FOOSBALL_WEBHOOK_URL
+Value: the Slack workflow’s Web request URL
+Keep the webhook URL out of:
+
+GitHub and committed configuration files
+Browser code or VITE_ environment variables
+Logs and screenshots
+Chat messages
+Leave the workflow unpublished while implementing the backend.
+
+5. Add a pending-notification table
+
+Create a database migration for a backend-only table that records notifications awaiting delivery.
+
+Suggested fields:
+
+id
+game_id
+game_revision
+destination
+payload
+status
+attempt_count
+next_attempt_at
+claimed_until
+sent_at
+last_error
+created_at
+Add a unique constraint on game ID + destination to suppress ordinary duplicate announcements.
+
+Also add configuration for:
+
+notifications_enabled
+activation_timestamp
+Do not backfill historical games. Only new finalizations after activation should qualify.
+
+The browser should not be able to create arbitrary notification records or change their delivery status.
+
+6. Record the notification at the correct point in the save
+
+The app currently saves through foos_save_game_v2.
+
+An important implementation detail: that function updates the game row before replacing its goals. An immediate trigger on the game-row update could therefore calculate a score using the previous goal list.
+
+Instead:
+
+Validate and save the complete game and goals.
+Detect whether this save represents the first eligible finalization.
+Calculate the final score using the same own-goal rules as the app.
+Record the notification payload at the end of the save operation, within the same transaction.
+Let the background sender deliver it after the transaction commits.
+Preserve the existing revision and concurrency checks. Review any legacy save function that can also finalize games.
+
+7. Build the background sender
+
+Create a Supabase Edge Function, for example:
+
+foosball-slack-notify
+It should:
+
+Claim pending notifications so concurrent workers do not send the same item.
+Check that the game has not been deleted.
+Send the payload using the exact Slack variable keys.
+Mark successful deliveries as sent.
+Retry temporary failures with a delay.
+Record useful errors without exposing credentials.
+Respect Slack rate limits.
+Restrict invocation to the backend. Store scheduler authentication privately as well.
+
+A scheduler running approximately once per minute is sufficient for version one. Messages may therefore take around a minute to arrive.
+
+Delivery tracking prevents ordinary duplicate posts, but a timeout after Slack accepts a request can leave the outcome uncertain. Handle that state explicitly; do not assume perfect “exactly once” delivery.
+
+8. Run automated checks before posting to Slack
+
+Use a mocked Slack endpoint to test:
+
+Singles and doubles
+Draws and early finishes
+Own goals
+Both finishing buttons
+Two devices attempting to finish the same game
+Page refreshes and repeated processing
+Historical games and backlog restores
+Corrections and deletions
+Temporary failures and retries
+Confirm that a Slack outage does not undo a successfully saved result.
+
+Commit the migration and function source, then deploy the backend with automatic delivery disabled.
+
+9. Test using a fake game
+
+Use the proposed fake-game test instead of sending a separate synthetic integration message.
+
+Publish the Slack workflow.
+Enable notifications with an activation timestamp of “now.”
+Create a clearly identifiable fake game, preferably with a test-only matchup. Avoid overlapping this first test with real games.
+Record a few goals and select Finish game.
+Check that one message arrives in #foosball.
+Verify the names, score, and game link.
+Refresh the result page or view it on another device. Confirm no second notification appears.
+Check that the backend delivery record is marked sent.
+Delete the fake game through the app.
+Confirm it no longer counts toward active standings and statistics.
+The app’s current delete flow moves the game to the backlog. Permanent removal is a separate action if desired.
+
+Deleting the fake game will not remove its Slack message. Its result link may stop opening a normal game page. Remove the test post through Slack’s available controls, or ask an authorized person if needed.
+
+Cover Finish & rematch in automated tests. If testing it live too, use a second fake game, confirm one result announcement, then discard the empty rematch and delete the completed fake game.
+
+10. Verify normal operation
+
+After cleaning up the fake game, check the next real completed game.
+
+Confirm that:
+
+The correct result appears in #foosball.
+Its game link works.
+No historical results are announced.
+Restores and corrections do not create new result announcements.
+Delivery failures are visible and retryable.
+11. Rollback
+
+Provide a simple disable-notifications switch.
+
+Turning it off should stop Slack delivery while normal scoring continues.
+
+Before re-enabling, decide whether to discard or resume pending notifications so an accumulated queue does not flood the channel.
+
+12. Completion checklist
+
+[ ] Latest production source checked
+[ ] GitHub push access verified
+[ ] Workflow renamed and destination confirmed
+[ ] Exact payload variable keys confirmed
+[ ] Webhook secret stored privately
+[ ] Pending-notification migration implemented
+[ ] Sender function and scheduler implemented
+[ ] Historical games excluded
+[ ] Both finishing paths tested
+[ ] Source and migration saved in GitHub
+[ ] Backend deployed
+[ ] Slack workflow published
+[ ] Fake game produced one correct notification
+[ ] Fake game removed from active statistics
+[ ] Test Slack message cleaned up if desired
+[ ] Next real result verified
+[ ] Disable switch and delivery logs available
+Cost
+
+This approach avoids a Zapier subscription. Database, function, and scheduler usage count toward existing Supabase allowances. The Slack workflow uses the company’s existing plan and permissions.
+
+Useful references: Slack webhook workflows, Supabase secrets, and the foosball repository.

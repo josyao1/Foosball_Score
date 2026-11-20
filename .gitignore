@@ -8,3 +8,5 @@ dist/
 .vercel/
 .playwright-mcp/
 .superdesign/tmp/
+
+supabase/.temp/
