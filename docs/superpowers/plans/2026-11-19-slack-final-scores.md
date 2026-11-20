@@ -18,7 +18,7 @@
 - [x] Implement dependency-injected sender and mock transport tests: auth, success, invalid secret, transient/permanent errors, timeout, persistence failure, disabled/deleted jobs.
 - [x] Add scheduler migration with a generated Vault token and service-only verification. Document disable/resume/discard and uncertain-delivery recovery.
 - [x] Run complete app tests, build, SQL regressions, and Deno type check. Commit/push source before deploying disabled backend.
-- [ ] Deploy, verify permissions/config and isolated fake-game delivery, remove test data, then enable new real finalizations. User confirms channel delivery because no Slack read connector is available.
+- [x] Deploy and verify permissions/config. User opted for global activation and screen-driven testing; two manual finishes were accepted once each and user confirmed channel delivery. Test-game cleanup is user-managed.
 
 ## Review focus
 - Saving the final goal must produce the updated score, including own goals.
@@ -33,4 +33,6 @@
 - User requested global activation without a test-only scope; enabled November 19, 2026 at 8:47 PM Pacific.
 - First manual test queued correctly, then user deleted it before dispatch; it was canceled with zero attempts as designed.
 - User requested immediate dispatch with bounded resource use; implemented post-commit wake-up and idle/backoff-aware fallback.
-- Channel delivery verification still awaits an undeleted finished game.
+- User confirmed channel delivery; backend recorded two successful messages, each with one attempt and no error.
+- Final Slack setup uses a View game button and a score line with active game duration; no extra timestamp.
+- All 432 app/worker tests, production build, Deno type check, SQL regressions, concurrency, immediate dispatch/fallback, and duration checks passed.
