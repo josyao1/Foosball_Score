@@ -48,7 +48,8 @@ Then enable with a new activation timestamp as above. To resume instead, omit th
 
 ## Delivery behavior and logs
 
-- One dispatch per minute globally, one job per invocation; row locks and random lease tokens serialize concurrent workers.
+- Each new finalization queues one immediate sender wake-up via pg_net. HTTP runs only after the save commits. Row locks and random lease tokens serialize concurrent workers; a one-second global cooldown protects against bursts. The minute cron retries missed wake-ups and due failures, without invoking the function when idle, disabled, backing off, or already sending.
+- If queueing the immediate wake-up fails, the game and durable notification still save; cron provides the fallback.
 - Finalization and queue insert commit together. Slack availability is entirely outside the save transaction.
 - Both current/legacy saves, both finish buttons, early finishes and draws work. Own goals credit the opposite side. Team names come from ordered roster membership, with safe Slack escaping. Slack supplies the sent timestamp; the message contains only the result and game link.
 - A unique game/destination pair plus first-finalization marker prevents corrections, reopen/refinish, restore, refresh, and rematch creation from posting again.
@@ -74,6 +75,8 @@ For a failed/uncertain item, first check the channel. If it already posted, mark
 
 `npm test -- --maxWorkers=2` includes mocked worker tests and existing Finish game / Finish & rematch UI flows. `npm run build` checks the app. `deno check supabase/functions/foosball-slack-notify/index.ts` checks the deployed code without npm dependencies.
 
-On an isolated local PostgreSQL database, apply existing schemas and the outbox migration, then run `supabase/slack-check.sql` (rollback-only). Run `python3 tests/slack-concurrency.py postgresql://127.0.0.1:PORT/foos_slack` for true overlapping saves/claims. It refuses non-local/non-test database targets. The scheduler migration needs hosted extensions; verify its cron registration and authenticated invocation separately while delivery is disabled.
+On an isolated local PostgreSQL database, apply existing schemas and the outbox migration (plus subsequent payload-format migrations), then run `supabase/slack-check.sql` (rollback-only). Run `python3 tests/slack-concurrency.py postgresql://127.0.0.1:PORT/foos_slack` for true overlapping saves/claims. It refuses non-local/non-test database targets. The scheduler migration needs hosted extensions; verify its cron registration and authenticated invocation separately while delivery is disabled.
 
 Reference: Supabase's [scheduled Edge Functions](https://supabase.com/docs/guides/functions/schedule-functions) and [pg_net](https://supabase.com/docs/guides/database/extensions/pg_net) documentation.
+
+`supabase/slack-immediate-check.sql` tests immediate dispatch with transaction-scoped pg_net/Vault stand-ins: no calls while scoring, one per finalization, no call on corrections, rollback, disabled/idle/backoff behavior, and failed-wake recovery. It rolls back both fixtures and the immediate-dispatch migration.
