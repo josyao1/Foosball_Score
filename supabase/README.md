@@ -89,4 +89,4 @@ The function intentionally permits anonymous execution, matching the site's shar
 
 ## Slack final scores
 
-See [slack-notifications.md](slack-notifications.md) for the transactional outbox, backend sender, scheduler, setup order, activation, disable switch, and delivery recovery. Apply both timestamped Slack migrations after all earlier setup files. Notifications start disabled.
+See [slack-notifications.md](slack-notifications.md) for the transactional outbox, backend sender, scheduler, setup order, activation, disable switch, and delivery recovery. Apply all timestamped Slack migrations after all earlier setup files. Notifications start disabled.

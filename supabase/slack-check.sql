@@ -32,6 +32,8 @@ begin
  perform public.foos_save_game(hist,singles,'2026-01-01','2026-01-01T00:01:00Z',0,
   jsonb_build_array(jsonb_build_object('id',gen_random_uuid(),'actor_side','a','rung','goalie','flags','[]'::jsonb,'elapsed_ms',1,'occurred_at','2026-01-01T00:00:01Z')));
  perform pg_temp.assert((select count(*)=0 from public.foos_slack_outbox),'historical import excluded');
+ perform pg_temp.assert(foos_private.slack_timestamp('2026-11-20T04:12:00Z')='Nov 19, 2026 · 8:12 PM PST','Pacific date rollover and winter time');
+ perform pg_temp.assert(foos_private.slack_timestamp('2026-07-10T19:05:00Z')='Jul 10, 2026 · 12:05 PM PDT','Pacific daylight saving time');
  -- Winning score while still live does not enqueue.
  goals:=pg_temp.goals('aaaaaaaaaa');
  perform public.foos_save_game_v2(gid,rid,start_at,null,0,goals,null);
@@ -40,7 +42,7 @@ begin
  goals:=pg_temp.goals('aab',2);
  rev:=public.foos_save_game_v2(gid,rid,start_at,clock_timestamp(),1,goals,null);
  select id,payload into jid,item from public.foos_slack_outbox where game_id=gid;
- perform pg_temp.assert(item->>'message'='⚽ Final: Slack A &amp; Slack B 1–2 Slack C &amp; Slack &lt;@here&gt;','doubles latest goals, own goals and escaped names');
+ perform pg_temp.assert(split_part(item->>'message',E'\n',1)='⚽ Final: Slack A &amp; Slack B 1–2 Slack C &amp; Slack &lt;@here&gt;','doubles latest goals, own goals and escaped names');
  perform pg_temp.assert(item->>'game_url'='https://foosball-score.vercel.app/game/'||gid,'canonical link');
  perform pg_temp.assert((select game_revision=2 from public.foos_slack_outbox where id=jid),'final revision captured');
  begin
@@ -50,6 +52,7 @@ begin
  perform pg_temp.assert((select count(*)=1 from public.foos_slack_outbox),'stale finish no duplicate');
  rev:=public.foos_save_game_v2(gid,rid,start_at,clock_timestamp(),2,goals,null);
  perform pg_temp.assert((select count(*)=1 from public.foos_slack_outbox),'correction no duplicate');
+ perform pg_temp.assert(split_part(item->>'message',E'\n',2)=(select foos_private.slack_timestamp(ended_at) from public.foos_games where id=gid),'timestamp uses finished game time');
  -- Claims serialize; wrong lease cannot dispatch; successful sends stay sent.
  item:=public.foos_slack_claim(); lease:=(item->>'claim_token')::uuid;
  perform pg_temp.assert((item->>'attempt_count')::int=1,'first attempt is one');
@@ -64,7 +67,7 @@ begin
  -- Legacy path: early draw; rematch creation cannot reannounce previous result.
  goals:=pg_temp.goals('ab');
  rev:=public.foos_save_game(other,singles,start_at,clock_timestamp(),0,goals);
- perform pg_temp.assert((select payload->>'message'='⚽ Final: Slack A 1–1 Slack C (draw)' from public.foos_slack_outbox where game_id=other),'legacy early draw');
+ perform pg_temp.assert((select split_part(payload->>'message',E'\n',1)='⚽ Final: Slack A 1–1 Slack C (draw)' from public.foos_slack_outbox where game_id=other),'legacy early draw');
  perform public.foos_save_game(gen_random_uuid(),singles,start_at,null,0,'[]');
  perform pg_temp.assert((select count(*)=2 from public.foos_slack_outbox),'empty rematch no extra notification');
  -- Delete then restore before polling still skips forever.
