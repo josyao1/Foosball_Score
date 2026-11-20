@@ -4,7 +4,7 @@ The published **Score Update** workflow receives two text fields, `message` and 
 
 ## Installation
 
-Apply the existing setup files through `weekly-feature.sql`, then the timestamped `foos_slack_outbox`, `foos_slack_scheduler`, and `foos_slack_timestamp` migrations. The latter requires hosted Supabase Vault, pg_cron, and pg_net. The scheduler's project URL is explicitly scoped to `iqiffravpddrvpwqbrkm`; change it for another installation.
+Apply the existing setup files through `weekly-feature.sql`, then the timestamped Slack migrations in filename order. The latter requires hosted Supabase Vault, pg_cron, and pg_net. The scheduler's project URL is explicitly scoped to `iqiffravpddrvpwqbrkm`; change it for another installation.
 
 Deploy `supabase/functions/foosball-slack-notify/index.ts` and `worker.ts`. Keep `verify_jwt = false`: the handler requires a random 256-bit scheduler token, authenticated through a service-only database RPC before accessing the queue. The token is generated inside PostgreSQL, stored in Vault, and its SHA-256 digest stored in backend-only settings. No token appears in cron's command text. The service-role key is Supabase's built-in server environment variable, never a Vite variable.
 
@@ -50,7 +50,7 @@ Then enable with a new activation timestamp as above. To resume instead, omit th
 
 - One dispatch per minute globally, one job per invocation; row locks and random lease tokens serialize concurrent workers.
 - Finalization and queue insert commit together. Slack availability is entirely outside the save transaction.
-- Both current/legacy saves, both finish buttons, early finishes and draws work. Own goals credit the opposite side. Team names come from ordered roster membership, with safe Slack escaping. The message includes the finish date/time in America/Los_Angeles, labeled PST or PDT according to that date; delivery retries keep the original finish time.
+- Both current/legacy saves, both finish buttons, early finishes and draws work. Own goals credit the opposite side. Team names come from ordered roster membership, with safe Slack escaping. Slack supplies the sent timestamp; the message contains only the result and game link.
 - A unique game/destination pair plus first-finalization marker prevents corrections, reopen/refinish, restore, refresh, and rematch creation from posting again.
 - Deletion cancels pending/claimed jobs immediately, even if restored before polling. The worker also rechecks availability and the enable switch immediately before sending.
 - Explicit HTTP 429/5xx responses retry with exponential delay (one minute to one hour; respect Retry-After up to one day), at most eight attempts. Other HTTP failures stop as `failed`.
