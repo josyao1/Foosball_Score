@@ -41,7 +41,7 @@ begin
  update public.foos_games set paused_ms=3000 where id=gid;
  rev:=public.foos_save_game_v2(gid,rid,start_at,start_at+interval '10 seconds',1,goals,null);
  select id,payload into jid,item from public.foos_slack_outbox where game_id=gid;
- perform pg_temp.assert(split_part(item->>'message',' · ',1)='⚽ Final: Slack A &amp; Slack B 1–2 Slack C &amp; Slack &lt;@here&gt;','doubles latest goals, own goals and escaped names');
+ perform pg_temp.assert(split_part(item->>'message',' · ',1)='⚽ Final: Slack A & Slack B 1–2 Slack C & Slack &lt;@here&gt;','doubles latest goals, own goals, literal ampersands and escaped mentions');
  perform pg_temp.assert(item->>'game_url'='https://foosball-score.vercel.app/game/'||gid,'canonical link');
  perform pg_temp.assert((select game_revision=2 from public.foos_slack_outbox where id=jid),'final revision captured');
  begin
