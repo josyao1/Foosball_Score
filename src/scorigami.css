@@ -122,11 +122,15 @@
 .sc-missing-more summary { cursor: pointer; min-height: 44px; align-content: center; }
 .sc-missing-more .sc-missing-tickets { max-height: 220px; overflow-y: auto; }
 .sc-oddities { margin-top: 28px; }
-.sc-oddity-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+.sc-oddity-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
 .sc-oddity-ticket { --oddity-ink: #725641; --oddity-wash: #f0e2cb; display: flex; flex-direction: column; align-items: stretch; min-width: 0; text-align: left; padding: 16px; border: 1px solid var(--line); border-top: 3px solid var(--oddity-ink); border-radius: 5px 5px 12px 12px; background: linear-gradient(150deg, var(--oddity-wash), var(--panel) 72%); color: var(--text); font: inherit; cursor: pointer; }
 .sc-oddity-dunks { --oddity-ink: #98701f; --oddity-wash: #f4e5ae; }
 .sc-oddity-banks { --oddity-ink: #3e8279; --oddity-wash: #dcebe2; }
 .sc-oddity-ownGoals { --oddity-ink: #a85656; --oddity-wash: #f1dcd3; }
+.sc-oddity-run { --oddity-ink: #9a603b; --oddity-wash: #f2dfc5; }
+.sc-oddity-comeback, .sc-oddity-matchPoints { --oddity-ink: #5b7560; --oddity-wash: #e4e9d9; }
+.sc-oddity-leadChanges { --oddity-ink: #746b82; --oddity-wash: #e9e2e6; }
+.sc-oddity-triple { --oddity-ink: #98701f; --oddity-wash: #f1e6c9; }
 .sc-oddity-ticket:disabled { cursor: default; opacity: .65; }
 .sc-oddity-ticket:not(:disabled):hover { border-color: var(--oddity-ink); }
 .sc-oddity-ticket:focus-visible, .sc-special-feature:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
@@ -162,6 +166,11 @@
 .sc-oddity-game small, .sc-oddity-holders { grid-column: 1 / -1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow-wrap: anywhere; }
 @container scorigami (max-width: 700px) {
   .sc-oddity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .sc-oddity-matchPoints { grid-column:1 / -1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:14px; }
+  .sc-oddity-matchPoints .sc-oddity-top { grid-column:1 / -1; }
+  .sc-oddity-matchPoints .sc-oddity-value, .sc-oddity-matchPoints .sc-oddity-label, .sc-oddity-matchPoints > small { grid-column:1; }
+  .sc-oddity-matchPoints > small { margin-bottom:0; }
+  .sc-oddity-matchPoints .sc-oddity-preview { grid-column:2;grid-row:2 / 5;align-self:center;margin-top:10px;padding:0 0 0 14px;border-top:0;border-left:1px dashed var(--line); }
   .sc-missing { gap: 14px; }
   .sc-special-feature { grid-template-columns: minmax(0, 1fr) 18px; padding: 14px; gap: 10px; }
   .sc-special-balls { grid-column: 1; grid-row: 2; max-width: none; }

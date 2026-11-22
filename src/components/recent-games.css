@@ -1,4 +1,12 @@
 .recent-results { margin-block: 34px; }
+html[data-design] .game-history-heading .game-player-search { display:flex;align-items:center;align-self:center;gap:7px;width:200px;max-width:100%;min-width:0;box-sizing:border-box;margin-left:auto;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;color:var(--muted); }
+html[data-design] .game-history-heading .game-player-search input { flex:1;min-width:0;width:100%;height:44px;min-height:44px;padding:8px 0;border:0;border-radius:0;background:transparent;color:var(--text);font:inherit;font-size:14px;box-shadow:none; }
+.game-player-search > svg { flex-shrink:0; }
+html[data-design] .game-player-search:focus-within { outline:2px solid var(--text);outline-offset:2px; }
+html[data-design] .game-player-search input:focus-visible { outline:none; }
+.game-player-search input::-webkit-search-cancel-button { display:none; }
+html[data-design] .game-history-heading .game-player-search button { display:grid;place-items:center;flex:0 0 44px;min-height:44px;padding:0;border:0;background:transparent;color:var(--muted); }
+@media(max-width:760px) { html[data-design] .game-history-heading .game-player-search input { font-size:16px; } }
 .recent-results > header { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:16px; }
 .recent-results h2 { margin:0; font-size:24px; }
 .recent-results > header > span { color:var(--muted); font-size:11px; }

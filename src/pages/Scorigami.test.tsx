@@ -196,6 +196,23 @@ it('lists the selected player’s rivalries first and keeps the filter tied to i
   }
 });
 
+it('opens the new pressure records and keeps a zero-duration three-goal record accessible', () => {
+ Object.defineProperty(HTMLDialogElement.prototype,'showModal',{configurable:true,value:function(this:HTMLDialogElement){this.open=true;}});
+ Object.defineProperty(HTMLDialogElement.prototype,'close',{configurable:true,value:function(this:HTMLDialogElement){this.open=false;this.dispatchEvent(new Event('close'));}});
+ const comeback=game('escape',11,9);
+ comeback.goals.forEach((goal,i)=>{goal.actor_side=i<9?'b':'a';});
+ const instant=game('instant',10,0);
+ instant.goals.forEach(goal=>{goal.elapsed_ms=0;});
+ fixture.games=[comeback,instant];
+ render(<MemoryRouter><Scorigami/></MemoryRouter>);
+ for(const name of ['Biggest winning comeback: 9. 1 record games','Most lead changes: 1. 1 record games','Fastest three goals: 0s. 1 record games','Most match points saved: 9. 1 record games']) {
+   fireEvent.click(screen.getByRole('button',{name}));
+   const dialog=within(screen.getByRole('dialog'));
+   expect(dialog.getAllByRole('link').map(a=>a.getAttribute('href'))).toEqual([name.startsWith('Fastest')?'/game/instant':'/game/escape']);
+   fireEvent.click(dialog.getByRole('button',{name:'Close dialog'}));
+ }
+});
+
 it('opens tied oddity games, updates broken records live, and scopes discoveries to the rivalry', () => {
  Object.defineProperty(HTMLDialogElement.prototype,'showModal',{configurable:true,value:function(this:HTMLDialogElement){this.open=true;}});
  Object.defineProperty(HTMLDialogElement.prototype,'close',{configurable:true,value:function(this:HTMLDialogElement){this.open=false;this.dispatchEvent(new Event('close'));}});
@@ -217,4 +234,8 @@ it('opens tied oddity games, updates broken records live, and scopes discoveries
  expect(screen.queryByRole('dialog')).toBeNull();
  expect(screen.getByRole('button',{name:'Banks in a game: 1. 2 record games'})).toBeTruthy();
  expect(screen.getByRole('button',{name:'Own goals in a game: none yet. 0 record games'}).hasAttribute('disabled')).toBe(true);
+ fireEvent.click(screen.getByRole('button',{name:'Biggest run: 10. 2 record games'}));
+ const runs=within(screen.getByRole('dialog',{name:'Biggest run'}));
+ expect(runs.getAllByRole('link')).toHaveLength(2);
+ expect(runs.getAllByText(/unanswered in 0:09/)).toHaveLength(2);
 });
