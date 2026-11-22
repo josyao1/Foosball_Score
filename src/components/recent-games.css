@@ -6,7 +6,7 @@ html[data-design] .game-player-search:focus-within { outline:2px solid var(--tex
 html[data-design] .game-player-search input:focus-visible { outline:none; }
 .game-player-search input::-webkit-search-cancel-button { display:none; }
 html[data-design] .game-history-heading .game-player-search button { display:grid;place-items:center;flex:0 0 44px;min-height:44px;padding:0;border:0;background:transparent;color:var(--muted); }
-@media(max-width:760px) { html[data-design] .game-history-heading .game-player-search input { font-size:16px; } }
+html[data-design] .game-history-heading .game-search-toggle { display:none; }
 .recent-results > header { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:16px; }
 .recent-results h2 { margin:0; font-size:24px; }
 .recent-results > header > span { color:var(--muted); font-size:11px; }
@@ -46,14 +46,34 @@ html[data-design] .game-history-heading .game-player-search button { display:gri
 .recent-rank-stamp-subtle > span { font-weight:400; }
 .recent-rank-stamp-subtle > b { font-weight:400; }
 @media(max-width:760px) {
-  .recent-results li > a { grid-template-columns:minmax(0,1fr) auto; gap:10px; padding:14px 4px; }
-  .recent-results time { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px; grid-column:1; grid-row:1; font-size:11px; }
-  .recent-result-meta { grid-column:2; grid-row:1;gap:8px; }
-  .recent-result-match { grid-column:1/-1; grid-row:2; gap:12px; font-size:13px; }
-  .recent-result-match > strong { font-size:22px; }
+  html[data-design] .game-history-heading { display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:center;gap:4px 12px;margin-bottom:18px; }
+  html[data-design] .game-history-heading h1 { grid-column:1;grid-row:1;font-size:clamp(26px,6vw,32px);line-height:1.15; }
+  .game-history-heading > span { grid-column:1;grid-row:2;font-size:12px; }
+  html[data-design] .game-history-heading .game-search-toggle { display:grid;place-items:center;grid-column:2;grid-row:1 / 3;width:44px;height:44px;padding:0;background:transparent;border:0;color:var(--muted); }
+  html[data-design] .game-history-heading .game-player-search { display:none; }
+  html[data-design] .game-history-heading .game-player-search.is-open { display:flex;grid-column:1 / -1;grid-row:3;width:100%;margin-top:8px; }
+  html[data-design] .game-history-heading .game-player-search input { font-size:16px; }
+  .recent-results li > a { grid-template-columns:minmax(0,1fr) 68px;gap:8px 18px;padding:14px 4px; }
+  .recent-results time { display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 7px;grid-column:1;grid-row:1;font-size:10px; }
+  .recent-results time small { font-size:10px; }
+  .recent-result-meta { grid-column:2;grid-row:1 / 3;flex-direction:column;justify-content:center;gap:9px; }
+  .recent-result-match { grid-column:1;grid-row:2;grid-template-columns:minmax(0,1fr) 34px;gap:3px 12px;font-size:14px;line-height:1.35; }
+  .recent-result-match > .recent-result-team { grid-column:1;justify-content:flex-start;text-align:left; }
+  .recent-result-jerseys { display:flex;gap:0; }
+  .recent-result-jerseys .player-jersey { width:18px;height:20px; }
+  .recent-result-jerseys .player-jersey + .player-jersey { margin-left:-3px; }
+  .recent-result-match > .recent-result-team:first-child { grid-row:1; }
+  .recent-result-match > .recent-result-team:last-child { grid-row:2; }
+  .recent-result-match > strong { display:contents; }
+  .recent-result-match > strong > b { grid-column:2;text-align:right;font-size:22px;line-height:1.2; }
+  .recent-result-match > strong > b:first-child { grid-row:1; }
+  .recent-result-match > strong > b:last-child { grid-row:2; }
+  .recent-result-match > strong > i { display:none; }
+  .recent-result-duration { font-size:11px;gap:4px; }
   .recent-result-arrow { display:none; }
 }
 
 @media(max-width:400px) { .recent-results h2 { font-size:21px; } }
-@container(max-width:420px) { .recent-result-jerseys { display:none; } }
-@media(max-width:480px) { .recent-result-jerseys { display:none; } }
+@media(min-width:761px) {
+  @container(max-width:420px) { .recent-result-jerseys { display:none; } }
+}

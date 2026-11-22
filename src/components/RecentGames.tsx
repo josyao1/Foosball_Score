@@ -1,3 +1,4 @@
+import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Search, Timer, X } from 'lucide-react';
 import type { Game, Rivalry } from '../lib/types';
@@ -24,12 +25,20 @@ export function filterGameHistory(entries:ReturnType<typeof gameHistory>, query:
     sidePlayers(rivalry,side).some(player => player.name.toLowerCase().includes(name)))) : entries;
 }
 export function GamePlayerSearch({query,onChange}:{query:string;onChange:(query:string)=>void}) {
-  return <div className="game-player-search">
+  const [opened,setOpened] = useState(false);
+  const input = useRef<HTMLInputElement>(null), toggle = useRef<HTMLButtonElement>(null);
+  const id = useId(), expanded = opened || Boolean(query);
+  useEffect(()=>{ if(opened) input.current?.focus(); },[opened]);
+  const close = () => { setOpened(false); onChange(''); toggle.current?.focus(); };
+  return <>
+  <button ref={toggle} type="button" className="game-search-toggle" aria-label={expanded?'Close player search':'Search players'} aria-expanded={expanded} aria-controls={id}
+    onClick={()=>expanded?close():setOpened(true)}>{expanded?<X size={20} aria-hidden="true"/>:<Search size={20} aria-hidden="true"/>}</button>
+  <div id={id} className={`game-player-search${expanded?' is-open':''}`}>
     <Search size={17} aria-hidden="true"/>
-    <input type="search" aria-label="Search games by player name" placeholder="Search players…" value={query}
-      onChange={event=>onChange(event.target.value)} autoComplete="off"/>
+    <input ref={input} type="search" aria-label="Search games by player name" placeholder="Search players…" value={query}
+      onChange={event=>onChange(event.target.value)} autoComplete="off" onKeyDown={event=>{if(event.key==='Escape' && opened){event.preventDefault();close();}}}/>
     {query && <button type="button" aria-label="Clear player search" onClick={()=>onChange('')}><X size={16} aria-hidden="true"/></button>}
-  </div>;
+  </div></>;
 }
 export function RecentGames({games,rivalries}: {games:Game[];rivalries:Rivalry[]}) {
   const entries = recentGames(games, rivalries);

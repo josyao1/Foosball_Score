@@ -38,6 +38,19 @@ it('opens full history with the player search applied and restores every game wh
  expect(screen.getByRole('status').textContent).toContain('No games');
  expect(screen.queryByRole('list')).toBeNull();
 });
+it('opens and focuses the compact search, then closes it and restores the full history',()=>{
+ render(<MemoryRouter><GameHistoryPage/></MemoryRouter>);
+ const toggle=screen.getByRole('button',{name:'Search players'});
+ expect(toggle.getAttribute('aria-expanded')).toBe('false');
+ fireEvent.click(toggle);
+ const search=screen.getByRole('searchbox');
+ expect(document.activeElement).toBe(search);
+ fireEvent.change(search,{target:{value:'Ada'}});
+ expect(within(screen.getByRole('list')).getAllByRole('link')).toHaveLength(3);
+ fireEvent.click(screen.getByRole('button',{name:'Close player search'}));
+ expect(screen.getByRole('button',{name:'Search players'}).getAttribute('aria-expanded')).toBe('false');
+ expect(within(screen.getByRole('list')).getAllByRole('link')).toHaveLength(7);
+});
 it('excludes deleted games, archived parents and orphan games; empty state takes no space',()=>{
  const parents=[r,{...r,id:'s',deleted_at:'2026-11-10'}];
  expect(recentGames(games.map(g=>({...g,deleted_at:g.id==='g5'?'2026-11-10':null})),parents).map(x=>x.game.id)).toEqual(['g3','g1']);
