@@ -9,7 +9,7 @@ html[data-design] .availability-draft-controls :is(select,input) { width:100%;mi
 .availability-profile-preview .passport-identity h2 { font-size:28px;margin:0; }
 .availability-profile-preview .player-passport section+section { margin-top:0; }
 .passport-portrait-out { position:relative; }
-.passport-portrait-out > .player-jersey { filter:grayscale(1);opacity:.55; }
+.passport-portrait-out > .player-jersey { filter:saturate(.78);opacity:.8; }
 .player-jersey-out-tag { position:absolute;bottom:0;left:50%;transform:translateX(-50%) rotate(-7deg);border:3px double var(--panel);outline:1px solid #925143;background:#925143;color:var(--panel);padding:1px 7px;font:700 11px/1.25 var(--body-font);letter-spacing:1px;white-space:nowrap; }
 .passport-identity > .passport-out-inline { display:flex;align-items:baseline;gap:6px;line-height:normal;min-width:0;color:#925143; }
 .passport-out-inline > span { min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600; }
