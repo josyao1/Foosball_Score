@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { Pause, Play } from 'lucide-react';
 import { momentWindow, recordLabels } from '../lib/records';
@@ -8,12 +8,12 @@ import { playerName } from '../lib/types';
 import type { Game, Rivalry } from '../lib/types';
 import { useChartScrub } from '../hooks/useChartScrub';
 import { useMomentumReplay } from '../hooks/useMomentumReplay';
+import { GOAL_PARTICLES, useGoalCelebration } from '../hooks/useGoalCelebration';
 import { GoalBall } from './GoalBall';
 import '../momentum.css';
 
 const LEFT = 54, RIGHT = 690, TOP = 14, CENTER = 94, BOTTOM = 174;
 const exactClock = (ms: number) => `${clock(ms)}.${String(Math.floor(ms) % 1000).padStart(3, '0')}`;
-const PARTICLES = [[0,-28],[21,-21],[29,0],[21,21],[0,28],[-21,21],[-29,0],[-21,-21]];
 type Props = { game: Game; rivalry: Rivalry; highlight?: Moment; watchMoment?: boolean };
 
 export function MomentumChart(props: Props) {
@@ -26,10 +26,6 @@ export function MomentumChart(props: Props) {
 function MomentumView({ game, rivalry, highlight, watchMoment }: Props) {
   const id = useId().replace(/:/g, '');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [celebration, setCelebration] = useState<{ index: number; key: number; burst: boolean } | null>(null);
-  const previousGoalCount = useRef(0);
-  const celebrationKey = useRef(0);
-  const lastCelebrationAt = useRef(-Infinity);
   const points = useRef<(SVGGElement | null)[]>([]);
   const pendingFocus = useRef<number | null>(null);
   const goals = useMemo(() => orderedGoals(game.goals), [game.goals]);
@@ -55,18 +51,7 @@ function MomentumView({ game, rivalry, highlight, watchMoment }: Props) {
   const selectedIndex = replaying ? visibleCount - 1 : Math.max(0, selectedId ? goals.findIndex(g => g.id === selectedId) : highlight?.end ?? goals.length - 1);
   const goal = goals[selectedIndex];
   const selected = momentum[selectedIndex + 1];
-  useEffect(() => {
-    const scored = visibleCount > previousGoalCount.current && replay.advancedByPlayback;
-    previousGoalCount.current = visibleCount;
-    if (!scored) { setCelebration(null); return; }
-    // Throttle particles only. Every goal gets a fresh name/time alert and deadline.
-    const now = performance.now();
-    const burst = now - lastCelebrationAt.current >= 500;
-    if (burst) lastCelebrationAt.current = now;
-    setCelebration({index: visibleCount - 1, key: ++celebrationKey.current, burst});
-    const timeout = window.setTimeout(() => setCelebration(null), 1600);
-    return () => window.clearTimeout(timeout);
-  }, [visibleCount, replay.advancedByPlayback]);
+  const celebration = useGoalCelebration(visibleCount, replay.advancedByPlayback);
   useLayoutEffect(() => {
     if (pendingFocus.current === null) return;
     points.current[pendingFocus.current]?.focus();
@@ -134,7 +119,7 @@ function MomentumView({ game, rivalry, highlight, watchMoment }: Props) {
           return <div key={celebration.key} className={`momentum-goal-celebration side-${creditedSide(scoredGoal)}`} aria-hidden="true">
             {celebration.burst && <div className="momentum-goal-burst" style={{left:`${left}%`, top:`${top}%`}}>
               <i className="momentum-goal-ring"/>
-              {PARTICLES.map(([dx,dy],index) => <i key={index} className="momentum-goal-particle" style={{'--dx':`${dx}px`, '--dy':`${dy}px`} as CSSProperties}/>)}
+              {GOAL_PARTICLES.map(([dx,dy],index) => <i key={index} className="momentum-goal-particle" style={{'--dx':`${dx}px`, '--dy':`${dy}px`} as CSSProperties}/>)}
             </div>}
             <div className="momentum-axis-alert">
               <i className="momentum-axis-goal-tick" style={{left:`${(x(scoredGoal.elapsed_ms) - LEFT) / (RIGHT - LEFT) * 100}%`}}/>

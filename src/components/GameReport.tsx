@@ -1,4 +1,5 @@
 import {GoalActions} from "./GoalActions";
+import {GoalLaneTimeline} from "./GoalLaneTimeline";
 import {GoalBall, GoalLegend, goalKind, GOAL_LABELS} from "./GoalBall";
 import { Zap, CornerUpRight, Undo2 } from "lucide-react";
 import {
@@ -26,6 +27,7 @@ export function Timeline({
   compact?: boolean;
   confirmedId?: string;
 }) {
+  if (!compact) return <GoalLaneTimeline game={game} rivalry={rivalry} onEdit={onEdit} onRemove={onRemove}/>;
   const s = { a: 0, b: 0 };
   const entries = orderedGoals(game.goals).map((goal) => {
     s[creditedSide(goal)]++;

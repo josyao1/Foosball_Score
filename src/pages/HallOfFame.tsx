@@ -1,15 +1,17 @@
 import { RivalryOptions } from "../components/RivalryOptions";
 import { useId, useMemo, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { Award, ChevronDown, Flag, Pause, Play, Timer, Trophy, Undo2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Dialog } from '../components/Dialog';
 import { useStore } from '../lib/store';
 import { rankedClassics, ratingLabel } from '../lib/hallOfFame';
 import type { RankedClassic } from '../lib/hallOfFame';
-import { clock } from '../lib/stats';
+import { clock, creditedSide } from '../lib/stats';
 import { gameDate, gameTime } from '../lib/time';
 import { useChartScrub } from '../hooks/useChartScrub';
 import { useMomentumReplay } from '../hooks/useMomentumReplay';
+import { GOAL_PARTICLES, useGoalCelebration } from '../hooks/useGoalCelebration';
 import { GoalBall } from '../components/GoalBall';
 import { PlayerJersey } from '../components/PlayerJersey';
 import { allPlayers, matchesProfile, sidePlayers } from '../lib/participants';
@@ -18,11 +20,12 @@ import '../hall-of-fame.css';
 import '../hall-featured.css';
 
 /** Time-proportional steps, from kickoff through the actual final goal. */
-export function PosterMomentum({ entry, position = null, onSeek }: { entry: RankedClassic; position?: number | null; onSeek: (ms:number)=>void }) {
+export function PosterMomentum({ entry, position = null, onSeek, advancedByPlayback = false }: { entry: RankedClassic; position?: number | null; onSeek: (ms:number)=>void; advancedByPlayback?: boolean }) {
   const { scores, goals, totalMs, moments } = entry.rating.highlights;
   const playhead = Math.min(totalMs, position ?? totalMs);
   const scrub = useChartScrub({total:totalMs,position,times:goals.map(g=>g.elapsed_ms),left:12,right:628,width:640,height:180,seek:onSeek});
   const visible = goals.filter(goal => goal.elapsed_ms <= playhead);
+  const celebration = useGoalCelebration(visible.length, advancedByPlayback);
   const current = scores[visible.length];
   const limit = Math.max(2, ...scores.map(s => Math.abs(s.a - s.b)));
   const x = (ms: number) => 12 + ms / Math.max(1, totalMs) * 616;
@@ -45,6 +48,14 @@ export function PosterMomentum({ entry, position = null, onSeek }: { entry: Rank
       {showLow && <g className="hall-low-marker" transform={`translate(${x(lowTime)} ${y(low!.a - low!.b)})`}><title>Comeback low point: {low!.a}–{low!.b} at {clock(lowTime)}</title><circle r="7"/><path d="M-3 0h6M0 -3l-3 3 3 3"/></g>}
       {finished && <g className="hall-win-marker" transform={`translate(${x(totalMs)} ${y(end.a - end.b)})`}><title>{winner} wins {end.a}–{end.b} at {clock(totalMs)}</title><circle r="5"/><path d="M0 -5v-11l-14 4 14 5"/></g>}
       {position !== null && !finished && <g className="hall-replay-cursor" transform={`translate(${x(playhead)} ${y(current.a - current.b)})`} aria-hidden="true"><circle r="14"/><g transform="translate(-12 -12)"><GoalBall size={24} flags={visible.at(-1)?.flags}/></g></g>}
+      {celebration?.burst && (() => {
+        const scoredGoal = goals[celebration.index];
+        const scored = scores[celebration.index + 1];
+        return <g key={celebration.key} className={`hall-goal-sparkles side-${creditedSide(scoredGoal)}`} transform={`translate(${x(scoredGoal.elapsed_ms)} ${y(scored.a - scored.b)})`} aria-hidden="true">
+          <circle className="hall-goal-ring" r="12"/>
+          {GOAL_PARTICLES.map(([dx, dy], index) => <g key={index} className="hall-goal-particle" style={{'--dx':`${dx}px`, '--dy':`${dy}px`} as CSSProperties}><rect x="-2.5" y="-2.5" width="5" height="5" rx="1"/></g>)}
+        </g>;
+      })()}
     </svg>
     <div className="hall-axis"><span>{position === null ? '0:00' : <time>{clock(playhead)}</time>}</span><span><span className="hall-axis-label">Final goal · </span>{clock(totalMs)}</span></div>
     <div className="hall-marker-key">
@@ -87,7 +98,7 @@ function RankedMatch({ entry, rank, variant, onRating }: {
     </Link>
     <div className={`hc-chart ${full ? 'hc-chart-open' : 'hc-chart-preview'}`} id={replayId}>
       {variant === 'feature' && <div className="hc-field-markings" aria-hidden="true"><i/><i/><i/></div>}
-      <PosterMomentum entry={entry} position={replay.position} onSeek={replay.seek}/>
+      <PosterMomentum entry={entry} position={replay.position} onSeek={replay.seek} advancedByPlayback={replay.advancedByPlayback}/>
     </div>
     <p className="hc-highlight">{highlight}</p>
     <div className="hc-actions">

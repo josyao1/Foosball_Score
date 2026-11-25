@@ -1,0 +1,11 @@
+.league-totals { margin-block: 26px 32px; padding-block: 15px 18px; border-block: 1px solid var(--line); }
+.league-totals h2 { margin: 0 0 13px; font: 500 12px/1.4 var(--body-font); color: var(--muted); }
+.league-totals-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.league-totals-grid > div { display: grid; grid-template-columns: 20px minmax(0, 1fr); column-gap: 9px; row-gap: 3px; align-items: center; min-inline-size: 0; }
+.league-totals-grid svg { color: var(--muted); grid-column: 1; grid-row: 1; }
+.league-totals-grid strong { grid-column: 2; grid-row: 1; font-size: 20px; line-height: 1.3; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.league-totals-grid > div > span { grid-column: 2; grid-row: 2; font-size: 12px; line-height: 1.4; color: var(--muted); }
+@media(max-width:600px) {
+  .league-totals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
+  .league-totals-grid strong { font-size: 18px; }
+}

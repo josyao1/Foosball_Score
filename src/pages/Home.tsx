@@ -1,5 +1,6 @@
 import { allPlayers, orderRivalries, rosterKey, sidePlayers } from '../lib/participants';
 import { PlayerJersey } from '../components/PlayerJersey';
+import { LeagueTotals } from '../components/LeagueTotals';
 import { GameAchievementMarker } from "../components/GameAchievements";
 import { useProfile } from "../lib/profile";
 import { useState } from "react";
@@ -8,14 +9,11 @@ import {
   Plus,
   Swords,
   Check,
-  Activity,
-  Target,
-  Timer,
   ChevronRight,
 } from "lucide-react";
 import { gameTime } from "../lib/time";
 import { useStore } from "../lib/store";
-import { dateLabel, score, winner, playingTime, playingTimeLabel, clock } from "../lib/stats";
+import { dateLabel, score, winner, playingTime, clock } from "../lib/stats";
 import { playerName } from "../lib/types";
 import type { Game, Rivalry } from "../lib/types";
 import { RivalryCollection } from "../components/RivalryCollection";
@@ -178,7 +176,6 @@ export function Home() {
   const profile=useProfile();
   const { rivalries, games } = useStore(),
     [creating, setCreating] = useState(false);
-  const completed = games.filter((g) => g.ended_at);
   return (
     <>
       <div className="home-heading">
@@ -204,28 +201,7 @@ export function Home() {
           Find or create
         </button>
       </div>
-      <div className="overview-strip">
-        <div>
-          <Swords size={19} />
-          <strong>{rivalries.length}</strong>
-          <span>rivalries</span>
-        </div>
-        <div>
-          <Activity size={19} />
-          <strong>{completed.length}</strong>
-          <span>games<span className="overview-detail"> played</span></span>
-        </div>
-        <div>
-          <Target size={19} />
-          <strong>{completed.reduce((n, g) => n + g.goals.length, 0)}</strong>
-          <span>goals<span className="overview-detail"> scored</span></span>
-        </div>
-        <div aria-label={`${playingTimeLabel(playingTime(completed))} spent playing`} title="Completed games, from start to last goal; rounded to the nearest minute">
-          <Timer size={19} />
-          <strong>{playingTimeLabel(playingTime(completed))}</strong>
-          <span className="overview-detail">spent playing</span>
-        </div>
-      </div>
+      <LeagueTotals games={games} rivalries={rivalries}/>
       <section>
         {rivalries.length ? (
           <RivalryCollection rivalries={orderRivalries(rivalries,games,profile)} games={games} profile={profile} layout={design.homeLayout}/>

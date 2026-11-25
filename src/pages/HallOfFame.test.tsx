@@ -60,6 +60,7 @@ it('replays inside the poster with timed scores, markers, pause, resume and rest
   expect(values()).toEqual(['11','9']);
   expect(poster.querySelector('.hall-low-marker title')?.textContent).toContain('4–9');
   expect(poster.querySelector('.hall-win-marker')).toBeTruthy();
+  expect(poster.querySelector('.hall-goal-sparkles')).toBeNull();
   fireEvent.click(within(poster).getByRole('button',{name:/Play replay/}));
   expect(values()).toEqual(['0','0']);
   expect(poster.querySelector('.hall-win-marker')).toBeNull();
@@ -67,6 +68,8 @@ it('replays inside the poster with timed scores, markers, pause, resume and rest
   expect(values()).toEqual(['1','0']);
   expect(poster.querySelector('.hall-axis time')?.textContent).toBe('0:10');
   expect(poster.querySelector('.hall-replay-cursor')).toBeTruthy();
+  expect(poster.querySelector('.hall-goal-sparkles.side-a')).toBeTruthy();
+  expect(poster.querySelectorAll('.hall-goal-particle')).toHaveLength(8);
   fireEvent.click(within(poster).getByRole('button',{name:/Pause replay/}));
   advance(2000);
   expect(values()).toEqual(['1','0']);
@@ -79,8 +82,10 @@ it('replays inside the poster with timed scores, markers, pause, resume and rest
   expect(values()).toEqual(['11','9']);
   expect(poster.querySelector('.hall-win-marker')).toBeTruthy();
   expect(frames.size).toBe(0);
+  expect(poster.querySelector('.hall-goal-sparkles.side-a')).toBeTruthy();
   fireEvent.click(within(poster).getByRole('button',{name:/Play replay/}));
   expect(values()).toEqual(['0','0']);
+  expect(poster.querySelector('.hall-goal-sparkles')).toBeNull();
   view.unmount();
   expect(frames.size).toBe(0);
 });
@@ -214,5 +219,26 @@ it('scrubs every poster by pointer, clamps to the plot and supports keyboard see
     expect(poster.querySelector('.hall-axis time')?.textContent).toBe('0:10');
     fireEvent.keyDown(svg,{key:'End'});
     expect(poster.querySelector('.hall-win-marker')).toBeTruthy();
+    expect(poster.querySelector('.hall-goal-sparkles')).toBeNull();
   }
+});
+
+it('celebrates the credited side of an own goal and clears sparkles when seeking',()=>{
+  let now=0,id=0;
+  const frames=new Map<number,FrameRequestCallback>();
+  vi.spyOn(performance,'now').mockImplementation(()=>now);
+  vi.stubGlobal('requestAnimationFrame',(cb:FrameRequestCallback)=>{frames.set(++id,cb);return id;});
+  vi.stubGlobal('cancelAnimationFrame',(key:number)=>frames.delete(key));
+  const own=game('own','baaaaaaaaaa');
+  own.goals[0]={...own.goals[0],actor_side:'a',flags:['own_goal']};
+  fixture.games=[own];
+  render(<MemoryRouter><HallOfFame/></MemoryRouter>);
+  const poster=screen.getByRole('article');
+  fireEvent.click(within(poster).getByRole('button',{name:/Play replay/}));
+  now=625;
+  act(()=>{const pending=[...frames.values()];frames.clear();pending.forEach(cb=>cb(now));});
+  expect(poster.querySelector('.hall-goal-sparkles.side-b')).toBeTruthy();
+  fireEvent.keyDown(within(poster).getByRole('slider'),{key:'End'});
+  expect(poster.querySelector('.hall-goal-sparkles')).toBeNull();
+  expect(frames.size).toBe(0);
 });

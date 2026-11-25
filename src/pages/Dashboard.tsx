@@ -5,6 +5,7 @@ import { useStore } from '../lib/store';
 import { useWeeklyFeature } from '../lib/useWeeklyFeature';
 import { score } from '../lib/stats';
 import { HomePersonal } from '../components/HomePersonal';
+import { LeagueTotals } from '../components/LeagueTotals';
 import { WeeklyFeature } from '../components/WeeklyFeature';
 import { RecentGames } from '../components/RecentGames';
 import { AchievementFeed } from '../components/AchievementFeed';
@@ -25,6 +26,7 @@ export function Dashboard() {
     </header>
     <HomePersonal weekStart={feature.week.start} now={feature.now}/>
     {live.length > 0 && <section className="home-live" aria-label="Live games">{live.map(({game,rivalry}) => {const s=score(game.goals);return <Link key={game.id} to={`/game/${game.id}`}><Radio size={17}/><span><strong>{rivalry.player_a} vs {rivalry.player_b}</strong><small>Game in progress · Resume scoring</small></span><b>{s.a}–{s.b}</b><ArrowUpRight size={16}/></Link>;})}</section>}
+    <LeagueTotals games={games} rivalries={rivalries} home/>
     <WeeklyFeature feature={feature} pausePopup={creating}/>
     <RecentGames games={games} rivalries={rivalries}/>
     <AchievementFeed games={games} rivalries={rivalries}/>

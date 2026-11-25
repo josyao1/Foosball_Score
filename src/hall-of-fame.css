@@ -177,4 +177,14 @@ html[data-design] dialog.hall-rating-dialog { width: min(520px, calc(100% - 32px
 
 .hall-momentum > svg { touch-action:pan-y; cursor:crosshair; -webkit-user-select:none; user-select:none; outline:none; }
 .hall-momentum > svg:focus-visible { outline:2px solid var(--text); outline-offset:3px; border-radius:4px; }
+
+/* Keep the burst in SVG coordinates, including letterboxed phone/laptop plots. */
+.hall-goal-sparkles { pointer-events:none; --spark-fill:#171b18; --spark-outline:#fff9; }
+.hall-goal-sparkles.side-b { --spark-fill:#fff; --spark-outline:#171b1880; }
+.hall-goal-ring { fill:none; stroke:var(--spark-fill); stroke-width:2; vector-effect:non-scaling-stroke; animation:hall-goal-ring .7s ease-out both; }
+.hall-goal-particle rect { fill:var(--spark-fill); stroke:var(--spark-outline); stroke-width:1; vector-effect:non-scaling-stroke; }
+.hall-goal-particle { animation:hall-goal-particle .8s ease-out both; }
+@keyframes hall-goal-ring { from { transform:scale(.55); opacity:.9; } to { transform:scale(2.6); opacity:0; } }
+@keyframes hall-goal-particle { from { transform:translate(0,0) scale(.7); opacity:1; } to { transform:translate(var(--dx),var(--dy)) rotate(100deg) scale(.4); opacity:0; } }
+@media(prefers-reduced-motion:reduce) { .hall-goal-sparkles { display:none; } .hall-goal-ring,.hall-goal-particle { animation:none; } }
 .hall-scrub-line { stroke:var(--muted); stroke-width:1; stroke-dasharray:3 4; vector-effect:non-scaling-stroke; }
