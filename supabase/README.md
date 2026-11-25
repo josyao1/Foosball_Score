@@ -90,3 +90,9 @@ The function intentionally permits anonymous execution, matching the site's shar
 ## Slack final scores
 
 See [slack-notifications.md](slack-notifications.md) for the transactional outbox, backend sender, scheduler, setup order, activation, disable switch, and delivery recovery. Apply all timestamped Slack migrations after all earlier setup files. Notifications start disabled.
+
+## Player availability
+
+Apply `migrations/20261125035116_foos_player_availability.sql` after player settings. Backlog → Availability saves shared custom status text (48 characters) and an optional return date through `foos_set_availability`. Its independent revision protects against conflicting edits without interfering with jersey or scouting settings. Run `player-availability-check.sql` to verify the public RPC and validation in a rolled-back transaction.
+
+Only profiles fade the jersey and display OUT. Availability expires at the start of the specified date in `America/Los_Angeles`, including daylight-saving changes. The profile clock refreshes at minute boundaries and on tab wake/focus, so an open page clears at midnight. The saved value remains inert after expiry; no scheduler or cleanup writes are required. A blank date stays OUT until cleared manually. New players default to available.

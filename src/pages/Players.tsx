@@ -8,6 +8,7 @@ import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 're
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Award, Plus, Users } from 'lucide-react';
 import { useStore } from '../lib/store';
+import { activeAvailability, useAvailabilityDate } from '../lib/playerAvailability';
 import { FINISH_LABELS, FINISH_TYPES, playerPassports, RUNG_LABELS } from '../lib/players';
 import type { FinishType, PlayerPassport } from '../lib/players';
 import { RUNGS } from '../lib/types';
@@ -25,6 +26,8 @@ import { ScoutingNote } from '../components/ScoutingNote';
 import { useScoutingManager } from '../lib/useScoutingManager';
 import type { ScoutingNote as Note } from '../lib/scouting';
 import '../players.css';
+import { PlayerAvailabilityInline, PlayerOutJerseyTag } from '../components/PlayerAvailability';
+import type { AvailabilityDraft } from '../lib/types';
 
 const flags: Record<FinishType, GoalFlag[]> = {dunk:['dunk'],bank:['bank'],combo:['dunk','bank'],own_goal:['own_goal']};
 const figures: Record<Rung, number> = {goalie:3,defender:2,middle:5,attacker:3};
@@ -32,8 +35,9 @@ const share = (count: number, total: number) => total ? Math.round(count/total*1
 
 
 const passportTabs = ['overview','scoring','chemistry','badges','recent'] as const;
-type PassportTab = typeof passportTabs[number];
-function Passport({ player: p, players, tab, setTab, note, chemistry }: { player: PlayerPassport; players:PlayerPassport[]; tab:PassportTab; setTab:(tab:PassportTab)=>void; note?:Note; chemistry?:PlayerChemistry }) {
+export type PassportTab = typeof passportTabs[number];
+export function PlayerPassportCard({ player: p, players, tab, setTab, note, chemistry, availability }: { player: PlayerPassport; players:PlayerPassport[]; tab:PassportTab; setTab:(tab:PassportTab)=>void; note?:Note; chemistry?:PlayerChemistry; availability?:AvailabilityDraft|null }) {
+  const jerseyOut=availability?.status==='out';
   const team = usePlayerAppearance(p.name).subtitle;
   const stamps=MASTERY.map(b=>({...b,level:p.mastery[b.id].earned.length})).filter(b=>b.level>0).sort((a,b)=>b.level-a.level).slice(0,3);
   const tabId = useId();
@@ -81,8 +85,8 @@ function Passport({ player: p, players, tab, setTab, note, chemistry }: { player
   ];
   return <article className="player-passport" aria-label={`${p.name} passport`}>
     <header className="passport-header">
-      <div className="passport-portrait"><PlayerJersey name={p.name}/></div>
-      <div className="passport-identity"><h2>{p.name}</h2>{team && <span className="passport-team">{team}</span>}<span>{p.firstPlayed ? `Playing since ${gameDate(p.firstPlayed)}` : 'First game still to come'}</span></div>
+      <div className={`passport-portrait${jerseyOut?' passport-portrait-out':''}`}><PlayerJersey name={p.name}/>{jerseyOut&&<PlayerOutJerseyTag/>}</div>
+      <div className="passport-identity"><h2>{p.name}</h2>{team && <span className="passport-team">{team}</span>}{jerseyOut?<PlayerAvailabilityInline draft={availability!}/>:<span>{p.firstPlayed ? `Playing since ${gameDate(p.firstPlayed)}` : 'First game still to come'}</span>}</div>
       <div className="passport-winrate"><strong>{p.played ? `${share(p.wins,p.played)}%` : '—'}</strong><span>win rate</span></div>
     </header>
     <dl className="passport-totals">
@@ -156,6 +160,7 @@ function Passport({ player: p, players, tab, setTab, note, chemistry }: { player
 
 export function Players() {
   const {games,rivalries,players} = useStore();
+  const today=useAvailabilityDate();
   const profile=useProfile();
   const people = useMemo(()=>playerPassports(games,rivalries,players),[games,rivalries,players]);
   const {notes}=useScoutingManager();
@@ -183,7 +188,7 @@ export function Players() {
   const visible = profileFirst(ranked, p => p.key === profile || p.name.trim().toLowerCase() === profile);
   return <section ref={pageRef} className="players-page">
     <header className="players-heading"><div><h1>Players</h1></div><button className="button primary" onClick={()=>setCreating(true)}><Plus size={18}/>New player</button></header>
-    {visible.length ? <PlayerCarousel entries={visible.map(p=>({id:p.key,content:<Passport player={p} players={people} tab={tab} setTab={setTab} note={notes[p.key]} chemistry={chemistry[p.key]}/>}))}/> : <div className="empty-state"><Users size={30}/><h2>No players yet</h2><p>Add your friends, then choose sides in a rivalry.</p></div>}
+    {visible.length ? <PlayerCarousel entries={visible.map(p=>({id:p.key,content:<PlayerPassportCard player={p} players={people} tab={tab} setTab={setTab} note={notes[p.key]} chemistry={chemistry[p.key]} availability={activeAvailability(players?.find(player=>player.id===p.key)?.availability,today)}/>}))}/> : <div className="empty-state"><Users size={30}/><h2>No players yet</h2><p>Add your friends, then choose sides in a rivalry.</p></div>}
     {creating && <NewPlayer onClose={()=>setCreating(false)}/>}
   </section>;
 }

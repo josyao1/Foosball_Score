@@ -1,3 +1,4 @@
+import { validateAvailability } from './playerAvailability';
 import { createClient } from "@supabase/supabase-js";
 import type { Game, Data, BacklogData } from "./types";
 import type { Repository } from "./storage";
@@ -71,6 +72,11 @@ export function createCloudRepository(): Repository {
     },
     async createTeamRivalry(a,b){
       const {data,error}=await client.rpc('foos_create_team_rivalry',{p_a:a,p_b:b});fail(error);return data;
+    },
+    async updateAvailability(player,input){
+      const availability=validateAvailability(input);
+      const {error}=await client.rpc('foos_set_availability',{p_id:player.id,p_expected_revision:player.availability_revision??0,p_availability:availability});
+      fail(error);
     },
     async updateScoutingOverride(player,override){
       validateScoutingOverride(override);

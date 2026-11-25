@@ -10,7 +10,7 @@ import {
   useState,
 } from "react";
 import type { ReactNode } from "react";
-import type { Data, Game, Rivalry, Player, PlayerSettings, ScoutingOverride } from "./types";
+import type { Data, Game, Rivalry, Player, PlayerSettings, ScoutingOverride, AvailabilityDraft } from "./types";
 import { LocalRepository } from "./storage";
 import type { Repository } from "./storage";
 import { cloudConfigured, createCloudRepository } from "./supabase";
@@ -102,6 +102,7 @@ function useDataStore() {
     cloud: cloudConfigured,
     refresh,
     updatePlayer:(player:Player,settings:PlayerSettings)=>backlogMutation(r=>r.updatePlayer(player,settings)),
+    updateAvailability:(player:Player,availability:AvailabilityDraft|null)=>backlogMutation(r=>r.updateAvailability(player,availability)),
     updateScoutingOverride:(player:Player,override:ScoutingOverride|null)=>backlogMutation(r=>r.updateScoutingOverride(player,override)),
     updateWeeklySettings:(settings:import('./weeklyFeature').WeeklySettings)=>backlogMutation(r=>r.updateWeeklySettings(settings)),
     createPlayer:(name:string)=>mutate(r=>r.createPlayer(name),(d,p)=>({...d,players:[...(d.players??[]),p]})),

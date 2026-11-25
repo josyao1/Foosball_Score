@@ -4,7 +4,8 @@ export type Rung = (typeof RUNGS)[number];
 export type GoalFlag = "dunk" | "bank" | "own_goal";
 export interface PlayerAppearance { letters: string; color: string; trim: string; lettering: string; subtitle: string }
 export interface ScoutingOverride { noteId: string; scores: Record<string, number> }
-export interface Player { id: string; name: string; created_at: string; appearance?: PlayerAppearance | null; settings_revision?: number; scouting_override?: ScoutingOverride | null; scouting_revision?: number }
+export type AvailabilityDraft = { status: 'available' | 'out'; reason: string; returnDate: string };
+export interface Player { availability?: AvailabilityDraft | null; availability_revision?: number; id: string; name: string; created_at: string; appearance?: PlayerAppearance | null; settings_revision?: number; scouting_override?: ScoutingOverride | null; scouting_revision?: number }
 export interface PlayerSettings { name: string; appearance: PlayerAppearance }
 export type Lineup = Record<Side, { defense: string; attack: string; swapped_at_ms?: number }>;
 export interface Goal {

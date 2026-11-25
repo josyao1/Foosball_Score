@@ -1,6 +1,7 @@
+import { validateAvailability } from './playerAvailability';
 import { validatePlayerSettings } from './playerAppearance';
 import { normalizePlayers, rosterKey, validateRoster, validateLineup, defaultLineup, sidePlayers } from './participants';
-import type { Data, Game, Rivalry, Player, PlayerSettings, BacklogData, ScoutingOverride } from "./types";
+import type { Data, Game, Rivalry, Player, PlayerSettings, BacklogData, ScoutingOverride, AvailabilityDraft } from "./types";
 import { validateScoutingOverride } from './scouting';
 import { DEFAULT_WEEKLY_SETTINGS, validateWeeklySettings, weeklyFeature, type WeeklySettings } from './weeklyFeature';
 export interface Repository {
@@ -13,6 +14,7 @@ export interface Repository {
   purgeRivalry(rivalry: Rivalry, expectedGames: Record<string,number>): Promise<void>;
   createPlayer(name:string):Promise<Player>;
   updatePlayer(player:Player, settings:PlayerSettings):Promise<void>;
+  updateAvailability(player:Player, availability:AvailabilityDraft|null):Promise<void>;
   updateScoutingOverride(player:Player, override:ScoutingOverride|null):Promise<void>;
   createTeamRivalry(a:string[],b:string[]):Promise<Rivalry>;
   createRivalry(a: string, b: string): Promise<Rivalry>;
@@ -100,6 +102,15 @@ export class LocalRepository implements Repository {
       return {...r,members,player_a:members.a.map(p=>p.name).join(' and '),player_b:members.b.map(p=>p.name).join(' and ')};
     });
     this.write({...d,players:d.players!.map(p=>p.id===player.id?updated:p),rivalries});
+  }
+  async updateAvailability(player:Player, input:AvailabilityDraft|null):Promise<void> {
+    const availability=validateAvailability(input),d=this.read(),current=d.players!.find(p=>p.id===player.id);
+    if(!current)throw new Error('Player no longer exists. Refresh and try again.');
+    if((current.availability_revision??0)!==(player.availability_revision??0))throw new Error('Availability changed on another device. Reload this player and try again.');
+    const updated={...current,availability,availability_revision:(current.availability_revision??0)+1};
+    this.write({...d,players:d.players!.map(p=>p.id===player.id?updated:p),rivalries:d.rivalries.map(r=>({...r,
+      members:{a:sidePlayers(r,'a').map(p=>p.id===player.id?updated:p),b:sidePlayers(r,'b').map(p=>p.id===player.id?updated:p)},
+    }))});
   }
   async updateScoutingOverride(player:Player, override:ScoutingOverride|null):Promise<void> {
     validateScoutingOverride(override);
