@@ -7,7 +7,7 @@ export interface AchievementFeedEntry {
   badges:(typeof ACHIEVEMENTS[number])[];
 }
 /** Only a player's first unlock qualifies; repeat performances do not renew an alert. */
-export function recentAchievements(players:Pick<PlayerPassport,'key'|'name'|'achievements'>[],now:number):AchievementFeedEntry[]{
+export function recentAchievements(players:Pick<PlayerPassport,'key'|'name'|'achievements'>[],now:number,limit=3):AchievementFeedEntry[]{
   const entries:AchievementFeedEntry[]=[];
   for(const player of players){
     const byGame=new Map<string,AchievementFeedEntry>();
@@ -22,5 +22,5 @@ export function recentAchievements(players:Pick<PlayerPassport,'key'|'name'|'ach
     }
     entries.push(...byGame.values());
   }
-  return entries.sort((a,b)=>b.earnedAt-a.earnedAt || a.name.localeCompare(b.name) || a.game.id.localeCompare(b.game.id)).slice(0,3);
+  return entries.sort((a,b)=>b.earnedAt-a.earnedAt || a.name.localeCompare(b.name) || a.game.id.localeCompare(b.game.id)).slice(0,limit);
 }

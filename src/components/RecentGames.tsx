@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Search, Timer, X } from 'lucide-react';
 import type { Game, Rivalry } from '../lib/types';
@@ -49,7 +50,7 @@ export function RecentGames({games,rivalries}: {games:Game[];rivalries:Rivalry[]
   </section>;
 }
 
-export function GameHistoryList({entries}: {entries:ReturnType<typeof gameHistory>}) {
+export function GameHistoryList({entries,annotations}: {entries:ReturnType<typeof gameHistory>;annotations?:ReadonlyMap<string,ReactNode>}) {
   return <ol>{entries.map(({game,rivalry,rank}) => {
       const result = score(game.goals), won = winner(game);
       return <li key={game.id}><Link to={`/game/${game.id}`}>
@@ -64,6 +65,7 @@ export function GameHistoryList({entries}: {entries:ReturnType<typeof gameHistor
           <span className="recent-result-duration" aria-label={`Game time ${clock(playingTime([game]))}`}><Timer size={13}/>{clock(playingTime([game]))}</span>
         </span>
         <ChevronRight className="recent-result-arrow" size={16} aria-hidden="true"/>
+        {annotations?.get(game.id) && <span className="recent-result-note">{annotations.get(game.id)}</span>}
       </Link></li>;
     })}</ol>;
 }

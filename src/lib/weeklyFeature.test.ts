@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { DEFAULT_WEEKLY_SETTINGS, leagueWeek, pacificMidnight, weeklyFeature, matchupShortlist } from './weeklyFeature';
+import { DEFAULT_WEEKLY_SETTINGS, leagueWeek, pacificMidnight, weeklyFeature, matchupShortlist, personalMatchup } from './weeklyFeature';
 import { LocalRepository } from './storage';
 import type { Game, Rivalry } from './types';
 const now = Date.parse('2026-11-20T20:00:00Z');
@@ -98,4 +98,21 @@ it('keeps more than four singles if they score well and fills remaining places w
  expect(sparse.filter(c=>c.rivalry.id.startsWith('single'))).toHaveLength(2);
  expect(matchupShortlist(singles.slice(0,2))).toHaveLength(2);
  expect(matchupShortlist([])).toEqual([]);
+});
+
+it('personalizes from the full ranked pool, including teammates, and falls back to the top option',()=>{
+ const top=candidate('top',100,true), mine=candidate('mine',10,false), lower=candidate('lower',1,true);
+ const candidates=[lower,mine,top];
+ expect(personalMatchup(candidates,'minec')?.rivalry.id).toBe('mine');
+ expect(personalMatchup(candidates,' MINEC ')?.rivalry.id).toBe('mine');
+ expect(personalMatchup(candidates,null)?.rivalry.id).toBe('top');
+ expect(personalMatchup(candidates,'unknown')?.rivalry.id).toBe('top');
+ expect(personalMatchup([],null)).toBeNull();
+ expect(candidates.map(c=>c.rivalry.id)).toEqual(['lower','mine','top']);
+});
+
+it('does not let a future-dated unfinished game suppress an eligible personal suggestion',()=>{
+ const games=[game('a'),{...game('future-live','r','2026-11-21T20:00:00Z'),ended_at:null}];
+ const feature=weeklyFeature(games,[r],DEFAULT_WEEKLY_SETTINGS,now);
+ expect(personalMatchup(feature.candidates,'josh')?.rivalry.id).toBe('r');
 });

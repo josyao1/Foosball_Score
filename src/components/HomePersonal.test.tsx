@@ -58,3 +58,22 @@ it('totals personal goals and playing time for this week, excluding own goals an
  expect(within(screen.getByText('Goals scored').parentElement!).getByText('5')).toBeTruthy();
  expect(within(screen.getByText('Time played').parentElement!).getByText('15 min')).toBeTruthy();
 });
+
+it('opens the weekly breakdown by default while showing the combined record and latest result',()=>{
+ selectProfile('j');state.games=[game('win','s',8,10),game('loss','t',3,10),game('draw','s',3,3)];
+ render(<MemoryRouter><HomePersonal weekStart={weekStart} now={now}/></MemoryRouter>);
+ expect(screen.getByLabelText('Weekly record').textContent).toContain('1W–1L–1D');
+ expect(screen.getByLabelText('Weekly record').textContent).toContain('3 games');
+ const toggle=screen.getByRole('button',{name:'Weekly breakdown'});
+ expect(toggle.getAttribute('aria-expanded')).toBe('true');
+ const panel=document.getElementById(toggle.getAttribute('aria-controls')!)!;
+ expect(panel.getAttribute('aria-hidden')).toBe('false');
+ fireEvent.click(toggle);
+ expect(toggle.getAttribute('aria-expanded')).toBe('false');
+ expect(panel.getAttribute('aria-hidden')).toBe('true');
+ expect(panel.hasAttribute('inert')).toBe(true);
+ fireEvent.click(toggle);
+ expect(toggle.getAttribute('aria-expanded')).toBe('true');
+ expect(panel.hasAttribute('inert')).toBe(false);
+ expect(screen.getByRole('link',{name:/Your latest result/})).toBeTruthy();
+});

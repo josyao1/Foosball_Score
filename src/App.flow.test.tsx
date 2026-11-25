@@ -829,6 +829,7 @@ it('separates the home dashboard from rivalries with Home as the first navigatio
 });
 
 it('saves the weekly feature day for everyone through Backlog', async () => {
+  vi.spyOn(Date,'now').mockReturnValue(Date.parse('2026-11-25T20:00:00Z'));
   const ended=new Date(Date.now()-3000000).toISOString();
   const finished={...baseGame,started_at:new Date(Date.now()-3600000).toISOString(),ended_at:ended,
     goals:[...'ab'.repeat(8)+'aa'].map((side,i)=>({...goal,id:`weekly-${i}`,actor_side:side as Goal['actor_side'],elapsed_ms:(i+1)*20000,occurred_at:ended}))};
@@ -842,7 +843,8 @@ it('saves the weekly feature day for everyone through Backlog', async () => {
   expect(stored().weekly_settings).toMatchObject({weekday:3,rivalry_id:'r',revision:1});
   fireEvent.click(screen.getAllByRole('link',{name:'Home'})[0]);
   await screen.findByRole('heading',{name:'Home'});
-  expect(screen.getAllByText('Wednesday matchup').length).toBeGreaterThan(0);
+  const popup=await screen.findByRole('dialog',{name:'This week at the table'});
+  expect(within(popup).getByText('Wednesday matchup')).toBeTruthy();
 });
 
 it('selects a player from the personal Home prompt and replaces it with their summary', async () => {
@@ -862,7 +864,7 @@ it('opens every finished game from the recent-games See all link', async () => {
   const games=Array.from({length:7},(_,i)=>({...baseGame,id:`history-${i}`,ended_at:`2026-11-10T20:0${i}:00Z`,goals:[goal]}));
   seed({rivalries:[rivalry],games:[...games,{...baseGame,id:'still-live'}]});
   openApp();
-  const recent=within(await screen.findByRole('region',{name:'Recent games'}));
+  const recent=within(await screen.findByRole('region',{name:'Around the table'}));
   expect(within(recent.getByRole('list')).getAllByRole('listitem')).toHaveLength(5);
   fireEvent.click(recent.getByRole('link',{name:'See all'}));
   await screen.findByRole('heading',{name:'Game history'});

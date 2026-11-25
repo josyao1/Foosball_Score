@@ -1,6 +1,6 @@
 import { rankedClassics } from './hallOfFame';
 import { score, winner } from './stats';
-import { sidePlayers } from './participants';
+import { matchesProfile, sidePlayers } from './participants';
 import type { Game, Rivalry } from './types';
 
 export interface WeeklySettings {
@@ -63,12 +63,12 @@ export function weeklyFeature(games: Game[], rivalries: Rivalry[], settings = DE
   const classics = rankedClassics(games.filter(g => g.ended_at && Date.parse(g.ended_at) <= now), rivalries);
   const weekGames = classics.filter(entry => Date.parse(entry.game.ended_at!) >= week.start && Date.parse(entry.game.ended_at!) < week.end);
   const overrides = settings.override_week === week.key;
-  const best = (overrides && settings.game_id ? weekGames.find(e => e.game.id === settings.game_id) : undefined) ?? weekGames[0] ?? null;
+  const best = (overrides && settings.game_id ? weekGames.find(e => e.game.id === settings.game_id) : undefined) ?? weekGames.at(0) ?? null;
   // Freeze the evidence at Monday. Fresh leagues can still build a first pick.
   const prior = classics.filter(e => Date.parse(e.game.ended_at!) < week.start);
   const source = prior.length ? prior : classics;
   const cutoff = prior.length ? week.start : now;
-  const liveRivalries = new Set(games.filter(g => !g.ended_at && !g.deleted_at).map(g => g.rivalry_id));
+  const liveRivalries = new Set(games.filter(g => !g.ended_at && !g.deleted_at && Date.parse(g.started_at) <= now).map(g => g.rivalry_id));
   const availableRivalries = new Map(rivalries.filter(r => !r.deleted_at).map(r => [r.id,r]));
   const finished = games.filter(g => !g.deleted_at && g.ended_at && Date.parse(g.ended_at) <= now && availableRivalries.has(g.rivalry_id));
   const activePlayers = new Set(finished.filter(g => Date.parse(g.ended_at!) >= now - 30 * DAY).flatMap(g => {
@@ -112,4 +112,12 @@ export function matchupShortlist(candidates: ReturnType<typeof weeklyFeature>['c
     selected.add(candidate.rivalry.id);
   }
   return ranked.filter(c => selected.has(c.rivalry.id));
+}
+
+/** Home's personal suggestion uses the entire eligible pool, not the shared weekly override. */
+export function personalMatchup(candidates: ReturnType<typeof weeklyFeature>['candidates'], profile: string | null) {
+  const ranked = [...candidates].sort((a,b) => b.rating - a.rating || a.rivalry.id.localeCompare(b.rivalry.id));
+  const selected = profile?.trim().toLowerCase() || null;
+  return ranked.find(({rivalry}) => (['a','b'] as const).some(side =>
+    sidePlayers(rivalry,side).some(player => matchesProfile(player,selected)))) ?? ranked.at(0) ?? null;
 }

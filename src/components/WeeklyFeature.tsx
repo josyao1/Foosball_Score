@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowUpRight, CalendarDays, Swords, Trophy } from 'lucide-react';
 import { PlayerJersey } from './PlayerJersey';
 import { Dialog } from './Dialog';
+import { WeeklyBriefing } from './WeeklyBriefing';
 import { sidePlayers } from '../lib/participants';
 import { score } from '../lib/stats';
 import { gameDate } from '../lib/time';
@@ -66,7 +67,7 @@ export function WeeklyFeatureCards({ feature, onNavigate }: { feature: Feature; 
   </div>;
 }
 
-export function WeeklyFeature({ feature, pausePopup = false }: { feature: Feature; pausePopup?: boolean }) {
+export function WeeklyFeature({ feature, pausePopup = false, briefing = false, profile = null, rank }: { feature: Feature; pausePopup?: boolean; briefing?: boolean; profile?: string|null; rank?: number }) {
   const [open, setOpen] = useState(false);
   const key = `tabletalk.weekly-feature.${feature.week.key}`;
   const eligible = feature.settings.enabled && !feature.loading && feature.week.isFeatureDay && !!(feature.matchup || feature.best);
@@ -79,9 +80,10 @@ export function WeeklyFeature({ feature, pausePopup = false }: { feature: Featur
   }, [eligible, key, pausePopup]);
   useEffect(() => { if (!eligible) setOpen(false); }, [eligible]);
   if (!feature.settings.enabled) return null;
-  return <section className="weekly-feature" aria-labelledby="weekly-feature-title">
+  return <section className="weekly-feature" aria-label={briefing ? "This week at the table" : undefined} aria-labelledby={briefing ? undefined : "weekly-feature-title"}>
+    {briefing ? <WeeklyBriefing key={feature.week.key} feature={feature} profile={profile} rank={rank}/> : <>
     <div className="weekly-heading"><h2 id="weekly-feature-title">This week at the table</h2><span><CalendarDays size={14} aria-hidden="true"/>Week of {calendarDate(feature.week.key)}</span></div>
-    <WeeklyFeatureCards feature={feature}/>
+    <WeeklyFeatureCards feature={feature}/></>}
     {open && !pausePopup && <Dialog title="This week at the table" className="weekly-popup" closeOnBackdrop onClose={() => setOpen(false)}>
       <WeeklyFeatureCards feature={feature} onNavigate={() => setOpen(false)}/>
       <button className="button secondary" onClick={() => setOpen(false)}>Back to Home</button>
