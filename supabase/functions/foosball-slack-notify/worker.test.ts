@@ -12,7 +12,7 @@ describe('Slack sender', () => {
  it('sends the exact workflow fields once after committing sending state', async () => {
   const f = fixture(); expect((await f.run()).status).toBe(200);
   expect(f.transport).toHaveBeenCalledTimes(1);
-  expect(f.transport.mock.calls[0][1]).toMatchObject({ body: JSON.stringify(job.payload), redirect: 'error' });
+  expect(f.transport.mock.calls[0][1]).toMatchObject({ body: JSON.stringify({...job.payload,score_line:job.payload.message,highlights:''}), redirect: 'error' });
   expect(vi.mocked(f.queue.begin).mock.invocationCallOrder[0]).toBeLessThan(f.transport.mock.invocationCallOrder[0]);
   expect(f.queue.settle).toHaveBeenCalledWith('job', 'lease', 'sent', null, 60);
  });
@@ -71,7 +71,7 @@ it('sends only the prepared message and URL, without private snapshot data',asyn
  const prepared={...job,payload:{...job.payload,message:job.payload.message+'\nFirst-ever 10–7 finish at the table.'},story_snapshot:{private:'snapshot'}};
  vi.mocked(f.queue.prepare).mockResolvedValue(prepared);
  await f.run();
- expect(f.transport.mock.calls[0][1]?.body).toBe(JSON.stringify(prepared.payload));
+ expect(f.transport.mock.calls[0][1]?.body).toBe(JSON.stringify({...prepared.payload,score_line:job.payload.message,highlights:'First-ever 10–7 finish at the table.'}));
  expect(vi.mocked(f.queue.prepare).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(f.queue.begin).mock.invocationCallOrder[0]);
 });
 it('never sends on failed preparation or a lost lease',async()=>{
@@ -79,4 +79,16 @@ it('never sends on failed preparation or a lost lease',async()=>{
  expect((await f.run()).status).toBe(503);expect(f.queue.begin).not.toHaveBeenCalled();expect(f.transport).not.toHaveBeenCalled();
  vi.mocked(f.queue.prepare).mockResolvedValueOnce(null);
  await f.run();expect(f.transport).not.toHaveBeenCalled();
+});
+
+it('exposes separately formattable score and indented highlights while retaining the original message',async()=>{
+ const f=fixture();
+ vi.mocked(f.queue.prepare).mockResolvedValue({...job,payload:{...job.payload,message:'⚽ Final: josh 11–9 kevin · 6:27\n     josh came back from 6–9 to win.\n🏆 Enters the Hall of Fame at #1.'}});
+ await f.run();
+ expect(JSON.parse(f.transport.mock.calls[0][1]!.body as string)).toEqual({
+  message:'⚽ Final: josh 11–9 kevin · 6:27\n     josh came back from 6–9 to win.\n🏆 Enters the Hall of Fame at #1.',
+  game_url:job.payload.game_url,
+  score_line:'⚽ Final: josh 11–9 kevin · 6:27',
+  highlights:'     josh came back from 6–9 to win.\n🏆 Enters the Hall of Fame at #1.',
+ });
 });

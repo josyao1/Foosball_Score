@@ -92,3 +92,9 @@ Scorigami and rivalry history use earlier completed games with stable ID orderin
 Bundle the Edge Function for deployment with `node scripts/build-slack-function.mjs /tmp/foosball-slack-deploy/index.js`. Upload that standalone `index.js` as the function entrypoint with `verify_jwt=false` (the existing scheduler-token authentication remains required). This bundles the shared game-analysis helpers instead of maintaining a second implementation. Type-check the source with `deno check --no-remote --no-npm --unstable-sloppy-imports supabase/functions/foosball-slack-notify/index.ts`.
 
 `slack-highlights-check.sql` suppresses the wake trigger transactionally and rolls back all fixtures. It checks snapshots, lease guards, service-only access, original-score preservation and frozen retries without making HTTP requests. Worker tests use mocked transport; no Slack test messages are needed.
+
+### Score-line formatting
+
+The sender also supplies `score_line` and `highlights` Text fields, while retaining `message` for existing workflows. Add the two fields to the webhook trigger, then replace the message step's `message` variable with `score_line` on the first line and `highlights` on the next. Apply bold to the `score_line` variable only and republish. Empty highlights are sent as an empty string. The existing workflow continues working until this edit is made; bold is controlled by Slack's editor, not literal asterisks in a Text variable.
+
+Newly prepared non-emoji highlight lines start with exactly five ASCII spaces. Emoji-led lines, including the Hall of Fame trophy, remain flush left. This formatting is frozen with the message on its first preparation, like the underlying story.

@@ -9,6 +9,7 @@ export async function prepareJob(job:Job,context:(job:Job)=>Promise<Data|null>,p
  if(!state)return null;
  const {game,rivalry}=job.story_snapshot;
  const rivalries=[...state.rivalries.filter(r=>r.id!==rivalry.id),rivalry];
- const lines=slackHighlights(game,rivalry,state.games,rivalries);
+ const lines=slackHighlights(game,rivalry,state.games,rivalries)
+  .map(line=>/^\p{Extended_Pictographic}/u.test(line)?line:`     ${line}`);
  return persist(job,[job.payload.message,...lines].join('\n'));
 }

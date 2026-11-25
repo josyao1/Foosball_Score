@@ -45,10 +45,11 @@ export function createHandler(queue: Queue, webhook: string, transport: typeof f
       let error: string | null = null;
       let delay = 60;
       try {
+        const [score_line,...highlights] = job.payload.message.split('\n');
         const response = await transport(webhook, {
           method: 'POST', redirect: 'error',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(job.payload), signal: AbortSignal.timeout(10000),
+          body: JSON.stringify({...job.payload,score_line,highlights:highlights.join('\n')}), signal: AbortSignal.timeout(10000),
         });
         if (response.ok) outcome = 'sent';
         else if (response.status === 429 || response.status >= 500) {

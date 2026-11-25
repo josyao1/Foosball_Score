@@ -9,7 +9,7 @@ it('uses original goal and name snapshots, not a later correction, and preserves
  const context=vi.fn(async()=>({games:[{...game,goals:[]}],rivalries:[{...rivalry,player_a:'renamed'}]}));
  const persist=vi.fn(async(_job:Job,message:string)=>({...job,story_prepared:true,payload:{...job.payload,message}}));
  const result=await prepareJob(job,context,persist);
- expect(result?.payload.message).toBe(job.payload.message+'\nFirst-ever 10–8 finish at the table.\n🏆 Enters the Hall of Fame at #1.');
+ expect(result?.payload.message).toBe(job.payload.message+'\n     First-ever 10–8 finish at the table.\n🏆 Enters the Hall of Fame at #1.');
  expect(result?.payload.game_url).toBe(job.payload.game_url);
  expect(persist).toHaveBeenCalledTimes(1);
 });
