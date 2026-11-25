@@ -25,6 +25,9 @@
 .home-personal { display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,1fr) minmax(0,1fr);gap:24px;align-items:center;border-block:1px solid var(--line);padding:20px 0;margin-bottom:28px; }
 .home-personal-identity { display:flex;align-items:center;gap:14px;min-width:0; }
 .home-personal-identity > .player-jersey { width:44px;flex-shrink:0; }
+.home-personal-tinted .home-personal-identity { background:linear-gradient(100deg,color-mix(in oklab,var(--personal-color) 7%,transparent),transparent 90%); border-radius:6px; }
+.home-personal-tinted a.home-personal-latest { position:relative; }
+.home-personal-tinted a.home-personal-latest::before { content:'';position:absolute;inset-inline-start:-8px;top:50%;transform:translateY(-50%);width:3px;height:26px;border-radius:2px;background:linear-gradient(var(--personal-color) 0 75%,var(--personal-trim) 75%);opacity:.65;pointer-events:none; }
 .home-personal h2 { font:600 24px/1.2 var(--heading-font);margin:0 0 5px;overflow-wrap:anywhere; }
 .home-personal-identity span,.home-personal small { color:var(--muted);font-size:12px; }
 .home-personal-records { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px; }
@@ -48,6 +51,7 @@
   .home-personal-records > div { padding-left:0;border-left:0; }
   .home-personal-records strong { font-size:17px; }
   .home-personal-latest { grid-column:1/-1;border-left:0;border-top:1px solid var(--line);padding:14px 0 0; }
+  .home-personal-tinted a.home-personal-latest::before { inset-inline-start:0;top:0;transform:none;width:28px;height:2px;background:linear-gradient(90deg,var(--personal-color) 0 75%,var(--personal-trim) 75%); }
   .home-personal-latest > div { grid-template-columns:auto minmax(0,1fr);gap:6px 12px;align-items:baseline; }
   .home-personal-latest small { grid-column:1/-1; }
   .home-profile-prompt { grid-template-columns:auto minmax(0,1fr); }

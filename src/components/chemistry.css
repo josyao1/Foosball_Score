@@ -26,8 +26,13 @@
 .chemistry-share-labels > span:last-child { text-align: right; }
 .chemistry-share-labels b { margin-left: 4px; }
 .chemistry-share-labels small { display: block; margin-top: 3px; }
-.chemistry-share-track { height: 6px; overflow: hidden; border: 1px solid var(--line); border-radius: 5px; background: var(--panel-light); margin: 7px 0; }
-.chemistry-share-track i { display: block; height: 100%; background: var(--text); }
+.chemistry-share-track { display:flex; height: 6px; overflow: hidden; border: 1px solid var(--line); border-radius: 5px; background: var(--panel-light); margin: 7px 0; }
+.chemistry-share-track i { display: block; flex-shrink:0; height: 100%; background: var(--share-own, var(--text)); }
+.chemistry-share-track .chemistry-share-partner { background-color:var(--share-partner, var(--panel-light)); background-image:repeating-linear-gradient(135deg,transparent 0 3px,#ffffff70 3px 4px); }
+@media(forced-colors:active) {
+ .chemistry-share-track i { background:CanvasText; }
+ .chemistry-share-track .chemistry-share-partner { background:Canvas; }
+}
 .chemistry-unknown { display: block; }
 .chemistry-opponents { margin-top: 0; }
 .chemistry-opponents h3 { font-size: 15px; margin: 0 0 10px; }

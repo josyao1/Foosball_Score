@@ -6,6 +6,8 @@ import { allPlayers, goalCredit, matchesProfile, sidePlayers } from '../lib/part
 import { playingTime, playingTimeLabel, score, winner } from '../lib/stats';
 import { otherSide, type Game, type Rivalry } from '../lib/types';
 import { PlayerJersey } from './PlayerJersey';
+import type { CSSProperties } from 'react';
+import { usePlayerAppearance } from '../lib/PlayerAppearanceContext';
 
 export function personalResults(games: Game[], rivalries: Rivalry[], profile: string | null, now: number) {
   const parents = new Map(rivalries.filter(r => !r.deleted_at).map(r => [r.id, r]));
@@ -24,6 +26,7 @@ export function HomePersonal({ weekStart, now }: { weekStart: number; now: numbe
   const { games, rivalries, players } = useStore();
   const selected = useProfile();
   const player = allPlayers(rivalries, players).find(p => matchesProfile(p, selected));
+  const kit = usePlayerAppearance(player?.name ?? '');
   if (!player) return <section className="home-personal home-profile-prompt" aria-label="Your home">
     <UserRound size={26} aria-hidden="true"/>
     <div><h2>Make yourself at home.</h2><p>Pick your jersey for your weekly record and latest result.</p></div>
@@ -35,7 +38,7 @@ export function HomePersonal({ weekStart, now }: { weekStart: number; now: numbe
     count + (goal.actor_side === side && !goal.flags.includes('own_goal') ? goalCredit(goal, rivalry, player.id) : 0), 0), 0));
   const timePlayed = playingTime(weekly.map(r => r.game));
   const latest = results[0], finalScore = latest ? score(latest.game.goals) : null;
-  return <section className="home-personal" aria-label="Your home">
+  return <section className="home-personal home-personal-tinted" aria-label="Your home" style={{'--personal-color':kit.color,'--personal-trim':kit.trim} as CSSProperties}>
     <div className="home-personal-identity"><PlayerJersey name={player.name} decorative/><div><h2>{player.name}</h2><span>This week at the table</span></div></div>
     <div className="home-personal-records">{[false, true].map(team => {
       const entries = weekly.filter(r => r.team === team);

@@ -29,11 +29,13 @@ html[data-design] .players-search input:focus-visible { outline:none; }
 .passport-rung-lineup,.passport-type-lineup { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px; }
 .passport-rung-lineup > div,.passport-type-lineup > div { display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px;border-radius:4px;min-width:0;font-size:10px;color:var(--muted);text-align:center; }
 .passport-rung-lineup .is-favorite,.passport-type-lineup .is-favorite { background:var(--panel-light);color:var(--text); }
+.passport-rung-lineup .is-favorite { background:color-mix(in oklab,var(--passport-jersey) 8%,var(--panel)); box-shadow:inset 0 -2px color-mix(in oklab,var(--passport-jersey) 45%,var(--line)); }
 .passport-rung-lineup strong,.passport-type-lineup strong { font-size:13px;font-weight:650; }
 .passport-goal-count { font-size:10px;line-height:1.2;color:var(--muted);font-variant-numeric:tabular-nums; }
 .passport-mini-rod { height:24px;display:flex;align-items:center;justify-content:space-evenly;width:100%;max-width:90px;position:relative;gap:2px; }
 .passport-mini-rod:before { content:'';position:absolute;inset:11px 0 auto;height:2px;background:var(--line); }
-.passport-mini-rod i { width:6px;height:17px;background:var(--text);position:relative;border-radius:2px; }
+.passport-mini-rod i { width:6px;height:17px;flex-shrink:0;background:var(--passport-jersey,var(--text));background-image:linear-gradient(to bottom,transparent 3px,var(--passport-trim,var(--panel)) 3px 5px,transparent 5px 13px,var(--passport-trim,var(--panel)) 13px 14px,transparent 14px);position:relative;border-radius:2px;box-shadow:0 0 0 .5px color-mix(in oklab,var(--text) 20%,transparent); }
+@media(forced-colors:active) { .passport-mini-rod i { background:CanvasText; } }
 .passport-type-lineup > div > span:nth-child(2) { min-height:14px; }
 .passport-form { margin:0 22px;border-block:1px solid var(--line);padding:14px 0;display:flex;align-items:center;justify-content:space-between;gap:12px; }
 .passport-form > div > span { font-size:10px;display:block;margin-top:5px;color:var(--muted); }

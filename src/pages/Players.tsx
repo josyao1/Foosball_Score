@@ -4,7 +4,7 @@ import type { PlayerChemistry } from '../lib/chemistry';
 import { TabUnderline } from "../components/TabUnderline";
 import { NewPlayer } from '../components/NewPlayer';
 import { useProfile, profileFirst } from "../lib/profile";
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Award, Plus, Users } from 'lucide-react';
 import { useStore } from '../lib/store';
@@ -38,7 +38,8 @@ const passportTabs = ['overview','scoring','chemistry','badges','recent'] as con
 export type PassportTab = typeof passportTabs[number];
 export function PlayerPassportCard({ player: p, players, tab, setTab, note, chemistry, availability }: { player: PlayerPassport; players:PlayerPassport[]; tab:PassportTab; setTab:(tab:PassportTab)=>void; note?:Note; chemistry?:PlayerChemistry; availability?:AvailabilityDraft|null }) {
   const jerseyOut=availability?.status==='out';
-  const team = usePlayerAppearance(p.name).subtitle;
+  const kit = usePlayerAppearance(p.name);
+  const team = kit.subtitle;
   const stamps=MASTERY.map(b=>({...b,level:p.mastery[b.id].earned.length})).filter(b=>b.level>0).sort((a,b)=>b.level-a.level).slice(0,3);
   const tabId = useId();
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -83,7 +84,7 @@ export function PlayerPassportCard({ player: p, players, tab, setTab, note, chem
     {label:'Winning comeback',record:p.bestComeback,value:`${p.bestComeback?.value} goals down`},
     {label:'Quickest win',record:p.quickestWin,value:clock(p.quickestWin?.value ?? 0)},
   ];
-  return <article className="player-passport" aria-label={`${p.name} passport`}>
+  return <article className="player-passport" aria-label={`${p.name} passport`} style={{'--passport-jersey':kit.color,'--passport-trim':kit.trim} as CSSProperties}>
     <header className="passport-header">
       <div className={`passport-portrait${jerseyOut?' passport-portrait-out':''}`}><PlayerJersey name={p.name}/>{jerseyOut&&<PlayerOutJerseyTag/>}</div>
       <div className="passport-identity"><h2>{p.name}</h2>{team && <span className="passport-team">{team}</span>}{jerseyOut?<PlayerAvailabilityInline draft={availability!}/>:<span>{p.firstPlayed ? `Playing since ${gameDate(p.firstPlayed)}` : 'First game still to come'}</span>}</div>

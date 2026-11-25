@@ -1,7 +1,16 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
+import { usePlayerAppearance } from '../lib/PlayerAppearanceContext';
 import { PlayerJersey } from './PlayerJersey';
 import type { ChemistryPair, PlayerChemistry } from '../lib/chemistry';
 import './chemistry.css';
+
+function ContributionBar({name, partner, percent}:{name:string;partner:string;percent:number}) {
+ const ownKit=usePlayerAppearance(name), partnerKit=usePlayerAppearance(partner);
+ return <div className="chemistry-share-track" role="img" aria-label={`${name} ${percent} percent, ${partner} ${100-percent} percent of attributed goals`}
+   style={{'--share-own':ownKit.color,'--share-partner':partnerKit.color} as CSSProperties}>
+   <i style={{width:`${percent}%`}}/><i className="chemistry-share-partner" style={{width:`${100-percent}%`}}/>
+ </div>;
+}
 
 export function Chemistry({name,data}:{name:string;data?:PlayerChemistry}){
  const [mode,setMode]=useState<'with'|'against'>('with');
@@ -15,7 +24,7 @@ export function Chemistry({name,data}:{name:string;data?:PlayerChemistry}){
      </div>
      {withPlayer&&<div className="chemistry-contribution">
        {total>0?<><div className="chemistry-share-labels"><span>{name} <b>{percent}%</b><small>{pair.ownGoals} goals</small></span><span>{pair.person.name} <b>{100-percent}%</b><small>{pair.partnerGoals} goals</small></span></div>
-       <div className="chemistry-share-track" role="img" aria-label={`${name} ${percent} percent, ${pair.person.name} ${100-percent} percent of attributed goals`}><i style={{width:`${percent}%`}}/></div></>:<small>No individually attributed goals yet.</small>}
+       <ContributionBar name={name} partner={pair.person.name} percent={percent}/></>:<small>No individually attributed goals yet.</small>}
        {pair.unattributed>0&&<small className="chemistry-unknown">{pair.unattributed} older {pair.unattributed===1?'goal has':'goals have'} no recorded scorer.</small>}
      </div>}
    </li>;
