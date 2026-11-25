@@ -1,3 +1,5 @@
+import { prepareJob } from './prepare.ts';
+import type { Data } from '../../../src/lib/types.ts';
 import { createHandler, type Job } from './worker.ts';
 
 const project = Deno.env.get('SUPABASE_URL') ?? '';
@@ -15,6 +17,9 @@ async function rpc<T>(name: string, args: Record<string, unknown> = {}): Promise
 Deno.serve(createHandler({
   authorize: (token) => rpc<boolean>('foos_slack_authorize', { p_token: token }),
   claim: () => rpc<Job | null>('foos_slack_claim'),
+  prepare: (job) => prepareJob(job,
+    claimed => rpc<Data|null>('foos_slack_story_context', { p_id: claimed.id, p_token: claimed.claim_token }),
+    (claimed,message) => rpc<Job|null>('foos_slack_prepare', { p_id: claimed.id, p_token: claimed.claim_token, p_message: message })),
   begin: (id, token) => rpc<boolean>('foos_slack_begin', { p_id: id, p_token: token }),
   settle: async (id, token, outcome, error, delay) => {
     await rpc('foos_slack_settle', { p_id: id, p_token: token, p_outcome: outcome, p_error: error, p_delay: delay });

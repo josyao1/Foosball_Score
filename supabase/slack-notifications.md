@@ -80,3 +80,15 @@ On an isolated local PostgreSQL database, apply existing schemas and the outbox 
 Reference: Supabase's [scheduled Edge Functions](https://supabase.com/docs/guides/functions/schedule-functions) and [pg_net](https://supabase.com/docs/guides/database/extensions/pg_net) documentation.
 
 `supabase/slack-immediate-check.sql` tests immediate dispatch with transaction-scoped pg_net/Vault stand-ins: no calls while scoring, one per finalization, no call on corrections, rollback, disabled/idle/backoff behavior, and failed-wake recovery. It rolls back both fixtures and the immediate-dispatch migration.
+
+## Ranked highlights
+
+New finalizations snapshot the game and rivalry into the private outbox. The sender uses `src/lib/slackHighlights.ts` before its sending transition to choose one primary story and at most one separate exceptional line. The original score/duration and View game URL are unchanged. Pre-rollout queued jobs keep their old payload; already sent jobs are never reposted.
+
+Primary priority is: Scorigami, late comeback, repeated match-point saves, huge comeback, first rivalry win, long losing streak broken, both held match point, big comeback, repeated lead changes, huge unanswered run, closing run, shorter losing streak broken, dominant rung, special-goal barrage. Thresholds and tests live beside the selector. Only valid standard finishes qualify. Rung/special attribution excludes own goals. The optional line picks a strictly new table record (not a tie) before a Hall of Fame entry ranked 1–10, skipping facts already expressed in the primary story. Nothing qualifying means no additional text.
+
+Scorigami and rivalry history use earlier completed games with stable ID ordering for simultaneous finishes. Hall of Fame and table records use active game data read immediately before preparing the first send. The prepared message is persisted once under the claim lease and reused on retries; later corrections remain visible only on the linked game. Enrichment errors leave the job safely claimed for retry without starting the Slack request.
+
+Bundle the Edge Function for deployment with `node scripts/build-slack-function.mjs /tmp/foosball-slack-deploy/index.js`. Upload that standalone `index.js` as the function entrypoint with `verify_jwt=false` (the existing scheduler-token authentication remains required). This bundles the shared game-analysis helpers instead of maintaining a second implementation. Type-check the source with `deno check --no-remote --no-npm --unstable-sloppy-imports supabase/functions/foosball-slack-notify/index.ts`.
+
+`slack-highlights-check.sql` suppresses the wake trigger transactionally and rolls back all fixtures. It checks snapshots, lease guards, service-only access, original-score preservation and frozen retries without making HTTP requests. Worker tests use mocked transport; no Slack test messages are needed.

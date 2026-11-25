@@ -1,8 +1,11 @@
-export type Job = { id: string; claim_token: string; attempt_count: number; payload: { message: string; game_url: string } };
+import type { Game, Rivalry } from '../../../src/lib/types.ts';
+
+export type Job = { story_snapshot?: {game:Game;rivalry:Rivalry}|null; story_prepared?:boolean; id: string; claim_token: string; attempt_count: number; payload: { message: string; game_url: string } };
 export type Outcome = 'sent' | 'retry' | 'failed' | 'uncertain';
 export interface Queue {
   authorize(token: string): Promise<boolean>;
   claim(): Promise<Job | null>;
+  prepare(job: Job): Promise<Job | null>;
   begin(id: string, token: string): Promise<boolean>;
   settle(id: string, token: string, outcome: Outcome, error: string | null, delay: number): Promise<void>;
 }
@@ -31,8 +34,10 @@ export function createHandler(queue: Queue, webhook: string, transport: typeof f
     try {
       if (!await queue.authorize(token)) return reply(401, 'unauthorized');
       if (!validWebhook(webhook)) return reply(503, 'webhook_not_configured');
-      const job = await queue.claim();
-      if (!job) return reply(200, 'idle');
+      const claimed = await queue.claim();
+      if (!claimed) return reply(200, 'idle');
+      const job = await queue.prepare(claimed);
+      if (!job) return reply(200, 'skipped');
       // Persist sending BEFORE the external side effect. A crashed/expired sender
       // goes to uncertain, never back to pending automatically.
       if (!await queue.begin(job.id, job.claim_token)) return reply(200, 'skipped');

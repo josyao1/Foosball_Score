@@ -4,7 +4,7 @@ const token = 'a'.repeat(64);
 const webhook = 'https://hooks.slack.com/triggers/test/secret';
 const job: Job = { id: 'job', claim_token: 'lease', attempt_count: 1, payload: { message: '⚽ Final: a 2–1 b', game_url: 'https://foosball-score.vercel.app/game/test' } };
 function fixture() {
- const queue: Queue = { authorize: vi.fn(async () => true), claim: vi.fn(async () => job), begin: vi.fn(async () => true), settle: vi.fn(async () => {}) };
+ const queue: Queue = { authorize: vi.fn(async () => true), claim: vi.fn(async () => job), prepare: vi.fn(async (claimed:Job) => claimed), begin: vi.fn(async () => true), settle: vi.fn(async () => {}) };
  const transport = vi.fn<typeof fetch>(async () => new Response('ok'));
  return { queue, transport, run: (url = webhook, method = 'POST', auth = token) => createHandler(queue, url, transport)(new Request('https://worker.test', { method, headers: { 'x-foos-scheduler-token': auth } })) };
 }
@@ -64,4 +64,19 @@ describe('Slack sender', () => {
   expect(retryDelay(1, '999999')).toBe(86400);
   expect(retryDelay(1, 'Thu, 19 Nov 2026 20:02:00 GMT', Date.parse('2026-11-19T20:00:00Z'))).toBe(120);
  });
+});
+
+it('sends only the prepared message and URL, without private snapshot data',async()=>{
+ const f=fixture();
+ const prepared={...job,payload:{...job.payload,message:job.payload.message+'\nFirst-ever 10–7 finish at the table.'},story_snapshot:{private:'snapshot'}};
+ vi.mocked(f.queue.prepare).mockResolvedValue(prepared);
+ await f.run();
+ expect(f.transport.mock.calls[0][1]?.body).toBe(JSON.stringify(prepared.payload));
+ expect(vi.mocked(f.queue.prepare).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(f.queue.begin).mock.invocationCallOrder[0]);
+});
+it('never sends on failed preparation or a lost lease',async()=>{
+ const f=fixture();vi.mocked(f.queue.prepare).mockRejectedValueOnce(new Error('private'));
+ expect((await f.run()).status).toBe(503);expect(f.queue.begin).not.toHaveBeenCalled();expect(f.transport).not.toHaveBeenCalled();
+ vi.mocked(f.queue.prepare).mockResolvedValueOnce(null);
+ await f.run();expect(f.transport).not.toHaveBeenCalled();
 });

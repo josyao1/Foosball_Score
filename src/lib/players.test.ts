@@ -88,7 +88,7 @@ it('awards match-point recovery only for valid wins after facing match point, on
   expect(playerPassports([saved],[r]).find(p=>p.key==='brooks')!.mastery.recovery.count).toBe(0);
 });
 
-it('uses only 1v1 games for personal bests, including for the solo opponent of a team',()=>{
+it('includes solo games against teams in personal bests without crediting the paired players',()=>{
  const team={...r,id:'team',player_a:'Josh and Brooks',player_b:'Andrew'};
  const solo={...r,id:'solo',player_b:'Andrew'};
  const singles=game('bbbaaaaaaaaaa','single','solo');
@@ -97,12 +97,28 @@ it('uses only 1v1 games for personal bests, including for the solo opponent of a
  const soloAgainstTeam=game('aaaaabbbbbbbbbb','solo-against-team','team');
  const expected=playerPassports([singles],[solo]);
  const actual=playerPassports([singles,teamWin,soloAgainstTeam],[solo,team]);
- for(const id of ['josh','andrew']){
+ for(const id of ['josh']){
   const before=expected.find(p=>p.key===id)!,after=actual.find(p=>p.key===id)!;
   expect([after.bestRun,after.bestComeback,after.quickestWin]).toEqual([before.bestRun,before.bestComeback,before.quickestWin]);
   expect(after.played).toBe(3);
  }
+ const andrew=actual.find(p=>p.key==='andrew')!;
+ expect(andrew.bestRun).toMatchObject({value:10,game:{id:'solo-against-team'}});
+ expect(andrew.bestComeback).toMatchObject({value:5,game:{id:'solo-against-team'}});
+ expect(andrew.quickestWin).toMatchObject({value:15000,game:{id:'solo-against-team'}});
  const brooks=actual.find(p=>p.key==='brooks')!;
  expect([brooks.bestRun,brooks.bestComeback,brooks.quickestWin]).toEqual([null,null,null]);
  expect(brooks.wins).toBe(1);
+});
+
+
+it.each(['a','b'] as const)('counts solo-side %s personal bests with registered team members',soloSide=>{
+ const soloPlayer={id:'solo-player',name:'Solo',created_at:'2026-01-01'};
+ const teammates=[{id:'team-1',name:'First',created_at:'2026-01-01'},{id:'team-2',name:'Second',created_at:'2026-01-01'}];
+ const members=soloSide==='a'?{a:[soloPlayer],b:teammates}:{a:teammates,b:[soloPlayer]};
+ const rivalry={...r,members,player_a:members.a.map(p=>p.name).join(' and '),player_b:members.b.map(p=>p.name).join(' and ')};
+ const g=game(soloSide==='a'?'bbbaaaaaaaaaa':'aaabbbbbbbbbb');
+ const people=playerPassports([g],[rivalry],[soloPlayer,...teammates]);
+ expect(people.find(p=>p.key===soloPlayer.id)).toMatchObject({bestRun:{value:10},bestComeback:{value:3},quickestWin:{value:13000}});
+ for(const teammate of teammates)expect(people.find(p=>p.key===teammate.id)).toMatchObject({bestRun:null,bestComeback:null,quickestWin:null});
 });

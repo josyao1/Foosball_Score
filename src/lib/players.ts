@@ -98,7 +98,7 @@ export function playerPassports(games: Game[], rivalries: Rivalry[], registry:Pl
         allRungs:RUNGS.every(r=>actorGoals.some(g=>g.rung===r&&goalPlayer(g,rivalry)===member.id)) ? 1 : 0,
         recovery:result === 'W' && highlights.moments.quickest?.side === side && highlights.hadMatchPoint[otherSide(side)] ? 1 : 0,
       },game);
-      if (sidePlayers(rivalry,'a').length === 1 && sidePlayers(rivalry,'b').length === 1) {
+      if (sidePlayers(rivalry,side).length === 1) {
         if (bestRuns[side] > (p.bestRun?.value ?? 0)) p.bestRun = {value:bestRuns[side],game};
         const comeback = highlights.moments.comeback;
         if (comeback?.side === side && (!p.bestComeback || comeback.value > p.bestComeback.value || (comeback.value === p.bestComeback.value && comeback.start > gameHighlights(p.bestComeback.game).moments.comeback!.start))) p.bestComeback = {value:comeback.value,game};
