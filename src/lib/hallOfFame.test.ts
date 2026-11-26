@@ -21,7 +21,7 @@ describe('classic score', () => {
   it('rewards a late comeback and both sides having match point', () => {
     const g = game('ababababbbbbb' + 'aaaaaaa'); // 4–9 to 11–9
     expect(points(g, 'Winning comeback')).toBe(20);
-    expect(points(g, 'Match-point drama')).toBe(5);
+    expect(points(g, 'Match-point drama')).toBe(8); // Both held match point, plus the 9–9 equalizer.
     expect(rankedClassics([g], [rivalry])[0].captions).toContain('Josh recovered from 4–9');
   });
   it('caps game-length points at six while retaining the six-minute benchmark', () => {
@@ -74,13 +74,33 @@ describe('classic score', () => {
     expect(points(g,'Close finish')).toBe(20);
     expect(points(g,'Closeness')).toBeLessThanOrEqual(20);
   });
-  it('rates the 12–10 late-comeback example around 92 with achievable benchmarks', () => {
+  it('rates the 12–10 late-comeback example including two deuce equalizers', () => {
     const g=game('baababbbaabbbbaaaaabaa',431000/22);
     g.goals[0].flags=['dunk']; g.goals[1].flags=['bank'];
     const rating=classicScore(g)!;
     expect(rating.highlights.leadChanges).toBe(3);
     expect(rating.highlights.moments.comeback?.value).toBe(4);
-    expect(rating.total).toBeCloseTo(91.7658,3);
+    expect(rating.total).toBeCloseTo(97.7658,3);
+  });
+  it.each([[8,0],[9,3],[10,6],[15,21]])('counts only equalizers from 9–9 onward in a %i-all sequence', (ties, expected) => {
+    const g=game('ab'.repeat(ties)+'aa');
+    expect(points(g,'Match-point drama')).toBe(expected);
+    expect(classicScore(g)!.highlights.leadChanges).toBe(0);
+  });
+  it('credits an overtime equalizer caused by an own goal to the receiving side', () => {
+    const g=game('ab'.repeat(10)+'aa');
+    g.goals[19]={...g.goals[19],actor_side:'a',flags:['own_goal']};
+    expect(points(g,'Match-point drama')).toBe(6);
+    expect(classicScore(g)!.highlights.leadChanges).toBe(0);
+  });
+  it('recognizes seven match-point equalizers in the 15–17 comeback without inventing lead changes', () => {
+    const g=game('aaaaabbbbaababbabbabababbabababb',1216175/32);
+    g.goals[0].flags=['bank'];
+    const rating=classicScore(g)!;
+    expect(points(g,'Match-point drama')).toBe(26);
+    expect(rating.highlights.leadChanges).toBe(1);
+    expect(rating.highlights.moments.comeback?.value).toBe(5);
+    expect(rating.total).toBeCloseTo(102.7917,3);
   });
   it('breaks rating ties by actual time, including mixed offsets and equivalent instants', () => {
     const g = game('aaaaaaaaaa');

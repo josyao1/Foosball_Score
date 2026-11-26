@@ -22,6 +22,8 @@ export function classicScore(game: Game) {
   const late = !!(comeback?.side && deficitScore && deficitScore[otherSide(comeback.side)] >= 9);
   const specials = goals.filter(g => !g.flags.includes('own_goal') && (g.flags.includes('dunk') || g.flags.includes('bank'))).length;
   const bothMatchPoint = hadMatchPoint.a && hadMatchPoint.b;
+  // Every tie from 9–9 onward saves match point, even if the same side retakes the lead.
+  const deuceEqualizers = scores.filter(s => s.a === s.b && s.a >= 9).length;
   const final = scores.at(-1)!;
   const margin = Math.abs(final.a - final.b);
   const factors: ClassicFactor[] = [
@@ -32,7 +34,7 @@ export function classicScore(game: Game) {
     { label: 'Total goals', max: 10, points: benchmarkPoints(goals.length-10,12,10), detail: `${goals.length} goals. Scales from 0 points at 10 goals to 10 at 22. Each goal beyond 22 adds 5/12 of a point.` },
     { label: 'Special goals', max: 5, points: benchmarkPoints(specials,5,5), detail: `${specials} dunk or bank goals. 1 point each up to 5, then 0.5 each. Combos count once; own goals don’t count.` },
     { label: 'Game length', max: 5, points: Math.min(6, benchmarkPoints(totalMs,360000,5)), detail: `${clock(totalMs)} through the final goal. 5 points at 6 minutes, then 5/12 of a point per extra minute, capped at 6 points.` },
-    { label: 'Match-point drama', max: 5, points: bothMatchPoint ? 5 : 0, detail: bothMatchPoint ? 'Both sides were one goal away from a valid win: +5.' : '5 points when both sides hold match point during the game.' },
+    { label: 'Match-point drama', max: 5, points: (bothMatchPoint ? 5 : 0) + deuceEqualizers * 3, detail: `${bothMatchPoint ? 'Both sides held match point: +5.' : 'Both-sides match-point bonus: 0 (5 when both hold it).'} ${deuceEqualizers} ${deuceEqualizers === 1 ? 'equalizer' : 'equalizers'} at 9–9 or later × 3 = +${deuceEqualizers * 3}. Earlier ties don’t count. Can exceed 5.` },
   ];
   return { total: factors.reduce((sum, f) => sum + f.points, 0), factors, highlights, specials, deficitScore, bothMatchPoint };
 }
